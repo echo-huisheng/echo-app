@@ -5980,8 +5980,17 @@ async function sbProcessIncomingMsg(msg, code) {
     ? '🔥 ' + formatBurnTime(burnRemaining) + '后焚毁'
     : '🔥 即将焚毁';
 
+  // Check if this is an image message
+  var bubbleContent;
+  if (text.indexOf('[IMG]') === 0) {
+    var imgData = text.substring(5); // Remove [IMG] prefix
+    bubbleContent = '<img src="' + imgData + '" alt="照片" style="max-width:100%;border-radius:8px;">';
+  } else {
+    bubbleContent = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
   msgEl.innerHTML = '<div class="space-nick">' + (msg.nick || '匿名') + '</div>'
-    + '<div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+    + '<div class="space-bubble">' + bubbleContent + '</div>'
     + '<div class="space-burn-meta">' + burnLabel + '</div>';
 
   container.appendChild(msgEl);
@@ -6145,7 +6154,26 @@ function handleSpacePhoto(input) {
   var file = input.files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    addSpaceMediaMessage('<img src="' + e.target.result + '" alt="照片">');
+    // Compress the image using canvas
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var maxW = 800;
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      var compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      // Send via Supabase (encrypted) if available
+      if (sbReady && currentSpaceCode) {
+        var msgText = '[IMG]' + compressedDataUrl;
+        fbSendMsg(currentSpaceCode, msgText, getSpaceNick());
+      }
+      // Render locally
+      addSpaceMediaMessage('<img src="' + compressedDataUrl + '" alt="照片" style="max-width:100%;border-radius:8px;">');
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
   input.value = '';
