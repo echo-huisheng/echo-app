@@ -51,12 +51,22 @@ body {
 /* ========== 2. Phone Frame ========== */
 .phone-frame {
   width: 390px; height: 844px;
+  max-height: 100vh;
   background: var(--bg-base);
   border-radius: 44px;
   position: relative;
   overflow: hidden;
   border: 3px solid #2a2a3a;
   box-shadow: 0 0 60px rgba(0,0,0,0.5);
+}
+@media (min-width: 500px) {
+  .phone-frame { width: 460px; border-radius: 0; border: none; }
+}
+@media (min-width: 600px) {
+  .phone-frame { width: 500px; }
+}
+@media (max-height: 700px) {
+  .phone-frame { height: 100vh; border-radius: 0; border: none; }
 }
 .status-bar {
   position: absolute; top: 0; left: 0; right: 0;
@@ -1724,9 +1734,16 @@ body {
   gap: 8px;
   align-items: center;
   padding: 8px 0;
+  flex-wrap: wrap;
+}
+.space-action-btns {
+  display: flex;
+  gap: 4px;
+  order: 1;
 }
 .space-chat-input {
   flex: 1;
+  min-width: 120px;
   padding: 12px 16px;
   background: var(--bg-surface-3);
   border: 1px solid var(--bg-surface-4);
@@ -1735,6 +1752,7 @@ body {
   font-size: 14px;
   font-family: var(--font-body);
   outline: none;
+  order: 2;
 }
 .space-chat-input:focus {
   border-color: var(--accent-primary);
@@ -1746,6 +1764,8 @@ body {
   border: 1px solid var(--accent-primary);
   color: var(--accent-primary);
   font-size: 16px;
+  order: 3;
+  flex-shrink: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1761,17 +1781,18 @@ body {
   gap: 4px;
 }
 .space-action-btn {
-  width: 36px; height: 36px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   background: var(--bg-surface-3);
   border: none;
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 .space-action-btn:active {
   background: var(--accent-dim);
