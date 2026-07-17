@@ -2972,7 +2972,7 @@ body {
       <div class="space-trust-badges">
         <span class="trust-badge">🔒 隐私保护模式</span>
         <span class="trust-badge">消息定时清理</span>
-        <span class="trust-badge">本地存储</span>
+        <span class="trust-badge" id="sbConnStatus">⏳ 连接中...</span>
         <span class="trust-badge">📱 防泄露提醒</span>
       </div>
       <div class="space-list">
@@ -4999,28 +4999,55 @@ function createSpace() {
   $('spaceNameInput').value = '';
   $('spaceCodeInput').value = '';
   addSpaceCard(name, code, cleanup);
-  // Register room on Firebase for real-time sync
-  if (fbReady) {
+  // Register room on Supabase for real-time sync
+  if (sbReady) {
     fbCreateRoom(code, name, cleanup).then(function(ok) {
-      if (ok) showToast('空间"' + name + '"创建成功（实时加密通信已启用）');
-      else showToast('空间"' + name + '"创建成功（仅本地模式）');
+      if (ok) showToast('空间"' + name + '"创建成功（实时加密已启用）');
+      else showToast('空间创建成功，但实时通信注册失败');
     });
   } else {
-    showToast('空间"' + name + '"创建成功');
+    // Supabase not ready yet — retry after delay
+    showToast('正在连接服务器...');
+    setTimeout(function() {
+      if (sbReady) {
+        fbCreateRoom(code, name, cleanup).then(function(ok) {
+          if (ok) showToast('空间"' + name + '"实时加密已启用');
+        });
+      } else {
+        showToast('服务器连接失败，空间仅本地可用。刷新页面试试。');
+      }
+    }, 3000);
   }
 }
 function addSpaceCard(name, code, cleanup) {
   var list = document.querySelector('.space-list');
   if (!list) return;
-  // Hide empty state
   var empty = list.querySelector('.space-empty-state');
   if (empty) empty.style.display = 'none';
-  // Create card
   var card = document.createElement('div');
   card.className = 'space-card';
-  card.innerHTML = '<div class="space-card-top"><div class="space-card-icon">🔐</div><div><div class="space-card-name">' + name + '</div><div class="space-card-status active">已连接</div></div></div><div class="space-card-desc">密室码：' + code + ' · 清理：' + cleanup + '</div><div class="space-card-meta">创建者：你</div>';
+  card.innerHTML = '<div class="space-card-top"><div class="space-card-icon">🔐</div><div style="flex:1"><div class="space-card-name">' + name + '</div><div class="space-card-status ' + (sbReady ? 'active' : '') + '">' + (sbReady ? '已连接' : '未连接') + '</div></div><button onclick="event.stopPropagation();deleteSpaceCard(this,\'' + code + '\')" style="background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:4px 8px;" title="销毁空间">✕</button></div><div class="space-card-desc">密室码：' + code + ' · 清理：' + cleanup + '</div><div class="space-card-meta">创建者：你</div>';
   card.addEventListener('click', function() { openSpaceDetail(name, code); });
   list.insertBefore(card, list.querySelector('.space-join-btn'));
+}
+function deleteSpaceCard(btn, code) {
+  if (!confirm('确定销毁此密语空间？所有消息将永久删除。')) return;
+  // Delete from Supabase
+  if (sbReady) {
+    fbDestroyRoom(code);
+  }
+  // Delete from localStorage
+  var spaces = lsLoad('spaces', []);
+  spaces = spaces.filter(function(s) { return s.code !== code; });
+  lsSave('spaces', spaces);
+  // Remove card from UI
+  var card = btn.closest('.space-card');
+  if (card) {
+    card.style.transition = 'opacity 0.3s';
+    card.style.opacity = '0';
+    setTimeout(function() { card.remove(); }, 300);
+  }
+  showToast('空间已销毁');
 }
 function loadSpaces() {
   var spaces = lsLoad('spaces', []);
@@ -5030,7 +5057,7 @@ function joinSpace() {
   var code = $('inviteCodeInput').value.trim();
   if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('请输入6位数字密室码'); return; }
 
-  if (fbReady) {
+  if (sbReady) {
     // Check Firebase for room across devices
     showToast('正在查找空间...');
     fbCheckRoom(code).then(function(room) {
@@ -5375,7 +5402,7 @@ function sendSpaceMessage() {
   input.value = '';
   var nick = getSpaceNick();
 
-  if (fbReady && currentSpaceCode) {
+  if (sbReady && currentSpaceCode) {
     // ===== Firebase mode: send encrypted message to server =====
     // Firebase listener (fbListenMessages) will render the message when it arrives back
     fbSendMsg(currentSpaceCode, text, nick);
@@ -5541,7 +5568,7 @@ function burnAllSpaceMessages() {
 function destroySpace() {
   if (!confirm('确定要销毁此空间吗？所有消息将被永久删除，不可恢复。')) return;
   // Destroy on Firebase (real server-side wipe)
-  if (fbReady && currentSpaceCode) {
+  if (sbReady && currentSpaceCode) {
     fbDestroyRoom(currentSpaceCode);
   }
   // Remove from localStorage
@@ -5589,6 +5616,8 @@ function initFirebase() { // 保留函数名兼容调用
   if (sbReady) return; // 防止重复初始化
   if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL.indexOf('supabase.co') === -1) {
     console.log('[Supabase] 未配置，密语空间使用本地模式');
+    var el = document.getElementById('sbConnStatus');
+    if (el) { el.textContent = '⚪ 未配置'; el.style.color = 'var(--text-tertiary)'; }
     return;
   }
   try {
@@ -5596,11 +5625,18 @@ function initFirebase() { // 保留函数名兼容调用
       sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
       sbReady = true;
       console.log('[Supabase] 已连接，密语空间启用实时通信');
+      var el = document.getElementById('sbConnStatus');
+      if (el) { el.textContent = '🟢 加密通信已连接'; el.style.color = '#4ade80'; }
       setInterval(sbCleanupExpired, 10 * 60 * 1000);
+    } else {
+      var el = document.getElementById('sbConnStatus');
+      if (el) { el.textContent = '🔴 SDK加载失败'; el.style.color = 'var(--danger)'; }
     }
   } catch (e) {
     console.warn('[Supabase] 初始化失败:', e.message);
     sbReady = false;
+    var el = document.getElementById('sbConnStatus');
+    if (el) { el.textContent = '🔴 连接失败'; el.style.color = 'var(--danger)'; }
   }
 }
 
@@ -5910,7 +5946,7 @@ function openSpaceDetail(name, code) {
   var container = $('spaceChatMessages');
   if (container) {
     container.innerHTML = '<div class="space-welcome-msg"><div style="font-size:32px;margin-bottom:8px;">🔐</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">此空间消息阅后即焚，到期后自动物理删除，不可恢复。<br>所有参与者均使用匿名身份，空间销毁后不留任何痕迹。</div>'
-      + (fbReady ? '<div style="font-size:11px;color:#4ade80;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border-radius:8px;">🔒 端到端加密通信已启用 · 消息经AES-256加密传输</div>' : '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。</div>')
+      + (sbReady ? '<div style="font-size:11px;color:#4ade80;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border-radius:8px;">🔒 端到端加密通信已启用 · 消息经AES-256加密传输</div>' : '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。</div>')
       + '</div>';
   }
   // Add/update online status indicator
@@ -5921,12 +5957,12 @@ function openSpaceDetail(name, code) {
       statusEl = document.createElement('span');
       statusEl.id = 'spaceOnlineStatus';
       statusEl.style.cssText = 'float:right;font-size:11px;';
-      statusEl.textContent = fbReady ? '⚪ 等待对方加入...' : '';
+      statusEl.textContent = sbReady ? '⚪ 等待对方加入...' : '';
       trustBar.appendChild(statusEl);
     }
   }
   // Join room on Firebase and start listening
-  if (fbReady) {
+  if (sbReady) {
     fbJoinRoom(code).then(function() {
       fbListenMessages(code);
     });
