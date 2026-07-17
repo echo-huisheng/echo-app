@@ -50,23 +50,24 @@ body {
 
 /* ========== 2. Phone Frame ========== */
 .phone-frame {
-  width: 390px; height: 844px;
+  width: 100%; height: 100dvh;
   max-height: 100vh;
   background: var(--bg-base);
-  border-radius: 44px;
+  border-radius: 0;
   position: relative;
   overflow: hidden;
-  border: 3px solid #2a2a3a;
-  box-shadow: 0 0 60px rgba(0,0,0,0.5);
+  border: none;
+  box-shadow: none;
+}
+/* Fallback for browsers without dvh support */
+@supports not (height: 100dvh) {
+  .phone-frame { height: 100vh; }
 }
 @media (min-width: 500px) {
-  .phone-frame { width: 460px; border-radius: 0; border: none; }
+  .phone-frame { width: 460px; }
 }
 @media (min-width: 600px) {
   .phone-frame { width: 500px; }
-}
-@media (max-height: 700px) {
-  .phone-frame { height: 100vh; border-radius: 0; border: none; }
 }
 .status-bar {
   position: absolute; top: 0; left: 0; right: 0;
