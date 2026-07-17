@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#0B0E14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v7.5</title>
+<title>Echo回声 — 试用版v7.6</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5038,10 +5041,16 @@ function joinSpace() {
   var code = $('inviteCodeInput').value.trim();
   if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('请输入6位数字密室码'); return; }
 
+  // DEBUG: 显示连接状态
+  console.log('[DEBUG] joinSpace: sbReady=' + sbReady + ', code=' + code);
+  console.log('[DEBUG] sbClient=' + (sbClient ? 'exists' : 'null'));
+
   if (sbReady) {
-    // Check Firebase for room across devices
+    // Check Supabase for room across devices
     showToast('正在查找空间...');
+    console.log('[DEBUG] 调用 fbCheckRoom(' + code + ')');
     fbCheckRoom(code).then(function(room) {
+      console.log('[DEBUG] fbCheckRoom 返回:', JSON.stringify(room));
       if (room) {
         // Found on server, add to local list and join
         var spaces = lsLoad('spaces', []);
@@ -5069,7 +5078,8 @@ function joinSpace() {
       }
     });
   } else {
-    // Local-only mode
+    // Local-only mode - Supabase not connected
+    alert('⚠️ 服务器未连接(sbReady=false)，只能在本地查找。\n请检查：1.页面是否最新版本(强制刷新) 2.网络是否正常');
     var spaces = lsLoad('spaces', []);
     var found = spaces.some(function(s) { return s.code === code; });
     if (!found) { showToast('未找到该密室码对应的空间'); return; }
@@ -5701,11 +5711,15 @@ async function fbCreateRoom(code, name, cleanupTime) {
 }
 
 async function fbCheckRoom(code) {
-  if (!sbReady) return false;
+  if (!sbReady) { console.warn('[DEBUG] fbCheckRoom: sbReady=false'); return false; }
   try {
+    console.log('[DEBUG] fbCheckRoom: 查询 code=' + code);
     var result = await sbClient.from('echo_rooms').select('*').eq('code', code).eq('active', true).maybeSingle();
+    console.log('[DEBUG] fbCheckRoom: result.data=', JSON.stringify(result.data), 'error=', result.error ? result.error.message : 'null');
     return result.data || false;
   } catch (e) {
+    console.error('[DEBUG] fbCheckRoom 异常:', e);
+    alert('fbCheckRoom异常: ' + e.message);
     return false;
   }
 }
