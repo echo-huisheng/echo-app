@@ -5985,6 +5985,12 @@ async function sbProcessIncomingMsg(msg, code) {
   if (text.indexOf('[IMG]') === 0) {
     var imgData = text.substring(5); // Remove [IMG] prefix
     bubbleContent = '<img src="' + imgData + '" alt="照片" style="max-width:100%;border-radius:8px;">';
+  } else if (text.indexOf('[VOICE]') === 0) {
+    var voicePayload = text.substring(7); // Remove [VOICE] prefix
+    var pipeIdx = voicePayload.indexOf('|');
+    var voiceDuration = voicePayload.substring(0, pipeIdx);
+    var voiceDataUrl = voicePayload.substring(pipeIdx + 1);
+    bubbleContent = '<div class="voice-msg" onclick="playSpaceVoice(this, \'' + voiceDataUrl + '\')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 0;"><span class="voice-icon">🎤</span><span class="voice-duration">' + voiceDuration + '″</span></div>';
   } else {
     bubbleContent = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -6244,7 +6250,14 @@ function startSpaceVoice() {
       var duration = spaceVoiceSeconds;
       var reader = new FileReader();
       reader.onload = function(e) {
-        var html = '<div class="voice-msg" onclick="playSpaceVoice(this, \'' + e.target.result + '\')"><span class="voice-icon">🎤</span><span class="voice-duration">' + duration + '″</span></div>';
+        var dataUrl = e.target.result;
+        // Send via Supabase (encrypted) if available
+        if (sbReady && currentSpaceCode) {
+          var msgText = '[VOICE]' + duration + '|' + dataUrl;
+          fbSendMsg(currentSpaceCode, msgText, getSpaceNick());
+        }
+        // Render locally
+        var html = '<div class="voice-msg" onclick="playSpaceVoice(this, \'' + dataUrl + '\')"><span class="voice-icon">🎤</span><span class="voice-duration">' + duration + '″</span></div>';
         addSpaceMediaMessage(html);
       };
       reader.readAsDataURL(blob);
