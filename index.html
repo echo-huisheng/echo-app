@@ -6238,7 +6238,7 @@ function startSpaceVoice() {
     var m = String(Math.floor(spaceVoiceSeconds / 60)).padStart(2, '0');
     var s = String(spaceVoiceSeconds % 60).padStart(2, '0');
     if (timeEl) timeEl.textContent = m + ':' + s;
-    if (spaceVoiceSeconds >= 60) stopSpaceVoice();
+    if (spaceVoiceSeconds >= 15) stopSpaceVoice();
   }, 1000);
   navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
     spaceVoiceRecorder = new MediaRecorder(stream);
@@ -6251,10 +6251,25 @@ function startSpaceVoice() {
       var reader = new FileReader();
       reader.onload = function(e) {
         var dataUrl = e.target.result;
+        // Check size - if too large, warn user
+        if (dataUrl.length > 500000) {
+          showToast('语音太长了，请录短一些（10秒以内）');
+          // Still render locally
+          var html = '<div class="voice-msg" onclick="playSpaceVoice(this, \'' + dataUrl + '\')"><span class="voice-icon">🎤</span><span class="voice-duration">' + duration + '″</span></div>';
+          addSpaceMediaMessage(html);
+          return;
+        }
         // Send via Supabase (encrypted) if available
         if (sbReady && currentSpaceCode) {
           var msgText = '[VOICE]' + duration + '|' + dataUrl;
-          fbSendMsg(currentSpaceCode, msgText, getSpaceNick());
+          fbSendMsg(currentSpaceCode, msgText, getSpaceNick()).then(function(msgId) {
+            if (!msgId) {
+              console.warn('[Voice] 发送失败');
+              showToast('语音发送失败');
+            } else {
+              console.log('[Voice] 语音已发送, id=' + msgId);
+            }
+          });
         }
         // Render locally
         var html = '<div class="voice-msg" onclick="playSpaceVoice(this, \'' + dataUrl + '\')"><span class="voice-icon">🎤</span><span class="voice-duration">' + duration + '″</span></div>';
