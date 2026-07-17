@@ -5643,6 +5643,11 @@ function initFirebase() { // 保留函数名兼容调用
       console.log('[Supabase] 已连接，密语空间启用实时通信');
       var el = document.getElementById('sbConnStatus');
       if (el) { el.textContent = '🟢 加密通信已连接'; el.style.color = '#4ade80'; }
+      // Update all existing space cards to show connected status
+      document.querySelectorAll('.space-card-status').forEach(function(statusEl) {
+        statusEl.textContent = '已连接';
+        statusEl.classList.add('active');
+      });
       setInterval(sbCleanupExpired, 10 * 60 * 1000);
     } else {
       var el = document.getElementById('sbConnStatus');
