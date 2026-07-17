@@ -3920,6 +3920,9 @@ function fetchWeather() {
     });
 }
 function init() {
+  // Auto-skip PIN screen — go directly to app
+  $('pinScreen').classList.add('hidden');
+  $('immersionPage').classList.remove('hidden');
   // Load saved state
   deepSeekApiKey = lsLoad('apiKey', '');
   zhipuApiKey = lsLoad('zhipuApiKey', '015a506c3308448aae13a89d8daa7f88.o9RasbTfslpPnMEQ');
