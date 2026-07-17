@@ -3664,9 +3664,8 @@ body {
   <div class="toast" id="toast"></div>
 </div>
 
-<!-- Firebase SDK for Realtime Database (密语空间实时通信) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<!-- Supabase SDK for Realtime Database (密语空间实时通信) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
 // ========== State ==========
@@ -5549,58 +5548,45 @@ function destroySpace() {
   showToast('空间已销毁，所有消息已永久删除');
 }
 
-// ========== Firebase Realtime Communication (密语空间双人通信) ==========
-// 替换下方 FIREBASE_CONFIG 为你的 Firebase 项目配置即可启用双人实时加密通信
-// 未配置时密语空间保持本地演示模式（模拟回复）
-var FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  databaseURL: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
-};
+// ========== Supabase Realtime Communication (密语空间双人通信) ==========
+// Supabase 实时加密通信 — 消息经AES-256-GCM加密传输，服务器只存密文
+var SUPABASE_URL = "https://hnwdwzbouhsxsmlfhmmc.supabase.co";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhud2R3emJvdWhzeHNtbGZobW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyNjAxMzYsImV4cCI6MjA5OTgzNjEzNn0.szq5s6Nue2GEKsnjMb1cRTjPm11Udn3hYQ40MvnSUwU";
 
-var fbApp = null, fbDb = null, fbReady = false, fbMsgListener = null, fbPresenceListener = null;
-var fbRoomCode = '', fbMyUid = '';
-var fbSeenMsgIds = {};
+var sbClient = null, sbReady = false, sbChannel = null;
+var sbRoomCode = '', sbMyUid = '';
+var sbSeenMsgIds = {};
 
-// Generate a unique user ID for this browser session (persisted in localStorage)
-(function initFbUid() {
-  fbMyUid = lsLoad('echo_fb_uid', '');
-  if (!fbMyUid) {
-    fbMyUid = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);
-    lsSave('echo_fb_uid', fbMyUid);
+// Generate a unique user ID (persisted in localStorage)
+(function initSbUid() {
+  sbMyUid = lsLoad('echo_sb_uid', '');
+  if (!sbMyUid) {
+    sbMyUid = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);
+    lsSave('echo_sb_uid', sbMyUid);
   }
 })();
 
-function initFirebase() {
-  if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.databaseURL) {
-    console.log('[Firebase] 未配置Firebase，密语空间使用本地模式');
+function initFirebase() { // 保留函数名兼容调用
+  if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL.indexOf('supabase.co') === -1) {
+    console.log('[Supabase] 未配置，密语空间使用本地模式');
     return;
   }
   try {
-    if (typeof firebase !== 'undefined' && firebase.initializeApp) {
-      fbApp = firebase.initializeApp(FIREBASE_CONFIG);
-      fbDb = firebase.database();
-      fbReady = true;
-      console.log('[Firebase] 已连接，密语空间启用实时通信');
-      // Periodic cleanup of expired messages on server (every 10 minutes)
-      setInterval(fbCleanupExpired, 10 * 60 * 1000);
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+      sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      sbReady = true;
+      console.log('[Supabase] 已连接，密语空间启用实时通信');
+      setInterval(sbCleanupExpired, 10 * 60 * 1000);
     }
   } catch (e) {
-    console.warn('[Firebase] 初始化失败:', e.message);
-    fbReady = false;
+    console.warn('[Supabase] 初始化失败:', e.message);
+    sbReady = false;
   }
 }
 
 // ========== AES-GCM Encryption (端到端加密) ==========
-// 用房间码作为密码，PBKDF2派生密钥，AES-GCM加密消息
-// Firebase服务器只看到密文，无法读取内容
-
-var fbCryptoKey = null;
-var fbCryptoSalt = new TextEncoder().encode('Echo-v1-密语空间');
+var sbCryptoKey = null;
+var sbCryptoSalt = new TextEncoder().encode('Echo-v1-密语空间');
 
 async function fbDeriveKey(roomCode) {
   var keyMaterial = await crypto.subtle.importKey(
@@ -5608,7 +5594,7 @@ async function fbDeriveKey(roomCode) {
     'PBKDF2', false, ['deriveKey']
   );
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: fbCryptoSalt, iterations: 100000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: sbCryptoSalt, iterations: 100000, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false, ['encrypt', 'decrypt']
@@ -5617,10 +5603,10 @@ async function fbDeriveKey(roomCode) {
 
 async function fbEncrypt(text, roomCode) {
   try {
-    if (!fbCryptoKey) fbCryptoKey = await fbDeriveKey(roomCode);
+    if (!sbCryptoKey) sbCryptoKey = await fbDeriveKey(roomCode);
     var iv = crypto.getRandomValues(new Uint8Array(12));
     var encoded = new TextEncoder().encode(text);
-    var ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, fbCryptoKey, encoded);
+    var ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, sbCryptoKey, encoded);
     var combined = new Uint8Array(iv.length + new Uint8Array(ciphertext).length);
     combined.set(iv);
     combined.set(new Uint8Array(ciphertext), iv.length);
@@ -5633,17 +5619,16 @@ async function fbEncrypt(text, roomCode) {
 
 async function fbDecrypt(base64Data, roomCode) {
   try {
-    // Handle non-encrypted fallback
     if (base64Data.indexOf('b64:') === 0) {
       return decodeURIComponent(escape(atob(base64Data.substring(4))));
     }
-    if (!fbCryptoKey) fbCryptoKey = await fbDeriveKey(roomCode);
+    if (!sbCryptoKey) sbCryptoKey = await fbDeriveKey(roomCode);
     var raw = atob(base64Data);
     var bytes = new Uint8Array(raw.length);
     for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
     var iv = bytes.slice(0, 12);
     var ciphertext = bytes.slice(12);
-    var decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, fbCryptoKey, ciphertext);
+    var decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, sbCryptoKey, ciphertext);
     return new TextDecoder().decode(decrypted);
   } catch (e) {
     console.warn('[Decrypt] 解密失败:', e);
@@ -5651,121 +5636,124 @@ async function fbDecrypt(base64Data, roomCode) {
   }
 }
 
-// ========== Firebase Room Operations ==========
+// ========== Supabase Room Operations ==========
 
 async function fbCreateRoom(code, name, cleanupTime) {
-  if (!fbReady) return false;
+  if (!sbReady) return false;
   try {
-    var roomRef = fbDb.ref('echo_rooms/' + code);
-    var snapshot = await roomRef.once('value');
-    if (snapshot.exists()) {
-      // Room exists, just join it
-      return true;
-    }
-    await roomRef.set({
-      name: name,
-      cleanup: cleanupTime,
-      created: Date.now(),
-      createdBy: fbMyUid,
-      active: true
+    // Check if room already exists
+    var existing = await sbClient.from('echo_rooms').select('code').eq('code', code).maybeSingle();
+    if (existing.data) return true;
+    // Create room
+    var result = await sbClient.from('echo_rooms').insert({
+      code: code, name: name, cleanup: cleanupTime,
+      created_at: Date.now(), created_by: sbMyUid, active: true
     });
-    console.log('[Firebase] 房间已创建:', code);
+    if (result.error) {
+      // Room might already exist (race condition), that's OK
+      if (result.error.code === '23505') return true;
+      console.warn('[Supabase] 创建房间失败:', result.error.message);
+      return false;
+    }
+    console.log('[Supabase] 房间已创建:', code);
     return true;
   } catch (e) {
-    console.warn('[Firebase] 创建房间失败:', e);
+    console.warn('[Supabase] 创建房间异常:', e);
     return false;
   }
 }
 
 async function fbCheckRoom(code) {
-  if (!fbReady) return false;
+  if (!sbReady) return false;
   try {
-    var snapshot = await fbDb.ref('echo_rooms/' + code).once('value');
-    var data = snapshot.val();
-    return data && data.active ? data : false;
+    var result = await sbClient.from('echo_rooms').select('*').eq('code', code).eq('active', true).maybeSingle();
+    return result.data || false;
   } catch (e) {
     return false;
   }
 }
 
 async function fbJoinRoom(code) {
-  if (!fbReady) return false;
+  if (!sbReady) return false;
   var room = await fbCheckRoom(code);
   if (!room) return false;
-  // Set presence indicator
+  // Update presence (heartbeat)
   try {
-    await fbDb.ref('echo_rooms/' + code + '/members/' + fbMyUid).set({
-      nick: getSpaceNick(),
-      joinedAt: Date.now(),
-      online: true
-    });
-    // Set online status to false when disconnected
-    fbDb.ref('echo_rooms/' + code + '/members/' + fbMyUid + '/online')
-      .onDisconnect().set(false);
+    await sbClient.from('echo_presence').upsert({
+      room_code: code, uid: sbMyUid, nick: getSpaceNick(),
+      last_seen: Date.now(), online: true
+    }, { onConflict: 'room_code,uid' });
+    // Heartbeat: keep online status updated every 30s
+    if (window._sbHeartbeat) clearInterval(window._sbHeartbeat);
+    window._sbHeartbeat = setInterval(function() {
+      sbClient.from('echo_presence').update({ last_seen: Date.now(), online: true })
+        .eq('room_code', code).eq('uid', sbMyUid);
+    }, 30000);
   } catch (e) {
-    console.warn('[Firebase] 加入房间失败:', e);
+    console.warn('[Supabase] 加入房间失败:', e);
   }
   return room;
 }
 
 async function fbSendMsg(code, text, nick) {
-  if (!fbReady) return null;
+  if (!sbReady) return null;
   var encrypted = await fbEncrypt(text, code);
   var burnAt = spaceBurnTimeMs > 0 ? Date.now() + spaceBurnTimeMs : Date.now() + 60000;
-  var msgData = {
-    uid: fbMyUid,
-    nick: nick,
-    encrypted: encrypted,
-    time: Date.now(),
-    burnAt: burnAt,
-    burnTimeMs: spaceBurnTimeMs
-  };
   try {
-    var ref = await fbDb.ref('echo_rooms/' + code + '/messages').push(msgData);
-    return ref.key;
+    var result = await sbClient.from('echo_room_messages').insert({
+      room_code: code, uid: sbMyUid, nick: nick,
+      encrypted: encrypted, created_at: Date.now(),
+      burn_at: burnAt, burn_time_ms: spaceBurnTimeMs
+    }).select('id').single();
+    return result.data ? result.data.id : null;
   } catch (e) {
-    console.warn('[Firebase] 发送消息失败:', e);
+    console.warn('[Supabase] 发送消息失败:', e);
     return null;
   }
 }
 
 function fbListenMessages(code) {
-  if (!fbReady) return;
+  if (!sbReady) return;
   fbStopListening();
-  fbRoomCode = code;
-  fbSeenMsgIds = {};
-  fbCryptoKey = null; // Reset crypto key for new room
+  sbRoomCode = code;
+  sbSeenMsgIds = {};
+  sbCryptoKey = null;
 
-  var msgRef = fbDb.ref('echo_rooms/' + code + '/messages');
+  // Subscribe to new messages via Supabase Realtime
+  sbChannel = sbClient.channel('room-' + code, {
+    config: { broadcast: { self: false } }
+  });
 
-  // Listen for new messages
-  fbMsgListener = msgRef.on('child_added', async function(snapshot) {
-    var msg = snapshot.val();
-    var msgId = snapshot.key;
-    if (!msg || fbSeenMsgIds[msgId]) return;
-    fbSeenMsgIds[msgId] = true;
+  // Listen for INSERT on echo_room_messages filtered by room_code
+  sbChannel.on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'echo_room_messages',
+    filter: 'room_code=eq.' + code
+  }, async function(payload) {
+    var msg = payload.new;
+    var msgId = msg.id;
+    if (!msg || sbSeenMsgIds[msgId]) return;
+    sbSeenMsgIds[msgId] = true;
 
-    // Skip if message is expired
-    if (msg.burnAt && Date.now() > msg.burnAt) {
-      // Delete expired message from server
-      fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+    // Skip expired messages
+    if (msg.burn_at && Date.now() > msg.burn_at) {
+      sbClient.from('echo_room_messages').delete().eq('id', msgId);
       return;
     }
 
-    // Decrypt message
-    var isMe = msg.uid === fbMyUid;
+    var isMe = msg.uid === sbMyUid;
 
-    // Skip rendering own messages (already rendered optimistically in sendSpaceMessage)
+    // Skip own messages (already rendered optimistically)
     if (isMe) {
-      // Still schedule Firebase-side deletion for burn timer
-      if (msg.burnAt) {
-        var burnRemaining = msg.burnAt - Date.now();
+      if (msg.burn_at) {
+        var burnRemaining = msg.burn_at - Date.now();
         if (burnRemaining > 0) {
           setTimeout(function() {
-            fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+            sbClient.from('echo_room_messages').delete().eq('id', msgId);
           }, burnRemaining);
         } else {
-          fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+          sbClient.from('echo_room_messages').delete().eq('id', msgId);
         }
       }
       return;
@@ -5776,17 +5764,15 @@ function fbListenMessages(code) {
     // Render message
     var container = $('spaceChatMessages');
     if (!container) return;
-
-    // Remove welcome if present
     var welcome = container.querySelector('.space-welcome-msg');
     if (welcome) welcome.remove();
 
     var msgEl = document.createElement('div');
     msgEl.className = 'space-msg other';
-    msgEl.setAttribute('data-fb-id', msgId);
+    msgEl.setAttribute('data-sb-id', msgId);
 
-    var burnRemaining = msg.burnAt ? msg.burnAt - Date.now() : 60000;
-    var burnLabel = msg.burnTimeMs > 0
+    var burnRemaining = msg.burn_at ? msg.burn_at - Date.now() : 60000;
+    var burnLabel = msg.burn_time_ms > 0
       ? '🔥 ' + formatBurnTime(burnRemaining) + '后焚毁'
       : '🔥 即将焚毁';
 
@@ -5797,72 +5783,96 @@ function fbListenMessages(code) {
     container.appendChild(msgEl);
     container.scrollTop = container.scrollHeight;
 
-    // Schedule burn
     if (burnRemaining > 0) {
       scheduleSpaceBurn(msgEl, burnRemaining);
-      // Also delete from Firebase when burned
       setTimeout(function() {
-        fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+        sbClient.from('echo_room_messages').delete().eq('id', msgId);
       }, burnRemaining);
     } else {
       setTimeout(function() {
         burnSpaceMsg(msgEl);
-        fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+        sbClient.from('echo_room_messages').delete().eq('id', msgId);
       }, 800);
     }
   });
 
-  // Listen for presence (other user online status)
-  fbPresenceListener = fbDb.ref('echo_rooms/' + code + '/members').on('value', function(snapshot) {
-    var members = snapshot.val();
-    if (!members) return;
-    var keys = Object.keys(members);
-    var othersOnline = keys.filter(function(k) { return k !== fbMyUid && members[k].online; });
-    var statusEl = document.getElementById('spaceOnlineStatus');
-    if (statusEl) {
-      if (othersOnline.length > 0) {
-        statusEl.textContent = '🟢 对方在线';
-        statusEl.style.color = '#4ade80';
-      } else {
-        statusEl.textContent = '⚪ 对方离线';
-        statusEl.style.color = 'var(--text-tertiary)';
+  // Listen for presence changes
+  sbChannel.on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'echo_presence',
+    filter: 'room_code=eq.' + code
+  }, function() {
+    sbUpdatePresence(code);
+  });
+  sbChannel.on('postgres_changes', {
+    event: 'UPDATE',
+    schema: 'public',
+    table: 'echo_presence',
+    filter: 'room_code=eq.' + code
+  }, function() {
+    sbUpdatePresence(code);
+  });
+
+  sbChannel.subscribe();
+
+  // Initial presence check
+  sbUpdatePresence(code);
+  // Poll presence every 35s (in case Realtime misses updates)
+  if (window._sbPresencePoll) clearInterval(window._sbPresencePoll);
+  window._sbPresencePoll = setInterval(function() { sbUpdatePresence(code); }, 35000);
+}
+
+async function sbUpdatePresence(code) {
+  if (!sbReady) return;
+  try {
+    var cutoff = Date.now() - 60000; // 60s timeout
+    var result = await sbClient.from('echo_presence')
+      .select('uid,online,last_seen')
+      .eq('room_code', code)
+      .gt('last_seen', cutoff);
+    if (result.data) {
+      var othersOnline = result.data.filter(function(m) { return m.uid !== sbMyUid; });
+      var statusEl = document.getElementById('spaceOnlineStatus');
+      if (statusEl) {
+        if (othersOnline.length > 0) {
+          statusEl.textContent = '🟢 对方在线';
+          statusEl.style.color = '#4ade80';
+        } else {
+          statusEl.textContent = '⚪ 对方离线';
+          statusEl.style.color = 'var(--text-tertiary)';
+        }
       }
     }
-  });
+  } catch (e) {}
 }
 
 function fbStopListening() {
-  if (fbMsgListener && fbRoomCode) {
-    fbDb.ref('echo_rooms/' + fbRoomCode + '/messages').off('child_added', fbMsgListener);
-    fbMsgListener = null;
+  if (sbChannel) {
+    sbClient.removeChannel(sbChannel);
+    sbChannel = null;
   }
-  if (fbPresenceListener && fbRoomCode) {
-    fbDb.ref('echo_rooms/' + fbRoomCode + '/members').off('value', fbPresenceListener);
-    fbPresenceListener = null;
-  }
+  if (window._sbHeartbeat) { clearInterval(window._sbHeartbeat); window._sbHeartbeat = null; }
+  if (window._sbPresencePoll) { clearInterval(window._sbPresencePoll); window._sbPresencePoll = null; }
 }
 
-function fbCleanupExpired() {
-  if (!fbReady || !fbRoomCode) return;
-  var now = Date.now();
-  fbDb.ref('echo_rooms/' + fbRoomCode + '/messages').once('value', function(snapshot) {
-    snapshot.forEach(function(child) {
-      var msg = child.val();
-      if (msg && msg.burnAt && now > msg.burnAt) {
-        child.ref.remove();
-      }
-    });
-  });
+function sbCleanupExpired() {
+  if (!sbReady || !sbRoomCode) return;
+  sbClient.from('echo_room_messages').delete().lt('burn_at', Date.now());
+  // Also clean up stale presence
+  sbClient.from('echo_presence').delete().lt('last_seen', Date.now() - 120000);
 }
 
 async function fbDestroyRoom(code) {
-  if (!fbReady) return;
+  if (!sbReady) return;
   try {
     fbStopListening();
-    await fbDb.ref('echo_rooms/' + code).remove();
-    console.log('[Firebase] 房间已销毁:', code);
+    await sbClient.from('echo_room_messages').delete().eq('room_code', code);
+    await sbClient.from('echo_presence').delete().eq('room_code', code);
+    await sbClient.from('echo_rooms').delete().eq('code', code);
+    console.log('[Supabase] 房间已销毁:', code);
   } catch (e) {
-    console.warn('[Firebase] 销毁房间失败:', e);
+    console.warn('[Supabase] 销毁房间失败:', e);
   }
 }
 
@@ -5872,9 +5882,6 @@ function formatBurnTime(ms) {
   if (ms < 3600000) return Math.ceil(ms / 60000) + '分钟';
   return Math.ceil(ms / 3600000) + '小时';
 }
-
-// Initialize Firebase on load (called from init function)
-// Will be called via: setTimeout(initFirebase, 500);
 
 function openSpaceDetail(name, code) {
   currentSpaceCode = code;
