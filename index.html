@@ -5074,8 +5074,12 @@ function joinSpace() {
           loadSpaces();
         });
       } else {
-        showToast('未找到该密室码对应的空间，请确认对方已创建');
+        showToast('服务器上未找到房间' + code + '。可能已被创建者销毁。');
+        console.warn('[DEBUG] fbCheckRoom 返回空，服务器无此房间');
       }
+    }).catch(function(err) {
+      console.error('[DEBUG] fbCheckRoom Promise rejected:', err);
+      showToast('查询服务器失败: ' + err.message);
     });
   } else {
     // Local-only mode - Supabase not connected
