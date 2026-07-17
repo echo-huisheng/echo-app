@@ -3211,6 +3211,17 @@ body {
       <button onclick="installPWA()" style="background:var(--bg-surface-3);border:1px solid var(--accent-primary);color:var(--accent-primary);padding:12px 20px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);width:100%;">安装Echo到桌面</button>
     </div>
     <div class="sub-card" style="text-align:center;">
+      <h3 style="margin-bottom:12px;">🔒 进入密码</h3>
+      <div id="pinSettingArea">
+        <div id="pinStatus" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">未设置密码</div>
+        <input type="password" id="pinSettingInput" maxlength="4" placeholder="输入4位数字密码" style="width:100%;padding:12px 16px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:12px;color:var(--text-primary);font-size:16px;text-align:center;letter-spacing:8px;margin-bottom:10px;outline:none;font-family:var(--font-body);">
+        <div style="display:flex;gap:8px;">
+          <button onclick="setPinCode()" style="flex:1;background:var(--accent-dim);border:1px solid var(--accent-primary);color:var(--accent-primary);padding:12px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);">设置密码</button>
+          <button onclick="removePinCode()" id="pinRemoveBtn" style="flex:1;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);color:var(--text-secondary);padding:12px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);display:none;">取消密码</button>
+        </div>
+      </div>
+    </div>
+    <div class="sub-card" style="text-align:center;">
       <button onclick="clearAllData()" style="background:rgba(212,107,107,0.15);border:none;color:var(--danger);padding:14px 24px;border-radius:var(--radius-btn);font-size:15px;cursor:pointer;font-family:var(--font-body);width:100%;">清除所有数据</button>
     </div>
   </div>
@@ -3921,9 +3932,20 @@ function fetchWeather() {
     });
 }
 function init() {
-  // Auto-skip PIN screen — go directly to app
-  $('pinScreen').classList.add('hidden');
-  $('immersionPage').classList.remove('hidden');
+  // Check if user has set a PIN - if so, show lock screen; otherwise skip
+  var userPin = getUserPin();
+  if (userPin) {
+    // PIN is set - show lock screen, update pinCorrect to user's PIN
+    pinCorrect = userPin;
+    $('pinScreen').classList.remove('hidden');
+    $('immersionPage').classList.add('hidden');
+  } else {
+    // No PIN - go directly to app
+    $('pinScreen').classList.add('hidden');
+    $('immersionPage').classList.remove('hidden');
+  }
+  // Update PIN setting UI when settings page opens
+  updatePinSettingUI();
   // Load saved state
   deepSeekApiKey = lsLoad('apiKey', '');
   zhipuApiKey = lsLoad('zhipuApiKey', '015a506c3308448aae13a89d8daa7f88.o9RasbTfslpPnMEQ');
@@ -5267,6 +5289,38 @@ function acceptConsent() {
     });
   }
 })();
+
+// ===== User-configurable PIN Lock =====
+function getUserPin() {
+  try { return localStorage.getItem('echo_user_pin') || ''; } catch(e) { return ''; }
+}
+function setPinCode() {
+  var input = $('pinSettingInput');
+  var pin = input.value.trim();
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) { showToast('请输入4位数字密码'); return; }
+  localStorage.setItem('echo_user_pin', pin);
+  input.value = '';
+  showToast('密码设置成功！下次打开需要输入密码');
+  updatePinSettingUI();
+}
+function removePinCode() {
+  var input = $('pinSettingInput');
+  var pin = input.value.trim();
+  var saved = getUserPin();
+  if (!saved) { showToast('当前没有设置密码'); return; }
+  if (pin && pin !== saved) { showToast('请输入当前密码来验证'); return; }
+  localStorage.removeItem('echo_user_pin');
+  input.value = '';
+  showToast('已取消密码');
+  updatePinSettingUI();
+}
+function updatePinSettingUI() {
+  var saved = getUserPin();
+  var statusEl = $('pinStatus');
+  var removeBtn = $('pinRemoveBtn');
+  if (statusEl) statusEl.textContent = saved ? '✅ 已设置密码' : '未设置密码';
+  if (removeBtn) removeBtn.style.display = saved ? 'block' : 'none';
+}
 
 // ===== Clear All Data =====
 function clearAllData() {
