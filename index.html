@@ -3664,27 +3664,8 @@ body {
   <div class="toast" id="toast"></div>
 </div>
 
-<!-- Supabase SDK (异步加载，不阻塞页面) -->
-<script>
-(function(){
-  var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-  s.async = true;
-  s.onload = function() {
-    console.log('[Supabase] SDK loaded');
-    if (typeof initFirebase === 'function') initFirebase();
-  };
-  s.onerror = function() {
-    // Fallback CDN
-    var s2 = document.createElement('script');
-    s2.src = 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-    s2.async = true;
-    s2.onload = function() { if (typeof initFirebase === 'function') initFirebase(); };
-    document.head.appendChild(s2);
-  };
-  document.head.appendChild(s);
-})();
-</script>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 // ========== State ==========
@@ -3931,7 +3912,7 @@ function init() {
   initDailyContent();
   initNotifications();
   showNotifySettings();
-  // initFirebase() 由Supabase SDK异步加载完成后自动调用
+  setTimeout(initFirebase, 300);
 
   // Render saved chat messages
   if (chatMessagesStore.length > 0) {
