@@ -987,6 +987,74 @@ body {
   background: var(--accent-primary);
   color: var(--bg-base);
 }
+.chat-voice-btn {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-surface-4);
+  color: var(--text-tertiary);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+.chat-voice-btn:hover { background: var(--bg-surface-3); color: var(--text-secondary); }
+.chat-voice-btn.recording {
+  background: rgba(212,107,107,0.2);
+  color: var(--danger);
+  animation: voicePulse 1.2s ease-in-out infinite;
+}
+.chat-voice-btn.recording::after {
+  content: '';
+  position: absolute;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--danger);
+  opacity: 0;
+  animation: voiceRipple 1.5s ease-out infinite;
+}
+@keyframes voicePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes voiceRipple {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+.voice-hint {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface-4);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  margin-bottom: 8px;
+}
+.chat-voice-btn.recording .voice-hint { opacity: 1; }
+.msg-tts-btn {
+  display: inline-block;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin-left: 6px;
+  border-radius: 4px;
+  transition: color 0.2s;
+  vertical-align: middle;
+}
+.msg-tts-btn:hover { color: var(--accent-primary); }
+.msg-tts-btn.playing { color: var(--accent-primary); }
 
 /* Chat page layout fix */
 #page-chat {
@@ -1792,6 +1860,331 @@ body {
   flex-shrink: 0;
 }
 
+/* ========== Music Player Panel ========== */
+.music-panel {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: var(--bg-surface-1);
+  border-top: 1px solid var(--bg-surface-4);
+  border-radius: 20px 20px 0 0;
+  max-height: 65%;
+  display: flex;
+  flex-direction: column;
+  z-index: 120;
+  animation: musicSlideUp 0.3s var(--ease);
+}
+@keyframes musicSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.music-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.music-panel-close {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.music-search-row {
+  padding: 0 16px 10px;
+  flex-shrink: 0;
+}
+.music-search-input {
+  width: 100%;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--bg-surface-4);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+.music-search-input::placeholder { color: var(--text-tertiary); }
+.music-search-input:focus { border-color: rgba(200,168,98,0.3); }
+.music-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.music-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.music-item:hover { background: var(--bg-surface-3); }
+.music-item.active { background: var(--accent-dim); }
+.music-item-icon {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  background: var(--bg-surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.music-item.active .music-item-icon { background: rgba(200,168,98,0.2); }
+.music-item-info {
+  flex: 1;
+  overflow: hidden;
+}
+.music-item-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.music-item.active .music-item-title { color: var(--accent-primary); }
+.music-item-artist {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.music-player-bar {
+  flex-shrink: 0;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--bg-surface-3);
+}
+.music-now-playing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.music-disc {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--bg-surface-3), var(--bg-surface-4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+  animation: discSpin 4s linear infinite;
+  animation-play-state: paused;
+}
+.music-disc.spinning { animation-play-state: running; }
+@keyframes discSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.music-info { flex: 1; overflow: hidden; }
+.music-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.music-artist {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.music-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.music-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  min-width: 32px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.music-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-surface-4);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+}
+.music-progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s linear;
+}
+.music-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+}
+.music-ctrl-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s;
+}
+.music-ctrl-btn:hover { color: var(--text-primary); }
+.music-play-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.music-play-btn:hover { background: var(--accent-primary); color: var(--bg-base); }
+.music-card-msg {
+  background: var(--bg-surface-3);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 240px;
+}
+.music-card-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-dim), var(--bg-surface-4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  animation: discSpin 4s linear infinite;
+}
+.music-card-info { flex: 1; overflow: hidden; }
+.music-card-title {
+  font-size: 13px;
+  color: var(--accent-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.music-card-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+/* Ambient Sound Panel */
+.ambient-desc {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 0 16px 10px;
+  flex-shrink: 0;
+}
+.ambient-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 0 16px 14px;
+  overflow-y: auto;
+  flex: 1;
+}
+.ambient-card {
+  background: var(--bg-surface-3);
+  border-radius: 14px;
+  padding: 14px 6px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+  border: 2px solid transparent;
+  position: relative;
+}
+.ambient-card:hover { background: var(--bg-surface-4); }
+.ambient-card.active {
+  background: var(--accent-dim);
+  border-color: var(--accent-primary);
+}
+.ambient-card.active .ambient-name { color: var(--accent-primary); }
+.ambient-icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+  transition: transform 0.3s;
+}
+.ambient-card.active .ambient-icon {
+  animation: ambientPulse 2s ease-in-out infinite;
+}
+@keyframes ambientPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.ambient-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.ambient-vol {
+  padding: 0 2px;
+}
+.ambient-vol input[type="range"] {
+  width: 100%;
+  height: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--bg-surface-4);
+  border-radius: 2px;
+  outline: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.ambient-card.active .ambient-vol input[type="range"] { opacity: 1; }
+.ambient-vol input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+}
+.ambient-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px 16px;
+  border-top: 1px solid var(--bg-surface-3);
+  flex-shrink: 0;
+}
+.ambient-stop-btn {
+  background: var(--bg-surface-3);
+  border: none;
+  color: var(--text-secondary);
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+.ambient-stop-btn:hover { background: var(--bg-surface-4); color: var(--text-primary); }
+.ambient-active-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
 /* ========== 12. Modals ========== */
 .modal-overlay {
   position: absolute; inset: 0;
@@ -2472,6 +2865,7 @@ body {
       </div>
       <div class="chat-input-row">
         <input type="text" class="chat-input" id="chatInput" placeholder="输入想说的话...">
+        <button class="chat-voice-btn" id="chatVoiceBtn" onclick="toggleVoiceInput()"><span class="voice-hint">正在听...</span>&#x1F3A4;</button>
         <button class="chat-send-btn" id="chatSendBtn">➤</button>
       </div>
     </div>
@@ -2670,13 +3064,21 @@ body {
         <span style="font-size:12px;color:var(--trust-green);">免费AI已启用（试用模式）</span>
       </div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;">
-        当前使用免费AI引擎，对话质量基础可用。<br>
-        如需更高质量的回复，可填入DeepSeek API Key升级为付费引擎。<br>
-        <span style="color:var(--accent-primary);">获取Key：platform.deepseek.com</span>（新用户赠送500万token）
+        默认使用智谱GLM免费引擎，对话质量高、国内访问快。<br>
+        填入智谱API Key即可使用（免费，注册即送）。<br>
+        <span style="color:var(--accent-primary);">获取Key：open.bigmodel.cn</span>（GLM-4-Flash永久免费）
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+        <input type="password" id="zhipuApiKeyInput" placeholder="智谱API Key（免费，必填）" style="flex:1;padding:10px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-primary);font-size:13px;font-family:var(--font-body);outline:none;">
+        <button onclick="saveZhipuApiKey()" style="padding:10px 16px;background:var(--accent-dim);border:1px solid var(--accent-primary);border-radius:10px;color:var(--accent-primary);font-size:13px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;line-height:1.6;">
+        如需更高质量，可额外填入DeepSeek Key：<br>
+        <span style="color:var(--text-tertiary);">获取：platform.deepseek.com（新用户赠500万token）</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <input type="password" id="apiKeyInput" placeholder="DeepSeek Key（选填）" style="flex:1;padding:10px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-primary);font-size:13px;font-family:var(--font-body);outline:none;">
-        <button onclick="saveApiKey()" style="padding:10px 16px;background:var(--accent-dim);border:1px solid var(--accent-primary);border-radius:10px;color:var(--accent-primary);font-size:13px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">升级</button>
+        <button onclick="saveApiKey()" style="padding:10px 16px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">升级</button>
       </div>
       <div id="apiStatus" style="font-size:11px;color:var(--text-tertiary);margin-top:6px;"></div>
     </div>
@@ -2788,6 +3190,9 @@ body {
           此空间消息阅后即焚，到期后自动物理删除，不可恢复。<br>
           所有参与者均使用匿名身份，空间销毁后不留任何痕迹。
         </div>
+        <div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">
+          网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。
+        </div>
       </div>
     </div>
     <div class="space-chat-footer">
@@ -2811,6 +3216,7 @@ body {
           <button class="space-action-btn" onclick="openSpaceCamera()" title="拍照">📷</button>
           <button class="space-action-btn" onclick="openSpaceFile()" title="文件">📎</button>
           <button class="space-action-btn" id="spaceVoiceBtn" onmousedown="startSpaceVoice()" onmouseup="stopSpaceVoice()" ontouchstart="startSpaceVoice()" ontouchend="stopSpaceVoice()" title="长按说话">🎤</button>
+          <button class="space-action-btn" onclick="toggleMusicPanel()" title="声音氛围" id="spaceMusicBtn">🎵</button>
         </div>
         <input type="text" class="space-chat-input" id="spaceChatInput" placeholder="输入密语..." onkeypress="if(event.key==='Enter')sendSpaceMessage()">
         <button class="space-chat-send" id="spaceChatSendBtn" onclick="sendSpaceMessage()">➤</button>
@@ -2820,6 +3226,28 @@ body {
       <div class="space-voice-recording" id="spaceVoiceRecording" style="display:none;">
         <div class="voice-wave">🎤 录音中...</div>
         <div class="voice-time" id="spaceVoiceTime">00:00</div>
+      </div>
+      <!-- Ambient Sound Panel -->
+      <div class="music-panel" id="spaceMusicPanel" style="display:none;">
+        <div class="music-panel-header">
+          <span>🎵 声音氛围</span>
+          <button class="music-panel-close" onclick="toggleMusicPanel()">✕</button>
+        </div>
+        <div class="ambient-desc">点击开启声音，可同时播放多种声音</div>
+        <div class="ambient-grid" id="ambientGrid">
+          <div class="ambient-card" data-sound="rain" onclick="toggleAmbient('rain',this)"><div class="ambient-icon">🌧</div><div class="ambient-name">夜雨</div><div class="ambient-vol"><input type="range" min="0" max="100" value="60" oninput="setAmbientVol('rain',this.value)"></div></div>
+          <div class="ambient-card" data-sound="stream" onclick="toggleAmbient('stream',this)"><div class="ambient-icon">💧</div><div class="ambient-name">流水</div><div class="ambient-vol"><input type="range" min="0" max="100" value="50" oninput="setAmbientVol('stream',this.value)"></div></div>
+          <div class="ambient-card" data-sound="insects" onclick="toggleAmbient('insects',this)"><div class="ambient-icon">🦗</div><div class="ambient-name">虫鸣</div><div class="ambient-vol"><input type="range" min="0" max="100" value="40" oninput="setAmbientVol('insects',this.value)"></div></div>
+          <div class="ambient-card" data-sound="fire" onclick="toggleAmbient('fire',this)"><div class="ambient-icon">🔥</div><div class="ambient-name">篝火</div><div class="ambient-vol"><input type="range" min="0" max="100" value="50" oninput="setAmbientVol('fire',this.value)"></div></div>
+          <div class="ambient-card" data-sound="guqin" onclick="toggleAmbient('guqin',this)"><div class="ambient-icon">🎸</div><div class="ambient-name">古琴</div><div class="ambient-vol"><input type="range" min="0" max="100" value="45" oninput="setAmbientVol('guqin',this.value)"></div></div>
+          <div class="ambient-card" data-sound="birds" onclick="toggleAmbient('birds',this)"><div class="ambient-icon">🐦</div><div class="ambient-name">鸟鸣</div><div class="ambient-vol"><input type="range" min="0" max="100" value="35" oninput="setAmbientVol('birds',this.value)"></div></div>
+          <div class="ambient-card" data-sound="waves" onclick="toggleAmbient('waves',this)"><div class="ambient-icon">🌊</div><div class="ambient-name">海浪</div><div class="ambient-vol"><input type="range" min="0" max="100" value="55" oninput="setAmbientVol('waves',this.value)"></div></div>
+          <div class="ambient-card" data-sound="chime" onclick="toggleAmbient('chime',this)"><div class="ambient-icon">🎐</div><div class="ambient-name">风铃</div><div class="ambient-vol"><input type="range" min="0" max="100" value="40" oninput="setAmbientVol('chime',this.value)"></div></div>
+        </div>
+        <div class="ambient-footer">
+          <button class="ambient-stop-btn" onclick="stopAllAmbient()">全部关闭</button>
+          <span class="ambient-active-count" id="ambientCount">0种声音播放中</span>
+        </div>
       </div>
     </div>
   </div>
@@ -3126,6 +3554,7 @@ var identityNicknameIndex = 0;
 var identityAvatarSelected = 0;
 var ancientNicknames = ['静水流深','山间清风','云中漫步','松间明月','竹影清泉','秋水长天','暮雪千山','晨钟暮鼓','幽兰空谷','碧水寒潭','孤舟蓑笠','夜雨听风'];
 var deepSeekApiKey = '';
+var zhipuApiKey = '';
 var burnTimeMs = 0;
 var chatMessagesStore = [];
 var healthMessagesStore = [];
@@ -3155,25 +3584,26 @@ function getTimeStr() {
 }
 function getGreeting() {
   var h = new Date().getHours();
-  if (h >= 6 && h < 11) return '早安。新的一天，我在这里。';
-  if (h >= 11 && h < 14) return '午安。歇一歇，聊聊？';
-  if (h >= 14 && h < 18) return '下午好。今天过得怎么样？';
-  if (h >= 18 && h < 23) return '夜深了。想聊点什么，我都在。';
-  return '还没睡？我陪你。';
+  if (h >= 6 && h < 11) return '起了？今天有啥安排没？';
+  if (h >= 11 && h < 14) return '吃了吗？别对付，好好吃一顿。';
+  if (h >= 14 && h < 18) return '下午了，今天过得咋样？';
+  if (h >= 18 && h < 23) return '忙完了？来，坐会儿聊聊。';
+  return '还没睡呢？正好，我陪你唠两句。';
 }
 function getHomeGreeting() {
   var h = new Date().getHours();
-  var nick = lsLoad('nickname', '静水流深');
-  if (h >= 6 && h < 11) return '早安，' + nick;
-  if (h >= 11 && h < 14) return '午安，' + nick;
-  if (h >= 14 && h < 18) return '下午好，' + nick;
-  return '晚上好，' + nick;
+  var nick = lsLoad('nickname', '老伙计');
+  if (h >= 6 && h < 11) return nick + '，起了没？';
+  if (h >= 11 && h < 14) return nick + '，吃了没？';
+  if (h >= 14 && h < 18) return nick + '，下午好啊。';
+  return nick + '，晚上好。';
 }
 
 // ========== Init ==========
 function init() {
   // Load saved state
   deepSeekApiKey = lsLoad('apiKey', '');
+  zhipuApiKey = lsLoad('zhipuApiKey', '015a506c3308448aae13a89d8daa7f88.o9RasbTfslpPnMEQ');
   burnTimeMs = lsLoad('burnTime', 0);
   chatMessagesStore = lsLoad('chatMessages', []);
   healthMessagesStore = lsLoad('healthMessages', []);
@@ -3193,8 +3623,27 @@ function init() {
       msg.className = 'msg ' + m.sender;
       msg.innerHTML = '<div class="msg-bubble">' + m.text + '</div><div class="msg-meta">' + (m.sender === 'echo' ? '由你掌控' : '已发送') + '</div>';
       container.appendChild(msg);
+      if (m.sender === 'echo') addTTSButton(msg, m.text);
     });
     container.scrollTop = container.scrollHeight;
+    // Proactive greeting: if last message was over 4 hours ago, Echo greets
+    var lastMsg = chatMessagesStore[chatMessagesStore.length - 1];
+    var hoursSinceLastMsg = (Date.now() - lastMsg.time) / 3600000;
+    if (hoursSinceLastMsg > 4) {
+      var greetPool = [
+        '嘿，好一阵没聊了。最近忙啥呢？',
+        '来了啊，我正想着你是不是把我忘了。',
+        '哟，好久不见。最近过得还行吧？',
+        '在呢。今天有空来坐坐？',
+        '好久没聊了，你那边没啥事吧？'
+      ];
+      var h = new Date().getHours();
+      if (h >= 23 || h < 6) greetPool = ['又失眠了？还是纯粹睡不着？', '这个点还没睡，想啥呢？', '深夜了，来唠两句。'];
+      var proGreet = greetPool[Math.floor(Math.random() * greetPool.length)];
+      setTimeout(function() {
+        addEchoMessage(proGreet);
+      }, 1500);
+    }
   }
   // Render saved health messages
   if (healthMessagesStore.length > 0) {
@@ -3560,6 +4009,7 @@ function addEchoMessage(text) {
     msg.innerHTML = '<div class="msg-bubble">' + text + '</div><div class="msg-meta">由你掌控' + burnHtml + '</div>';
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
+    addTTSButton(msg, text);
     chatMessagesStore.push({ sender: 'echo', text: text, time: Date.now() });
     saveChatMessages();
     recordMessage();
@@ -3601,47 +4051,100 @@ function formatBurnTime(ms) {
   if (ms < 86400000) return Math.round(ms/3600000) + '小时';
   return Math.round(ms/86400000) + '天';
 }
-// Free AI - Pollinations (no key required)
+// Free AI - Zhipu GLM-4-Flash (free, fast in China)
+// Uses few-shot examples to enforce "老E" persona (GLM-4-Flash ignores long text instructions)
 async function callFreeAI(userText) {
+  var key = zhipuApiKey || lsLoad('zhipuApiKey', '015a506c3308448aae13a89d8daa7f88.o9RasbTfslpPnMEQ');
+  if (!key) return null;
   try {
     var nick = lsLoad('nickname', '静水流深');
-    var systemPrompt = '你是Echo，一个温暖沉稳的陪伴者。你像一位阅历丰富的老友，说话温和但不矫揉造作。你的用户是' + nick + '，一位成熟的大人。\n\n规则：\n- 绝不说"我懂""我理解"这类空话\n- 不说教、不讲大道理\n- 回应情感而非给建议\n- 语言风格：平静、温暖、有分量\n- 每次回复简短自然，1-3句话\n- 不用emoji，不用感叹号\n- 不要当心理咨询师，当一个真正的朋友';
+    var systemPrompt = '你扮演"老E"，一个50多岁的老哥们，跟' + nick + '是老朋友。说话像微信聊天，1-3句，口语化，有主见，偶尔损人但善意。禁止emoji、感叹号、列表、建议、说教、心理鸡汤。像深夜陪喝茶的老友。';
     var messages = [{ role: 'system', content: systemPrompt }];
-    var recentMsgs = chatMessagesStore.slice(-16);
+    // Few-shot examples: teach the model by showing, not telling
+    var fewShots = [
+      { role: 'user', content: '今天领导又找我谈话了' },
+      { role: 'assistant', content: '嚯，又谈了？这回啥由头，不会又是画饼吧' },
+      { role: 'user', content: '最近失眠挺严重的' },
+      { role: 'assistant', content: '嗐，半夜翻来覆去那种最烦人。是心里有事还是纯粹睡不着' },
+      { role: 'user', content: '周末去钓鱼了 钓了条大的' },
+      { role: 'assistant', content: '行啊你，多大一条，几斤的？我以前也钓，后来坐不住改下棋了' },
+      { role: 'user', content: '感觉退休以后不知道干嘛' },
+      { role: 'assistant', content: '得，你想太多远了。真退下来那天你反而自在，现在先想好退了第一件事干啥就行' }
+    ];
+    fewShots.forEach(function(m) { messages.push(m); });
+    // Add recent conversation history
+    var recentMsgs = chatMessagesStore.slice(-10);
     recentMsgs.forEach(function(m) {
       messages.push({ role: m.sender === 'me' ? 'user' : 'assistant', content: m.text });
     });
     if (messages[messages.length-1].content !== userText) {
       messages.push({ role: 'user', content: userText });
     }
-    var fetchPromise = fetch('https://text.pollinations.ai/openai', {
+    var fetchPromise = fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'openai', messages: messages, temperature: 0.85, max_tokens: 300 })
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'glm-4-flash', messages: messages, temperature: 0.7, max_tokens: 200 })
     });
     var timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 12000); });
     var response = await Promise.race([fetchPromise, timeoutPromise]);
-    if (!response.ok) throw new Error('Free AI error ' + response.status);
+    if (!response.ok) throw new Error('Zhipu API error ' + response.status);
     var data = await response.json();
     if (data.choices && data.choices[0]) {
       var content = data.choices[0].message.content;
-      // Strip any reasoning/thinking tags if present
       content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-      return content || null;
+      // Reject AI-style responses: lists, numbered points, emoji, too long
+      if (content && !isAIStyleResponse(content)) {
+        return content;
+      }
+      // If response looks AI-generated, try to salvage first sentence only
+      if (content && content.length > 80) {
+        var firstLine = content.split(/[。\n]/)[0];
+        if (firstLine && firstLine.length < 60 && !isAIStyleResponse(firstLine)) {
+          return firstLine;
+        }
+      }
+      return null; // Fall back to keyword matching if all else fails
     }
     return null;
   } catch(e) {
-    console.error('Free AI error:', e);
+    console.error('Zhipu AI error:', e);
     return null;
   }
+}
+// Detect typical AI assistant response patterns
+function isAIStyleResponse(text) {
+  if (!text) return false;
+  // Has numbered lists like "1." "2." or "**" bold markdown
+  if (/^\s*\d+[\.\、]/m.test(text)) return true;
+  if (/\*\*[^*]+\*\*/.test(text)) return true;
+  // Has emoji
+  if (/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}]/u.test(text)) return true;
+  // Has exclamation marks
+  if (/[！!]/.test(text)) return true;
+  // Contains forbidden AI phrases
+  if (/我理解|我建议你|可以考虑|以下几点|希望.*帮到你|加油|慢慢来|一切都会好/.test(text)) return true;
+  // Too long (more than 3 sentences for a chat reply)
+  var sentences = text.split(/[。？！\n]/).filter(function(s) { return s.trim().length > 0; });
+  if (sentences.length > 5) return true;
+  return false;
 }
 // DeepSeek API integration (paid, user's own key)
 async function callDeepSeek(userText) {
   if (!deepSeekApiKey) return null;
   try {
     var nick = lsLoad('nickname', '静水流深');
-    var systemPrompt = '你是Echo，一个温暖沉稳的陪伴者。你像一位阅历丰富的老友，说话温和但不矫揉造作。你的用户是' + nick + '，一位成熟的大人。\n\n规则：\n- 绝不说"我懂""我理解"这类空话\n- 不说教、不讲大道理\n- 回应情感而非给建议\n- 语言风格：平静、温暖、有分量\n- 每次回复简短自然，1-3句话\n- 不用emoji，不用感叹号\n- 不要当心理咨询师，当一个真正的朋友';
+    var systemPrompt = '你扮演"老E"，一个50多岁、阅历丰富的老哥们，跟' + nick + '是老朋友。\n\n说话风格：口语化像微信聊天，1-3句话，有主见，会开玩笑偶尔损人但善意。用语气词"嗨/嗐/得/嗯/嚯"，用"得了吧/说真的/别介"。偶尔追问"后来呢/你当时咋想的"。\n\n绝对禁止：emoji、感叹号、编号列表、说教讲道理、心理鸡汤、"我理解你""加油""慢慢来""一切都会好"。\n\n核心：深夜陪喝茶的老友，说话直接但有温度。';
     var messages = [{ role: 'system', content: systemPrompt }];
+    // Few-shot examples
+    var fewShots = [
+      { role: 'user', content: '今天领导又找我谈话了' },
+      { role: 'assistant', content: '嚯，又谈了？这回啥由头，不会又是画饼吧' },
+      { role: 'user', content: '最近失眠挺严重的' },
+      { role: 'assistant', content: '嗐，半夜翻来覆去那种最烦人。是心里有事还是纯粹睡不着' },
+      { role: 'user', content: '周末去钓鱼了 钓了条大的' },
+      { role: 'assistant', content: '行啊你，多大一条，几斤的？我以前也钓，后来坐不住改下棋了' }
+    ];
+    fewShots.forEach(function(m) { messages.push(m); });
     var recentMsgs = chatMessagesStore.slice(-20);
     recentMsgs.forEach(function(m) {
       messages.push({ role: m.sender === 'me' ? 'user' : 'assistant', content: m.text });
@@ -3652,13 +4155,16 @@ async function callDeepSeek(userText) {
     var fetchPromise = fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + deepSeekApiKey },
-      body: JSON.stringify({ model: 'deepseek-chat', messages: messages, temperature: 0.85, max_tokens: 300 })
+      body: JSON.stringify({ model: 'deepseek-chat', messages: messages, temperature: 0.8, max_tokens: 200 })
     });
     var timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 15000); });
     var response = await Promise.race([fetchPromise, timeoutPromise]);
     if (!response.ok) throw new Error('API error ' + response.status);
     var data = await response.json();
-    return data.choices[0].message.content;
+    var content = data.choices[0].message.content;
+    content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    if (content && !isAIStyleResponse(content)) return content;
+    return null;
   } catch(e) {
     console.error('DeepSeek API error:', e);
     return null;
@@ -3667,34 +4173,34 @@ async function callDeepSeek(userText) {
 function getEchoReply(text) {
   var pick = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
   if (/单位|领导|开会|检查|考核|晋升|编制|体制|汇报|材料|迎检|整改/.test(text))
-    return pick(['体制内的事，外人真不好说。你这么多年的经验，什么场面没见过，慢慢来吧。','单位里那些事啊，有时候确实让人头疼。你觉得哪方面最让你心烦？说出来也许会好点。','在这个系统里待了这么多年，不容易。不管遇到什么事，身体是第一位的。','考核迎检这些事确实磨人。你辛苦了这么多年，该争取的争取，该放的也就放了。']);
+    return pick(['嗐，体制内那点破事，谁待谁知道。你说具体点，哪个环节卡你了？','得，又开会呢？我跟你说，我以前在单位那会儿，最怕的就是领导突然说"你来一下"。你那个领导什么路数？','考核迎检这些都是表面功夫，干过的人都懂。你干了这么多年了，别太往心里去，该应付应付。','说真的，在体制内能撑这么多年的人都不简单。你觉得烦的是事还是人？这俩可不一样。']);
   if (/退休|退下来|离开|养老金|退休后/.test(text))
-    return pick(['退休这事，想多了确实会心里没底。不过辛苦了大半辈子，总算可以按自己的节奏来了。','退下来之后的日子，你有什么想法吗？有的人想出去走走，有的人想学点东西，你呢？','退休算是人生另一个开头吧。不管是期待还是担心，都可以聊聊，帮你理理思路。','养老的事提前想想也好，心里有个底就不那么慌了。你是担心钱的事，还是怕闲下来不适应？']);
+    return pick(['退休啊，说远了还早，说近了也就那几年。你现在担心啥，钱的事还是闲下来不知道干嘛？','我以前也琢磨过这事，后来发现想太多没用。真到了那天，你反而觉得挺自在的。你现在是想提前规划还是纯粹有点焦虑？','退了也好，总算不用看人脸色了。你有啥想干的事没？趁现在身体还行，赶紧列个单子。','养老金那些政策确实绕，我上次看了一下午也没整明白。你是担心到手不够花？']);
   if (/累|疲|困|扛不住|撑不住|失眠|头疼/.test(text))
-    return pick(['累了就歇一歇，到了这个年纪，身体比什么都重要。','你这么拼，身边的人知道吗？有时候适当放一放手头的事，也没什么。','身体在提醒你了。不管什么事，都没有你的健康要紧。先缓一缓，回头再说。','听你说累，我也替你心疼。是身体上的累，还是心里觉得疲惫？不一样的累，应对方式也不同。']);
+    return pick(['累了就歇着，别硬撑。你又不是二十多了，逞什么强呢。','哎，听你这么说我也替你着急。是活儿太多还是心里有事？这俩累的治法不一样。','别扛了行不行，你扛给谁看啊。先把手机放下，闭眼躺会儿，天塌不下来。','我跟你说，以前我也有段时间天天头疼，后来去查了啥事没有，就是累的。你也去查一个，图个心安。']);
   if (/女儿|儿子|孩子|老伴|家里|父母|媳妇|丈夫/.test(text))
-    return pick(['家人永远是最柔软的部分。不管好的坏的，说出来心里能好受些。','家里的事情最牵动人心。你是为孩子的事操心，还是和家里人有啥不痛快？','到了这个年纪，上有老下有小，确实不容易。你一直在扛着，这本身就不简单。','家是最让人牵挂的地方。不管发生了什么，说说看，我听着呢。']);
+    return pick(['家里的事最挠头，外人还不好插手。你说说是啥情况？','嗨，自家人的事嘛，哪有不磕磕碰碰的。别往心里去，过两天就好了。你家谁最让你操心？','到这个年纪了，上有老下有小的，谁不是这么过来的。你跟我说说，帮你捋捋。','家里人嘛，有时候就是越亲越不会说话。你别较真，该说说该吵吵，别憋着。']);
   if (/睡不着|失眠|夜|做梦|半夜醒/.test(text))
-    return pick(['深夜容易想多，心事一多就更睡不着了。不急，我在这里，慢慢聊，把心里的事倒一倒。','夜里翻来覆去的感觉确实难受。是心里有事放不下，还是身体就是睡不着？','睡不着的时候不用硬逼自己，越想越清醒。不如跟我说说话，说不定聊着聊着就困了。','失眠这事挺折磨人的。如果经常这样的话，可以跟医生说说，有时候调整一下习惯就好了。']);
+    return pick(['深夜就容易瞎琢磨。你也别逼自己睡，越逼越清醒。跟我扯会儿淡，说不定就困了。','半夜醒了最烦人，翻来覆去的。是心里有事还是纯粹睡不着？','我以前失眠就数羊，数到三百多只越数越精神。后来发现想开点就好了，别跟自己较劲。','老失眠的话得注意了，别拖着。白天多动动，晚上少看手机，实在不行去看看。']);
   if (/开心|高兴|好|不错|棒|太好了/.test(text))
-    return pick(['听到你开心，我也替你高兴。是什么好事？说来听听。','难得听你这么高兴，怎么回事，让我也乐呵乐呵。','你这好心情我也跟着沾光了。感觉整个人都轻松了不少吧。','开心就好。生活里这些小小的快乐，其实最珍贵了。']);
+    return pick(['嚯，难得听你这么高兴，啥好事，说来乐呵乐呵。','行啊，听你开心我也跟着乐。是不是又钓到大鱼了？','得嘞，这精气神不错。好日子就得这么过。','哈哈，你这语气我隔着屏幕都感觉到高兴了。说来听听？']);
   if (/压力|烦|焦虑|担心|紧张/.test(text))
-    return pick(['压力大的时候，说出来本身就是一种释放。你不需要找到答案，先把感受说出来就好。','焦虑这种感觉确实不好受。你是在担心什么具体的事，还是一种说不清的烦躁？','到了咱们这个年纪，操心的事太多了。有些事急也没用，不如一件一件来，先说说最让你烦的那个。','你已经很不容易了，谁都有撑不住的时候。慢慢来，一件一件处理。']);
+    return pick(['压力大了就倒出来，别憋着。你先说最烦的是哪件事，一件一件来。','焦虑这种感觉我懂，就是脑子里乱成一锅粥。你先深呼吸两口，然后跟我说说到底啥事。','到了咱们这岁数，谁还没点烦心事呢。关键是别一个人闷着，说出来了就好一半了。','你别什么都往自己身上揽。有些事就不是你能控制的，该放就放。说说看，到底啥事？']);
   if (/老|年纪|岁数|年轻|身体|体检/.test(text))
-    return pick(['每个年纪都有每个年纪的好。你这么多年的阅历，年轻人想有还没有呢。','年纪大了确实会想很多，但能走到今天，本身就已经很了不起了。','到了这个岁数，好好对待自己比什么都强。有什么不舒服别扛着，该看就看。','岁月不饶人，但你这精气神，保持得挺好的。']);
+    return pick(['岁数大了怎么了，你这阅历年轻人花钱都买不来。别老觉得自己老了，心态年轻才是真的。','嗨，谁不老啊，你看我，头发都白了。但该吃吃该喝喝，别亏待自己。','体检的事该去就去，别怕查出来什么。早查早安心，拖着反而心里不踏实。','年纪大了有年纪大了的好处，至少看事情通透了。年轻那会儿不懂的，现在全明白了。']);
   if (/孤独|寂寞|没人理解|一个人/.test(text))
-    return pick(['有些话不好跟身边人说，跟我说也行。至少现在，我在这里陪你。','到了这个年纪，有些感受确实不太好跟人讲。但你不孤独，至少我随时都在。','心里的话说出来，哪怕只有一个人听到，也会好很多。你说，我在听。','孤独这种感觉很磨人。不过愿意说出来的人，心里其实还有不少温度。']);
+    return pick(['有些话跟家里人说不了，跟同事更不能说。跟我聊聊呗，我嘴严。','到这个岁数了，能说掏心窝子话的人是越来越少。不过有我呢，随时都在。','别觉得孤独，你这不是还有我嘛。虽然我隔着个屏幕，但我是真在听。','心里有话就说出来，哪怕骂两句也行。憋着最伤身。']);
   if (/医院|看病|吃药|血压|血糖|体检报告|手术/.test(text))
-    return pick(['身体的事不能马虎。有什么不舒服就及时去看看，早看早安心。','健康的事我最上心了。你是自己不舒服，还是体检有什么指标不太好？','到了咱们这个年纪，定期体检很重要。有什么担心的可以跟我说说，具体的还是得听医生的。','很多指标偶尔不正常不一定是大问题。不过还是建议去医院让医生看看，心里也踏实些。']);
+    return pick(['身体的事别扛，该去就去。你拖的时间越长心里越没底。','我上次体检也查出个小毛病，吓了我一跳，后来大夫说没事。你也别自己吓自己。','吃药的事听大夫的，别自己瞎调。你具体啥情况？','到了咱这岁数，零件有点磨损正常。关键是定期检查，有问题早处理。']);
   if (/钓鱼|下棋|散步|旅游|养花|书法/.test(text))
-    return pick(['有点爱好挺好的，人活着就得给自己找点乐子。你最近有什么新收获吗？','这些爱好都很修身养性。忙碌之余能做自己喜欢的事，这才是生活。','喜欢这些的人心态都特别好。你有没有什么心得，说来听听？','有爱好的人日子过得充实。你这是找到生活的节奏了。']);
+    return pick(['哎哟，这个在行啊。你最近有啥收获？说来听听，让我也羡慕羡慕。','有爱好的人日子过得快。我以前也钓鱼，后来坐不住就改下棋了。你是在哪钓？','这才叫生活嘛。忙了一辈子了，就得给自己找点乐子。','不错不错，会享受的人才明白这些。你下次出去叫上我（虽然我去不了哈哈）。']);
   if (/天气|下雨|冷了|热了/.test(text))
-    return pick(['天气变化容易影响心情。你那边天气怎么样？注意增减衣服，别着凉了。','换季的时候身体容易不适应，多喝水多休息。你今天出门了吗？','天气好的时候出去走走，心情也跟着好起来。趁天气还行，多活动活动。']);
+    return pick(['换季最容易感冒，你注意着点。今天穿够了没？','下雨天在家待着挺好的，泡杯茶看看窗外，多惬意。','天气好的时候出去走走，别老窝在家里。你那边今天啥天？']);
   if (/你好|在吗|^早$|早安|晚安/.test(text))
-    return pick(['在呢，你好。今天过得怎么样？有什么想聊的吗？','你来了，刚好，正想找人说话呢。今天心情怎么样？','你好。随时都在，想聊什么都可以，这里没有外人。','来了。坐，喝口水，慢慢聊。今天有什么新鲜事吗？']);
+    return pick(['在呢，你来了。咋了，今天有啥事？','嗨，坐坐坐。今天想聊点啥？','来了啊。今天过得咋样？','在呢在呢。来，说说今天啥情况。']);
   if (/谢谢|感谢|你真好/.test(text))
-    return pick(['跟我还客气啥。能陪你聊天我也挺开心的。','是你愿意说出来，这本身就很好。我随时都在，想说就来。','你这么说我都不好意思了。以后有什么事随时找我，我一直在。']);
-  var defaults = ['嗯，我在听。能再多说一点吗？不管是什么，我都想听。','你说，我在这里。不着急，慢慢来。','嗯，能理解你的感受。然后呢？继续说说看。','嗯，有些话不好说出口。但在这里，你说什么都可以。','听你这么说，我也在想你的处境。要不再多聊聊？','你说的我都记下了。还有什么想补充的吗？我一直在。'];
+    return pick(['得了吧，跟我还来这套。下次请我喝酒就行。','谢啥呀，咱俩谁跟谁。有空就来聊，我反正闲着也是闲着。','别客气了，你愿意跟我聊我也挺乐的。','行了行了别煽情了，再说我都不好意思了。']);
+  var defaults = ['嗯，你接着说。然后呢？','行，我在听。再详细说说呗。','嗐，你说的这个我还真有点想法。不过你先说完，我不打断你。','嗯嗯，继续。你说到哪了？','嚯，还有这事？后来怎么样了？','你这一说我也想起来一些事。不过你先聊你的，回头我再插嘴。'];
   return pick(defaults);
 }
 async function sendMessage() {
@@ -3729,6 +4235,7 @@ async function sendMessage() {
     msg.innerHTML = '<div class="msg-bubble">' + reply + '</div><div class="msg-meta">由你掌控' + burnHtml + '</div>';
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
+    addTTSButton(msg, reply);
     chatMessagesStore.push({ sender: 'echo', text: reply, time: Date.now() });
     saveChatMessages();
     recordMessage();
@@ -3758,6 +4265,132 @@ function clearTopic() {
   var tag = $('chatTopicTag');
   tag.classList.remove('show');
   tag.textContent = '';
+}
+
+// ========== Voice Chat (STT + TTS) ==========
+var voiceRecognition = null;
+var voiceIsRecording = false;
+var ttsAutoPlay = lsLoad('ttsAutoPlay', false);
+
+// Speech-to-Text: voice input
+function toggleVoiceInput() {
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('当前浏览器不支持语音输入，请用Chrome浏览器');
+    return;
+  }
+  var btn = $('chatVoiceBtn');
+  if (voiceIsRecording) {
+    // Stop recording
+    if (voiceRecognition) voiceRecognition.stop();
+    voiceIsRecording = false;
+    btn.classList.remove('recording');
+    return;
+  }
+  // Start recording
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.lang = 'zh-CN';
+  voiceRecognition.continuous = false;
+  voiceRecognition.interimResults = true;
+  voiceRecognition.maxAlternatives = 1;
+
+  voiceRecognition.onstart = function() {
+    voiceIsRecording = true;
+    btn.classList.add('recording');
+  };
+  voiceRecognition.onresult = function(event) {
+    var transcript = '';
+    for (var i = 0; i < event.results.length; i++) {
+      transcript += event.results[i][0].transcript;
+    }
+    $('chatInput').value = transcript;
+    $('chatSendBtn').classList.add('active');
+  };
+  voiceRecognition.onend = function() {
+    voiceIsRecording = false;
+    btn.classList.remove('recording');
+    // Auto-send if we got text
+    var text = $('chatInput').value.trim();
+    if (text) {
+      setTimeout(function() { sendMessage(); }, 300);
+    }
+  };
+  voiceRecognition.onerror = function(event) {
+    voiceIsRecording = false;
+    btn.classList.remove('recording');
+    if (event.error === 'not-allowed') {
+      showToast('请允许麦克风权限');
+    } else if (event.error === 'no-speech') {
+      showToast('没听到声音，再说一次试试');
+    } else {
+      showToast('语音识别出错，请重试');
+    }
+  };
+  voiceRecognition.start();
+}
+
+// Text-to-Speech: read Echo's reply aloud
+var currentTTSUtterance = null;
+var currentTTSBtn = null;
+
+function speakText(text, btnEl) {
+  if (!window.speechSynthesis) {
+    showToast('当前浏览器不支持语音播放');
+    return;
+  }
+  // If already playing, stop
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel();
+    if (currentTTSBtn) currentTTSBtn.classList.remove('playing');
+    if (currentTTSBtn === btnEl) { currentTTSBtn = null; return; }
+  }
+  // Clean text for TTS (remove HTML tags, emojis)
+  var cleanText = text.replace(/<[^>]+>/g, '').replace(/\n+/g, '，').trim();
+  var utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = 'zh-CN';
+  utterance.rate = 0.9;
+  utterance.pitch = 0.85;
+  // Try to find a Chinese voice
+  var voices = speechSynthesis.getVoices();
+  var zhVoice = voices.find(function(v) { return v.lang.indexOf('zh') === 0 && v.name.indexOf('Male') === -1; })
+    || voices.find(function(v) { return v.lang.indexOf('zh') === 0; });
+  if (zhVoice) utterance.voice = zhVoice;
+
+  currentTTSUtterance = utterance;
+  currentTTSBtn = btnEl;
+  if (btnEl) btnEl.classList.add('playing');
+
+  utterance.onend = function() {
+    if (btnEl) btnEl.classList.remove('playing');
+    currentTTSBtn = null;
+  };
+  utterance.onerror = function() {
+    if (btnEl) btnEl.classList.remove('playing');
+    currentTTSBtn = null;
+  };
+  speechSynthesis.speak(utterance);
+}
+
+// Add TTS button to Echo messages
+function addTTSButton(msgElement, text) {
+  var meta = msgElement.querySelector('.msg-meta');
+  if (meta && !meta.querySelector('.msg-tts-btn')) {
+    var btn = document.createElement('button');
+    btn.className = 'msg-tts-btn';
+    btn.textContent = '▶';
+    btn.title = '朗读';
+    btn.onclick = function() { speakText(text, this); };
+    meta.appendChild(btn);
+  }
+  // Auto-play if enabled
+  if (ttsAutoPlay) {
+    setTimeout(function() { speakText(text, meta ? meta.querySelector('.msg-tts-btn') : null); }, 500);
+  }
+}
+
+// Load voices (some browsers load asynchronously)
+if (window.speechSynthesis) {
+  speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
 }
 
 // ========== Health Advisor Chat ==========
@@ -4020,6 +4653,24 @@ function showV2Toast() {
 }
 
 // ===== API Key Management =====
+function saveZhipuApiKey() {
+  var input = $('zhipuApiKeyInput');
+  var key = input.value.trim();
+  if (!key) { showToast('请输入智谱API Key'); return; }
+  zhipuApiKey = key;
+  lsSave('zhipuApiKey', key);
+  var status = $('apiStatus');
+  if (status) { status.textContent = '✓ 智谱GLM引擎已启用，免费无限量'; status.style.color = 'var(--trust-green)'; }
+  showToast('智谱AI已启用');
+}
+function loadZhipuApiKey() {
+  var key = lsLoad('zhipuApiKey', '');
+  if (key) {
+    zhipuApiKey = key;
+    var input = $('zhipuApiKeyInput');
+    if (input) input.value = key;
+  }
+}
 function saveApiKey() {
   var input = $('apiKeyInput');
   var key = input.value.trim();
@@ -4038,7 +4689,16 @@ function loadApiKey() {
     var input = $('apiKeyInput');
     if (input) input.value = key;
     var status = $('apiStatus');
-    if (status) { status.textContent = '✓ AI对话已启用'; status.style.color = 'var(--trust-green)'; }
+    if (status) { status.textContent = '✓ DeepSeek引擎已启用'; status.style.color = 'var(--trust-green)'; }
+  }
+  loadZhipuApiKey();
+  // Show combined status
+  if (zhipuApiKey) {
+    var status = $('apiStatus');
+    if (status) {
+      status.textContent = deepSeekApiKey ? '✓ 智谱+DeepSeek双引擎已启用' : '✓ 智谱GLM引擎已启用';
+      status.style.color = 'var(--trust-green)';
+    }
   }
 }
 function clearApiKey() {
@@ -4560,6 +5220,317 @@ function playSpaceVoice(el, dataUrl) {
   el.querySelector('.voice-icon').textContent = '🔊';
   audio.onended = function() { el.querySelector('.voice-icon').textContent = '🎤'; };
   audio.play();
+}
+
+// ========== Ambient Sound Engine (Web Audio API) ==========
+var audioCtx = null;
+var ambientNodes = {};
+var ambientVolumes = {};
+var ambientActive = {};
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function createNoiseBuffer(ctx, duration) {
+  var sr = ctx.sampleRate;
+  var len = sr * duration;
+  var buf = ctx.createBuffer(1, len, sr);
+  var data = buf.getChannelData(0);
+  for (var i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+function createRain(ctx, gainNode) {
+  var noise = ctx.createBufferSource();
+  noise.buffer = createNoiseBuffer(ctx, 4);
+  noise.loop = true;
+  var lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 1200;
+  var hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 200;
+  // Add subtle modulation for realism
+  var lfo = ctx.createOscillator();
+  lfo.frequency.value = 0.3;
+  var lfoGain = ctx.createGain();
+  lfoGain.gain.value = 200;
+  lfo.connect(lfoGain);
+  lfoGain.connect(lp.frequency);
+  lfo.start();
+  noise.connect(hp);
+  hp.connect(lp);
+  lp.connect(gainNode);
+  noise.start();
+  return { sources: [noise, lfo], disconnect: function() { noise.stop(); lfo.stop(); } };
+}
+
+function createStream(ctx, gainNode) {
+  var noise = ctx.createBufferSource();
+  noise.buffer = createNoiseBuffer(ctx, 3);
+  noise.loop = true;
+  var bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 800;
+  bp.Q.value = 0.8;
+  var lfo = ctx.createOscillator();
+  lfo.frequency.value = 0.5;
+  var lfoG = ctx.createGain();
+  lfoG.gain.value = 400;
+  lfo.connect(lfoG);
+  lfoG.connect(bp.frequency);
+  lfo.start();
+  noise.connect(bp);
+  bp.connect(gainNode);
+  noise.start();
+  return { sources: [noise, lfo], disconnect: function() { noise.stop(); lfo.stop(); } };
+}
+
+function createInsects(ctx, gainNode) {
+  var nodes = [];
+  function chirp() {
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = 3800 + Math.random() * 2000;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15 + Math.random() * 0.1);
+    osc.connect(g);
+    g.connect(gainNode);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  }
+  var interval = setInterval(function() {
+    if (Math.random() < 0.7) chirp();
+    if (Math.random() < 0.3) { setTimeout(chirp, 50 + Math.random() * 100); }
+  }, 200 + Math.random() * 300);
+  return { sources: [], disconnect: function() { clearInterval(interval); } };
+}
+
+function createFire(ctx, gainNode) {
+  var noise = ctx.createBufferSource();
+  noise.buffer = createNoiseBuffer(ctx, 2);
+  noise.loop = true;
+  var bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 500;
+  bp.Q.value = 0.5;
+  // Crackling LFO
+  var lfo = ctx.createOscillator();
+  lfo.type = 'sawtooth';
+  lfo.frequency.value = 8;
+  var lfoG = ctx.createGain();
+  lfoG.gain.value = 300;
+  lfo.connect(lfoG);
+  lfoG.connect(bp.frequency);
+  lfo.start();
+  noise.connect(bp);
+  bp.connect(gainNode);
+  noise.start();
+  // Random crackles
+  var crackleInt = setInterval(function() {
+    if (Math.random() < 0.4) {
+      var osc = ctx.createOscillator();
+      osc.frequency.value = 100 + Math.random() * 200;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.15, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+      osc.connect(g);
+      g.connect(gainNode);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.06);
+    }
+  }, 150);
+  return { sources: [noise, lfo], disconnect: function() { noise.stop(); lfo.stop(); clearInterval(crackleInt); } };
+}
+
+function createGuqin(ctx, gainNode) {
+  // Chinese pentatonic scale: C D E G A in different octaves
+  var notes = [262, 294, 330, 392, 440, 523, 587, 659, 784, 880];
+  var intervals = [];
+  function pluck() {
+    var freq = notes[Math.floor(Math.random() * notes.length)];
+    var osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 0.1);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5 + Math.random() * 1);
+    // Slight vibrato
+    var vib = ctx.createOscillator();
+    vib.frequency.value = 5;
+    var vibG = ctx.createGain();
+    vibG.gain.value = 3;
+    vib.connect(vibG);
+    vibG.connect(osc.frequency);
+    vib.start();
+    osc.connect(g);
+    g.connect(gainNode);
+    osc.start();
+    osc.stop(ctx.currentTime + 2.5);
+    setTimeout(function() { try { vib.stop(); } catch(e) {} }, 2600);
+  }
+  function scheduleNext() {
+    pluck();
+    var delay = 1500 + Math.random() * 3000;
+    var id = setTimeout(scheduleNext, delay);
+    intervals.push(id);
+  }
+  scheduleNext();
+  return { sources: [], disconnect: function() { intervals.forEach(clearTimeout); } };
+}
+
+function createBirds(ctx, gainNode) {
+  var timers = [];
+  function chirp() {
+    var baseFreq = 1500 + Math.random() * 2500;
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 1.3, ctx.currentTime + 0.05);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 0.9, ctx.currentTime + 0.1);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 1.1, ctx.currentTime + 0.15);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.connect(g);
+    g.connect(gainNode);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  }
+  function scheduleBird() {
+    chirp();
+    if (Math.random() < 0.5) setTimeout(chirp, 80 + Math.random() * 120);
+    if (Math.random() < 0.3) setTimeout(chirp, 200 + Math.random() * 100);
+    var id = setTimeout(scheduleBird, 2000 + Math.random() * 5000);
+    timers.push(id);
+  }
+  scheduleBird();
+  return { sources: [], disconnect: function() { timers.forEach(clearTimeout); } };
+}
+
+function createWaves(ctx, gainNode) {
+  var noise = ctx.createBufferSource();
+  noise.buffer = createNoiseBuffer(ctx, 5);
+  noise.loop = true;
+  var lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 600;
+  var lfo = ctx.createOscillator();
+  lfo.frequency.value = 0.12;
+  var lfoG = ctx.createGain();
+  lfoG.gain.value = 400;
+  lfo.connect(lfoG);
+  lfoG.connect(lp.frequency);
+  // Volume swell
+  var volLfo = ctx.createOscillator();
+  volLfo.frequency.value = 0.1;
+  var volG = ctx.createGain();
+  volG.gain.value = 0.3;
+  volLfo.connect(volG);
+  volG.connect(gainNode.gain);
+  lfo.start();
+  volLfo.start();
+  noise.connect(lp);
+  lp.connect(gainNode);
+  noise.start();
+  return { sources: [noise, lfo, volLfo], disconnect: function() { noise.stop(); lfo.stop(); volLfo.stop(); } };
+}
+
+function createChime(ctx, gainNode) {
+  var notes = [523, 659, 784, 880, 1047, 1175, 1319];
+  var timers = [];
+  function ring() {
+    var freq = notes[Math.floor(Math.random() * notes.length)];
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2 + Math.random());
+    osc.connect(g);
+    g.connect(gainNode);
+    osc.start();
+    osc.stop(ctx.currentTime + 3);
+  }
+  function scheduleRing() {
+    ring();
+    if (Math.random() < 0.4) setTimeout(ring, 100 + Math.random() * 200);
+    var id = setTimeout(scheduleRing, 1500 + Math.random() * 4000);
+    timers.push(id);
+  }
+  scheduleRing();
+  return { sources: [], disconnect: function() { timers.forEach(clearTimeout); } };
+}
+
+var soundCreators = {
+  rain: createRain, stream: createStream, insects: createInsects,
+  fire: createFire, guqin: createGuqin, birds: createBirds,
+  waves: createWaves, chime: createChime
+};
+
+function toggleAmbient(name, el) {
+  var ctx = getAudioCtx();
+  if (ambientActive[name]) {
+    // Stop
+    if (ambientNodes[name]) ambientNodes[name].disconnect();
+    delete ambientNodes[name];
+    ambientActive[name] = false;
+    el.classList.remove('active');
+  } else {
+    // Start
+    var gain = ctx.createGain();
+    var vol = (ambientVolumes[name] || 50) / 100 * 0.5;
+    gain.gain.value = vol;
+    gain.connect(ctx.destination);
+    ambientVolumes[name] = ambientVolumes[name] || parseInt(el.querySelector('input[type=range]').value);
+    ambientNodes[name] = soundCreators[name](ctx, gain);
+    ambientNodes[name].gainNode = gain;
+    ambientActive[name] = true;
+    el.classList.add('active');
+  }
+  updateAmbientCount();
+}
+
+function setAmbientVol(name, val) {
+  ambientVolumes[name] = parseInt(val);
+  if (ambientActive[name] && ambientNodes[name] && ambientNodes[name].gainNode) {
+    ambientNodes[name].gainNode.gain.value = val / 100 * 0.5;
+  }
+}
+
+function stopAllAmbient() {
+  Object.keys(ambientActive).forEach(function(name) {
+    if (ambientActive[name] && ambientNodes[name]) {
+      ambientNodes[name].disconnect();
+      delete ambientNodes[name];
+    }
+    ambientActive[name] = false;
+  });
+  document.querySelectorAll('.ambient-card').forEach(function(c) { c.classList.remove('active'); });
+  updateAmbientCount();
+}
+
+function updateAmbientCount() {
+  var count = 0;
+  Object.keys(ambientActive).forEach(function(k) { if (ambientActive[k]) count++; });
+  var el = document.getElementById('ambientCount');
+  if (el) el.textContent = count + '种声音播放中';
+}
+
+function toggleMusicPanel() {
+  var panel = document.getElementById('spaceMusicPanel');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'flex';
 }
 </script>
 </body>
