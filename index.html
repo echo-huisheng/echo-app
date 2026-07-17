@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v7.6</title>
+<title>Echo回声 — 试用版v7.7</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5787,68 +5787,7 @@ function fbListenMessages(code) {
     filter: 'room_code=eq.' + code
   }, async function(payload) {
     var msg = payload.new;
-    var msgId = msg.id;
-    if (!msg || sbSeenMsgIds[msgId]) return;
-    sbSeenMsgIds[msgId] = true;
-
-    // Skip expired messages
-    if (msg.burn_at && Date.now() > msg.burn_at) {
-      sbClient.from('echo_room_messages').delete().eq('id', msgId);
-      return;
-    }
-
-    var isMe = msg.uid === sbMyUid;
-
-    // Skip own messages (already rendered optimistically)
-    if (isMe) {
-      if (msg.burn_at) {
-        var burnRemaining = msg.burn_at - Date.now();
-        if (burnRemaining > 0) {
-          setTimeout(function() {
-            sbClient.from('echo_room_messages').delete().eq('id', msgId);
-          }, burnRemaining);
-        } else {
-          sbClient.from('echo_room_messages').delete().eq('id', msgId);
-        }
-      }
-      return;
-    }
-
-    var text = await fbDecrypt(msg.encrypted, code);
-
-    // Render message
-    var container = $('spaceChatMessages');
-    if (!container) return;
-    var welcome = container.querySelector('.space-welcome-msg');
-    if (welcome) welcome.remove();
-
-    var msgEl = document.createElement('div');
-    msgEl.className = 'space-msg other';
-    msgEl.setAttribute('data-sb-id', msgId);
-
-    var burnRemaining = msg.burn_at ? msg.burn_at - Date.now() : 60000;
-    var burnLabel = msg.burn_time_ms > 0
-      ? '🔥 ' + formatBurnTime(burnRemaining) + '后焚毁'
-      : '🔥 即将焚毁';
-
-    msgEl.innerHTML = '<div class="space-nick">' + (msg.nick || '匿名') + '</div>'
-      + '<div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
-      + '<div class="space-burn-meta">' + burnLabel + '</div>';
-
-    container.appendChild(msgEl);
-    container.scrollTop = container.scrollHeight;
-
-    if (burnRemaining > 0) {
-      scheduleSpaceBurn(msgEl, burnRemaining);
-      setTimeout(function() {
-        sbClient.from('echo_room_messages').delete().eq('id', msgId);
-      }, burnRemaining);
-    } else {
-      setTimeout(function() {
-        burnSpaceMsg(msgEl);
-        sbClient.from('echo_room_messages').delete().eq('id', msgId);
-      }, 800);
-    }
+    if (msg) sbProcessIncomingMsg(msg, code);
   });
 
   // Listen for presence changes
@@ -5870,12 +5809,109 @@ function fbListenMessages(code) {
   });
 
   sbChannel.subscribe();
+  console.log('[Supabase] Realtime channel subscribed for room:', code);
+
+  // ===== POLLING FALLBACK: every 2s check for new messages =====
+  // This ensures messages are received even if Realtime push fails
+  if (window._sbMsgPoll) clearInterval(window._sbMsgPoll);
+  window._sbMsgPoll = setInterval(function() { sbPollMessages(code); }, 2000);
 
   // Initial presence check
   sbUpdatePresence(code);
   // Poll presence every 35s (in case Realtime misses updates)
   if (window._sbPresencePoll) clearInterval(window._sbPresencePoll);
   window._sbPresencePoll = setInterval(function() { sbUpdatePresence(code); }, 35000);
+
+  // Do an initial poll immediately
+  sbPollMessages(code);
+}
+
+// Poll for new messages (fallback for Realtime)
+async function sbPollMessages(code) {
+  if (!sbReady || sbRoomCode !== code) return;
+  try {
+    var result = await sbClient.from('echo_room_messages')
+      .select('*')
+      .eq('room_code', code)
+      .gt('burn_at', Date.now())
+      .order('created_at', { ascending: true });
+    if (result.data && result.data.length > 0) {
+      result.data.forEach(function(msg) {
+        if (!sbSeenMsgIds[msg.id]) {
+          sbProcessIncomingMsg(msg, code);
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('[Supabase] 轮询消息失败:', e);
+  }
+}
+
+// Process a single incoming message (shared by Realtime callback and polling)
+async function sbProcessIncomingMsg(msg, code) {
+  var msgId = msg.id;
+  if (!msg || sbSeenMsgIds[msgId]) return;
+  sbSeenMsgIds[msgId] = true;
+
+  // Skip expired messages
+  if (msg.burn_at && Date.now() > msg.burn_at) {
+    sbClient.from('echo_room_messages').delete().eq('id', msgId);
+    return;
+  }
+
+  var isMe = msg.uid === sbMyUid;
+
+  // Skip own messages (already rendered optimistically)
+  if (isMe) {
+    if (msg.burn_at) {
+      var burnRemaining = msg.burn_at - Date.now();
+      if (burnRemaining > 0) {
+        setTimeout(function() {
+          sbClient.from('echo_room_messages').delete().eq('id', msgId);
+        }, burnRemaining);
+      } else {
+        sbClient.from('echo_room_messages').delete().eq('id', msgId);
+      }
+    }
+    return;
+  }
+
+  console.log('[Supabase] 收到对方消息:', msgId, 'from:', msg.nick);
+  var text = await fbDecrypt(msg.encrypted, code);
+
+  // Render message
+  var container = $('spaceChatMessages');
+  if (!container) return;
+  var welcome = container.querySelector('.space-welcome-msg');
+  if (welcome) welcome.remove();
+
+  var msgEl = document.createElement('div');
+  msgEl.className = 'space-msg other';
+  msgEl.setAttribute('data-sb-id', msgId);
+
+  var burnRemaining = msg.burn_at ? msg.burn_at - Date.now() : 60000;
+  var burnLabel = msg.burn_time_ms > 0
+    ? '🔥 ' + formatBurnTime(burnRemaining) + '后焚毁'
+    : '🔥 即将焚毁';
+
+  msgEl.innerHTML = '<div class="space-nick">' + (msg.nick || '匿名') + '</div>'
+    + '<div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+    + '<div class="space-burn-meta">' + burnLabel + '</div>';
+
+  container.appendChild(msgEl);
+  container.scrollTop = container.scrollHeight;
+
+  if (burnRemaining > 0) {
+    scheduleSpaceBurn(msgEl, burnRemaining);
+    setTimeout(function() {
+      sbClient.from('echo_room_messages').delete().eq('id', msgId);
+    }, burnRemaining);
+  } else {
+    setTimeout(function() {
+      burnSpaceMsg(msgEl);
+      sbClient.from('echo_room_messages').delete().eq('id', msgId);
+    }, 800);
+  }
 }
 
 async function sbUpdatePresence(code) {
@@ -5909,6 +5945,7 @@ function fbStopListening() {
   }
   if (window._sbHeartbeat) { clearInterval(window._sbHeartbeat); window._sbHeartbeat = null; }
   if (window._sbPresencePoll) { clearInterval(window._sbPresencePoll); window._sbPresencePoll = null; }
+  if (window._sbMsgPoll) { clearInterval(window._sbMsgPoll); window._sbMsgPoll = null; }
 }
 
 function sbCleanupExpired() {
