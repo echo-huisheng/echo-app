@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Echo回声 — 试用版v7.3</title>
+<meta name="theme-color" content="#0B0E14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Echo回声">
+<link rel="manifest" href="manifest.json">
+<title>Echo回声 — 试用版v7.4</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -584,6 +589,70 @@ body {
   font-size: 16px;
   color: var(--text-secondary);
   margin-top: 4px;
+}
+/* Daily Content Card */
+.daily-card {
+  background: var(--bg-surface-2);
+  border: 1px solid rgba(200,168,98,0.1);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.daily-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.daily-card-icon { font-size: 18px; }
+.daily-card-title {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.daily-weather {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-surface-3);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.weather-icon { font-size: 24px; }
+.weather-temp { font-size: 20px; font-weight: 600; color: var(--accent-primary); }
+.weather-desc { font-size: 13px; color: var(--text-secondary); }
+.daily-topic {
+  padding: 10px 12px;
+  background: var(--bg-surface-3);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.daily-topic-label {
+  font-size: 12px;
+  color: var(--accent-primary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.daily-topic-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  cursor: pointer;
+}
+.daily-topic-text:active { opacity: 0.7; }
+.daily-quote {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 0 4px;
+  line-height: 1.5;
+}
+.weather-loading {
+  font-size: 13px;
+  color: var(--text-tertiary);
 }
 .privacy-promise {
   background: var(--bg-surface-2);
@@ -2691,6 +2760,22 @@ body {
         <p>今天想聊点什么？</p>
       </div>
 
+      <!-- Daily Content Card -->
+      <div class="daily-card" id="dailyCard">
+        <div class="daily-card-header">
+          <span class="daily-card-icon">📅</span>
+          <span class="daily-card-title" id="dailyDate"></span>
+        </div>
+        <div class="daily-weather" id="dailyWeather">
+          <span class="weather-loading">获取天气中...</span>
+        </div>
+        <div class="daily-topic" id="dailyTopic">
+          <div class="daily-topic-label">今日话题</div>
+          <div class="daily-topic-text" id="dailyTopicText"></div>
+        </div>
+        <div class="daily-quote" id="dailyQuote"></div>
+      </div>
+
       <!-- Privacy Promise -->
       <div class="privacy-promise">
         <div class="privacy-promise-header" id="privacyToggle">
@@ -3089,6 +3174,16 @@ body {
         <button onclick="saveApiKey()" style="padding:10px 16px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">升级</button>
       </div>
       <div id="apiStatus" style="font-size:11px;color:var(--text-tertiary);margin-top:6px;"></div>
+    </div>
+    <div class="sub-card">
+      <div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;">🔔 老E主动找你聊天</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">开启后，老E会在每晚8点提醒你聊天，周末早上也会打个招呼。</div>
+      <button id="notifyToggleBtn" onclick="requestNotificationPermission()" style="background:var(--accent-primary);border:none;color:var(--bg-base);padding:12px 20px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);width:100%;font-weight:500;">开启每晚提醒</button>
+    </div>
+    <div class="sub-card" id="installBanner" style="display:none;">
+      <div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;">📱 添加到手机主屏幕</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">像APP一样使用，获得更好的体验。</div>
+      <button onclick="installPWA()" style="background:var(--bg-surface-3);border:1px solid var(--accent-primary);color:var(--accent-primary);padding:12px 20px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);width:100%;">安装Echo到桌面</button>
     </div>
     <div class="sub-card" style="text-align:center;">
       <button onclick="clearAllData()" style="background:rgba(212,107,107,0.15);border:none;color:var(--danger);padding:14px 24px;border-radius:var(--radius-btn);font-size:15px;cursor:pointer;font-family:var(--font-body);width:100%;">清除所有数据</button>
@@ -3626,7 +3721,177 @@ function getHomeGreeting() {
   return nick + '，晚上好。';
 }
 
-// ========== Init ==========
+// ========== Daily Content System ==========
+var DAILY_TOPICS = [
+  '你人生中最自在的一段时光是什么时候？',
+  '如果能重来一次，你最想改变哪个决定？',
+  '你觉得这半辈子最值得的事是什么？',
+  '退休后你最想做的三件事是什么？',
+  '你记忆中最好吃的一顿饭是在哪吃的？',
+  '有没有一个地方你一直想去但还没去？',
+  '你最佩服的身边人是谁？为什么？',
+  '年轻时候最疯狂的一件事是什么？',
+  '你觉得什么是真正的"过得好"？',
+  '如果明天就退休了，你第一件事干嘛？',
+  '你最喜欢的一首歌或一段旋律是什么？',
+  '有没有一句老话你觉得特别有道理？',
+  '你最怀念小时候的什么？',
+  '你觉得自己最大的优点是什么？',
+  '如果能跟20岁的自己说句话，你想说啥？',
+  '你觉得好朋友最重要的是什么？',
+  '最近有没有什么事让你觉得挺满足的？',
+  '你觉得人活着最重要的是什么？',
+  '你最喜欢的季节是哪个？为啥？',
+  '有没有一部电影或电视剧你看了好几遍？',
+  '你觉得这辈子最对不起的人是谁？',
+  '如果能拥有一项超能力，你想要什么？',
+  '你人生中最感动的一次是什么时候？',
+  '你觉得现在的年轻人跟你们那会儿最大的区别是啥？',
+  '你最想对十年后的自己说什么？',
+  '你觉得什么是真正的"有钱"？',
+  '你记忆中笑得最开心的一次是因为什么？',
+  '你有没有一个一直想说但没说出口的话？',
+  '你觉得人老了以后最怕什么？',
+  '你最想跟老E聊的话题是什么？'
+];
+
+var DAILY_QUOTES = [
+  '"人生七十古来稀，能活明白就不错了。" — 老话',
+  '"不是日子不好过，是咱要求太多了。" — 过来人',
+  '"人这辈子，健康第一，其他都是零。" — 老话',
+  '"朋友不在多，知心的一两个就够。" — 老E',
+  '"别跟往事较劲，过去了就是过去了。" — 老E',
+  '"人活的就是个心态，想开了啥都好。" — 老话',
+  '"知足常乐，能忍自安。" — 古训',
+  '"世事洞明皆学问，人情练达即文章。" — 曹雪芹',
+  '"人生如逆旅，我亦是行人。" — 苏轼',
+  '"采菊东篱下，悠然见南山。" — 陶渊明',
+  '"莫愁前路无知己，天下谁人不识君。" — 高适',
+  '"海内存知己，天涯若比邻。" — 王勃',
+  '"老了才明白，活着就是最大的本事。" — 老E',
+  '"人这一辈子，能有几个说心里话的人就知足了。" — 老E',
+  '"该吃吃，该喝喝，遇事别往心里搁。" — 老话'
+];
+
+// 24 solar terms (节气) for seasonal awareness
+var SOLAR_TERMS = {
+  1: ['小寒', '大寒'], 2: ['立春', '雨水'], 3: ['惊蛰', '春分'],
+  4: ['清明', '谷雨'], 5: ['立夏', '小满'], 6: ['芒种', '夏至'],
+  7: ['小暑', '大暑'], 8: ['立秋', '处暑'], 9: ['白露', '秋分'],
+  10: ['寒露', '霜降'], 11: ['立冬', '小雪'], 12: ['大雪', '冬至']
+};
+
+var SEASON_TIPS = {
+  spring: ['春天到了，出去走走挺好', '换季注意保暖，别急着减衣服', '春困正常，别硬撑着'],
+  summer: ['天热注意防暑，多喝水', '夏天容易烦躁，正常', '傍晚出去遛弯挺好的'],
+  autumn: ['秋天凉快了，适合户外活动', '换季容易感冒，注意着点', '秋高气爽的好天气'],
+  winter: ['天冷了注意保暖', '冬天容易情绪低落，正常', '泡个热水脚，睡个好觉']
+};
+
+function getSeason() {
+  var m = new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5) return 'spring';
+  if (m >= 6 && m <= 8) return 'summer';
+  if (m >= 9 && m <= 11) return 'autumn';
+  return 'winter';
+}
+
+function getDailyTopic() {
+  // Use day-of-year as index for consistent daily topic
+  var now = new Date();
+  var start = new Date(now.getFullYear(), 0, 0);
+  var dayOfYear = Math.floor((now - start) / 86400000);
+  return DAILY_TOPICS[dayOfYear % DAILY_TOPICS.length];
+}
+
+function getDailyQuote() {
+  var now = new Date();
+  var start = new Date(now.getFullYear(), 0, 0);
+  var dayOfYear = Math.floor((now - start) / 86400000);
+  return DAILY_QUOTES[(dayOfYear + 3) % DAILY_QUOTES.length];
+}
+
+function getDateString() {
+  var now = new Date();
+  var weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  var month = now.getMonth() + 1;
+  var date = now.getDate();
+  var day = weekDays[now.getDay()];
+  var terms = SOLAR_TERMS[month] || [];
+  var termStr = terms.length > 0 ? ' · ' + terms[Math.floor((date - 1) / 15)] : '';
+  return month + '月' + date + '日 周' + day + termStr;
+}
+
+function initDailyContent() {
+  // Set date
+  var dateEl = document.getElementById('dailyDate');
+  if (dateEl) dateEl.textContent = getDateString();
+
+  // Set daily topic
+  var topicEl = document.getElementById('dailyTopicText');
+  if (topicEl) {
+    topicEl.textContent = getDailyTopic();
+    topicEl.onclick = function() {
+      // Clicking topic sends it as chat message
+      var input = document.getElementById('chatInput');
+      if (input) {
+        input.value = '今日话题：' + topicEl.textContent;
+        document.getElementById('chatSendBtn').classList.add('active');
+        // Switch to chat page
+        if (typeof switchTab === 'function') switchTab('chat');
+      }
+    };
+  }
+
+  // Set daily quote
+  var quoteEl = document.getElementById('dailyQuote');
+  if (quoteEl) {
+    var season = getSeason();
+    var tips = SEASON_TIPS[season];
+    var tip = tips[Math.floor(Math.random() * tips.length)];
+    quoteEl.textContent = tip + '\n' + getDailyQuote();
+  }
+
+  // Fetch weather (free API, no key needed)
+  fetchWeather();
+}
+
+function fetchWeather() {
+  var weatherEl = document.getElementById('dailyWeather');
+  if (!weatherEl) return;
+  // Use wttr.in - free, no API key, works in China
+  fetch('https://wttr.in/?format=j1&lang=zh', { mode: 'cors' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.current_condition || !data.current_condition[0]) {
+        weatherEl.innerHTML = '<span class="weather-desc">天气暂不可用</span>';
+        return;
+      }
+      var cur = data.current_condition[0];
+      var temp = cur.temp_C;
+      var feelsLike = cur.FeelsLikeC;
+      var desc = cur.lang_zh && cur.lang_zh[0] ? cur.lang_zh[0].value : (cur.weatherDesc && cur.weatherDesc[0] ? cur.weatherDesc[0].value : '');
+      var area = data.nearest_area && data.nearest_area[0] ? data.nearest_area[0].areaName[0].value : '';
+      // Weather icon based on description
+      var icon = '☁️';
+      if (/晴|Sunny|Clear/i.test(desc)) icon = '☀️';
+      else if (/雨|Rain|Drizzle/i.test(desc)) icon = '🌧️';
+      else if (/雪|Snow/i.test(desc)) icon = '❄️';
+      else if (/风|Wind/i.test(desc)) icon = '💨';
+      else if (/雾|Fog|Mist/i.test(desc)) icon = '🌫️';
+      else if (/多云|Cloud|Overcast/i.test(desc)) icon = '⛅';
+      weatherEl.innerHTML = '<span class="weather-icon">' + icon + '</span>' +
+        '<span class="weather-temp">' + temp + '°C</span>' +
+        '<span class="weather-desc">' + (area ? area + ' · ' : '') + desc + ' · 体感' + feelsLike + '°C</span>';
+    })
+    .catch(function() {
+      // Fallback: show season tip only
+      var season = getSeason();
+      var tips = SEASON_TIPS[season];
+      var tip = tips[Math.floor(Math.random() * tips.length)];
+      weatherEl.innerHTML = '<span class="weather-desc">' + tip + '</span>';
+    });
+}
 function init() {
   // Load saved state
   deepSeekApiKey = lsLoad('apiKey', '');
@@ -3641,6 +3906,9 @@ function init() {
   $('immersionTime').textContent = getTimeStr();
   $('homeGreeting').textContent = getHomeGreeting();
   $('immersionGreeting').textContent = getGreeting();
+  initDailyContent();
+  initNotifications();
+  showNotifySettings();
 
   // Render saved chat messages
   if (chatMessagesStore.length > 0) {
@@ -3657,7 +3925,9 @@ function init() {
     var lastMsg = chatMessagesStore[chatMessagesStore.length - 1];
     var hoursSinceLastMsg = (Date.now() - lastMsg.time) / 3600000;
     if (hoursSinceLastMsg > 4) {
-      var greetPool = [
+      // Try memory-based greeting first, fall back to generic
+      var memGreet = getMemoryGreeting();
+      var greetPool = memGreet ? [memGreet] : [
         '嘿，好一阵没聊了。最近忙啥呢？',
         '来了啊，我正想着你是不是把我忘了。',
         '哟，好久不见。最近过得还行吧？',
@@ -4021,6 +4291,131 @@ document.querySelectorAll('.memory-filter').forEach(function(f){
 // ========== Chat ==========
 function saveChatMessages() { lsSave('chatMessages', chatMessagesStore); }
 function saveHealthMessages() { lsSave('healthMessages', healthMessagesStore); }
+
+// ========== AI Memory System (老E的记忆) ==========
+var ECHO_MEMORY_KEY = 'echo_memory_v1';
+var MAX_MEMORIES = 30;
+
+// Extract memorable facts from user messages
+function extractMemory(userText) {
+  if (!userText || userText.length < 4) return null;
+  var memories = [];
+  // Work & career
+  if (/领导|单位|开会|考核|晋升|编制|汇报|材料|迎检|整改|同事|局长|处长|科长/.test(userText)) {
+    var workMatch = userText.match(/(.{0,20}(?:领导|单位|考核|晋升|编制|迎检|整改).{0,20})/);
+    if (workMatch) memories.push({ topic: '工作', fact: workMatch[1].trim(), time: Date.now() });
+  }
+  // Family
+  if (/女儿|儿子|孩子|老伴|父母|父亲|母亲|媳妇|姐/.test(userText)) {
+    var famMatch = userText.match(/(.{0,20}(?:女儿|儿子|孩子|老伴|父母|父亲|母亲|媳妇|姐).{0,20})/);
+    if (famMatch) memories.push({ topic: '家庭', fact: famMatch[1].trim(), time: Date.now() });
+  }
+  // Health
+  if (/失眠|头疼|血压|血糖|体检|吃药|手术|医院|糖尿病|看病/.test(userText)) {
+    var healthMatch = userText.match(/(.{0,20}(?:失眠|头疼|血压|血糖|体检|吃药|手术|医院|糖尿病|看病).{0,20})/);
+    if (healthMatch) memories.push({ topic: '健康', fact: healthMatch[1].trim(), time: Date.now() });
+  }
+  // Hobbies
+  if (/钓鱼|下棋|散步|旅游|养花|书法|喝茶|喝酒|打牌|跳舞/.test(userText)) {
+    var hobbyMatch = userText.match(/(.{0,20}(?:钓鱼|下棋|散步|旅游|养花|书法|喝茶|喝酒|打牌|跳舞).{0,20})/);
+    if (hobbyMatch) memories.push({ topic: '爱好', fact: hobbyMatch[1].trim(), time: Date.now() });
+  }
+  // Retirement
+  if (/退休|退下来|养老|养老金/.test(userText)) {
+    memories.push({ topic: '退休', fact: userText.substring(0, 40).trim(), time: Date.now() });
+  }
+  // Mood/emotion
+  if (/烦|累|焦虑|压力大|不开心|难受|憋屈|郁闷/.test(userText)) {
+    memories.push({ topic: '心情', fact: userText.substring(0, 40).trim(), time: Date.now() });
+  }
+  // Mood positive
+  if (/开心|高兴|太好了|不错|棒/.test(userText) && userText.length > 5) {
+    memories.push({ topic: '开心事', fact: userText.substring(0, 40).trim(), time: Date.now() });
+  }
+  return memories.length > 0 ? memories : null;
+}
+
+function saveMemories(newMemories) {
+  if (!newMemories) return;
+  var existing = lsLoad(ECHO_MEMORY_KEY, []);
+  newMemories.forEach(function(m) {
+    // Deduplicate: skip if very similar fact exists in last 7 days
+    var isDup = existing.some(function(e) {
+      return e.topic === m.topic && e.fact === m.fact && (Date.now() - e.time) < 7 * 86400000;
+    });
+    if (!isDup) existing.push(m);
+  });
+  // Keep only latest MAX_MEMORIES
+  if (existing.length > MAX_MEMORIES) existing = existing.slice(-MAX_MEMORIES);
+  lsSave(ECHO_MEMORY_KEY, existing);
+}
+
+// Build memory context string for AI prompt
+function getMemoryContext() {
+  var memories = lsLoad(ECHO_MEMORY_KEY, []);
+  if (!memories || memories.length === 0) return '';
+  // Get recent memories (last 14 days), max 5
+  var cutoff = Date.now() - 14 * 86400000;
+  var recent = memories.filter(function(m) { return m.time > cutoff; });
+  if (recent.length === 0) return '';
+  recent = recent.slice(-5);
+  var lines = ['你记得这些关于' + lsLoad('nickname', '静水流深') + '的事：'];
+  recent.forEach(function(m) {
+    var daysAgo = Math.floor((Date.now() - m.time) / 86400000);
+    var timeStr = daysAgo === 0 ? '今天' : daysAgo === 1 ? '昨天' : daysAgo + '天前';
+    lines.push('- ' + timeStr + '聊过' + m.topic + '：' + m.fact);
+  });
+  return lines.join('\n');
+}
+
+// Proactive greeting using memories
+function getMemoryGreeting() {
+  var memories = lsLoad(ECHO_MEMORY_KEY, []);
+  if (!memories || memories.length === 0) return null;
+  // Find most recent memory
+  var latest = memories[memories.length - 1];
+  var daysAgo = Math.floor((Date.now() - latest.time) / 86400000);
+  if (daysAgo > 7) return null; // Too old to reference
+  var greetings = [];
+  if (latest.topic === '工作') {
+    greetings = [
+      '上次你说单位的事，后来怎么样了？',
+      '上次聊到你工作那边，没啥新情况吧？',
+      '工作那边还那样吗？上次听你说挺烦的。'
+    ];
+  } else if (latest.topic === '家庭') {
+    greetings = [
+      '上次说到家里的事，现在好点没？',
+      '家里那边没啥新情况吧？',
+      '上次你提到家里的事，我一直惦记着呢。'
+    ];
+  } else if (latest.topic === '健康') {
+    greetings = [
+      '上次你说身体不太舒服，现在好点没？',
+      '身体咋样了？上次听你说有点问题。',
+      '你那身体的事去看了没？别拖着。'
+    ];
+  } else if (latest.topic === '爱好') {
+    greetings = [
+      '最近还钓鱼/下棋呢吗？上次你说得挺开心的。',
+      '上回你说的那个爱好，最近还在搞吗？',
+      '最近有没有出去玩？上次听你聊得挺来劲的。'
+    ];
+  } else if (latest.topic === '心情') {
+    greetings = [
+      '上次聊的时候感觉你心情不太好，现在好点没？',
+      '最近心情咋样？上回听你有点烦。',
+      '这两天过得还行吧？上次你说压力大。'
+    ];
+  } else if (latest.topic === '开心事') {
+    greetings = [
+      '上次你说的那件开心事，还有后续没？',
+      '最近还有啥好事没？上回听你挺高兴的。'
+    ];
+  }
+  if (greetings.length === 0) return null;
+  return greetings[Math.floor(Math.random() * greetings.length)];
+}
 function addEchoMessage(text) {
   var container = $('chatMessages');
   var typing = document.createElement('div');
@@ -4086,6 +4481,9 @@ async function callFreeAI(userText) {
   try {
     var nick = lsLoad('nickname', '静水流深');
     var systemPrompt = '你扮演"老E"，一个50多岁的老哥们，跟' + nick + '是老朋友。说话像微信聊天，1-3句，口语化，有主见，偶尔损人但善意。禁止emoji、感叹号、列表、建议、说教、心理鸡汤。像深夜陪喝茶的老友。';
+    // Inject memory context so 老E remembers past conversations
+    var memCtx = getMemoryContext();
+    if (memCtx) systemPrompt += '\n\n' + memCtx + '\n如果合适，自然地提起这些话题，像老朋友一样。';
     var messages = [{ role: 'system', content: systemPrompt }];
     // Few-shot examples: teach the model by showing, not telling
     var fewShots = [
@@ -4161,6 +4559,9 @@ async function callDeepSeek(userText) {
   try {
     var nick = lsLoad('nickname', '静水流深');
     var systemPrompt = '你扮演"老E"，一个50多岁、阅历丰富的老哥们，跟' + nick + '是老朋友。\n\n说话风格：口语化像微信聊天，1-3句话，有主见，会开玩笑偶尔损人但善意。用语气词"嗨/嗐/得/嗯/嚯"，用"得了吧/说真的/别介"。偶尔追问"后来呢/你当时咋想的"。\n\n绝对禁止：emoji、感叹号、编号列表、说教讲道理、心理鸡汤、"我理解你""加油""慢慢来""一切都会好"。\n\n核心：深夜陪喝茶的老友，说话直接但有温度。';
+    // Inject memory context
+    var memCtx = getMemoryContext();
+    if (memCtx) systemPrompt += '\n\n' + memCtx + '\n如果合适，自然地提起这些话题。';
     var messages = [{ role: 'system', content: systemPrompt }];
     // Few-shot examples
     var fewShots = [
@@ -4235,6 +4636,9 @@ async function sendMessage() {
   var text = input.value.trim();
   if (!text) return;
   addUserMessage(text);
+  // Extract and save memories from user message
+  var newMemories = extractMemory(text);
+  if (newMemories) saveMemories(newMemories);
   input.value = '';
   $('chatSendBtn').classList.remove('active');
   // Show typing indicator
@@ -5692,6 +6096,144 @@ function updateAmbientCount() {
   Object.keys(ambientActive).forEach(function(k) { if (ambientActive[k]) count++; });
   var el = document.getElementById('ambientCount');
   if (el) el.textContent = count + '种声音播放中';
+}
+
+// ========== Push Notifications (老E主动找你) ==========
+var NOTIFICATION_KEY = 'echo_notify_settings';
+var notifyTimer = null;
+
+function initNotifications() {
+  // Check if Notification API is supported
+  if (!('Notification' in window)) return;
+
+  var settings = lsLoad(NOTIFICATION_KEY, { enabled: false, eveningRemind: true, remindHour: 20 });
+
+  // If user previously enabled, re-register
+  if (settings.enabled && Notification.permission === 'granted') {
+    startNotificationSchedule();
+  }
+
+  // Register service worker for PWA install support
+  if ('serviceWorker' in navigator) {
+    // Create a minimal SW inline via blob (for PWA install prompt on supported browsers)
+    var swCode = "self.addEventListener('install', function(e) { self.skipWaiting(); });" +
+      "self.addEventListener('activate', function(e) { e.waitUntil(clients.claim()); });" +
+      "self.addEventListener('notificationclick', function(e) {" +
+      "  e.notification.close(); e.waitUntil(clients.openWindow('/'));" +
+      "});";
+    var swBlob = new Blob([swCode], { type: 'application/javascript' });
+    var swUrl = URL.createObjectURL(swBlob);
+    // Note: blob URLs won't persist as SW on all browsers, but won't error either
+    // Real SW file would be needed for full PWA; this is a graceful attempt
+    try { navigator.serviceWorker.register(swUrl).catch(function() {}); } catch(e) {}
+  }
+}
+
+function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('你的浏览器不支持通知功能。建议添加到手机主屏幕获得更好体验。');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    var settings = lsLoad(NOTIFICATION_KEY, { enabled: false, eveningRemind: true, remindHour: 20 });
+    settings.enabled = true;
+    lsSave(NOTIFICATION_KEY, settings);
+    startNotificationSchedule();
+    showNotifySettings();
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    alert('通知权限被拒绝了。请在浏览器设置中手动开启。');
+    return;
+  }
+  Notification.requestPermission().then(function(perm) {
+    if (perm === 'granted') {
+      var settings = lsLoad(NOTIFICATION_KEY, { enabled: false, eveningRemind: true, remindHour: 20 });
+      settings.enabled = true;
+      lsSave(NOTIFICATION_KEY, settings);
+      startNotificationSchedule();
+      // Show a test notification
+      new Notification('Echo回声', {
+        body: '老E已经准备好随时找你聊天了',
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">🌙</text></svg>',
+        tag: 'echo-welcome'
+      });
+      showNotifySettings();
+    }
+  });
+}
+
+function startNotificationSchedule() {
+  if (notifyTimer) clearInterval(notifyTimer);
+  // Check every 5 minutes if it's time for evening reminder
+  notifyTimer = setInterval(function() {
+    var settings = lsLoad(NOTIFICATION_KEY, { enabled: false, eveningRemind: true, remindHour: 20 });
+    if (!settings.enabled) return;
+    var now = new Date();
+    var h = now.getHours();
+    var m = now.getMinutes();
+    var todayKey = now.toISOString().slice(0, 10);
+    var lastNotified = lsLoad('echo_last_notify', '');
+
+    // Evening reminder (default 8pm, once per day)
+    if (settings.eveningRemind && h === settings.remindHour && m < 5 && lastNotified !== todayKey) {
+      lsSave('echo_last_notify', todayKey);
+      var greetings = [
+        '忙了一天了吧？来跟老E聊两句。',
+        '晚上好，今天过得怎么样？',
+        '老E在呢，有空聊聊？',
+        '夜深了，来坐坐吧。',
+        '今天有啥想说的？老E听着呢。'
+      ];
+      var msg = greetings[Math.floor(Math.random() * greetings.length)];
+      new Notification('Echo回声 · 老E找你聊天', {
+        body: msg,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">🌙</text></svg>',
+        tag: 'echo-evening'
+      });
+    }
+
+    // Weekend morning greeting (once per day, 9-10am)
+    var day = now.getDay();
+    if ((day === 0 || day === 6) && h === 9 && m < 5 && lastNotified !== todayKey + '_am') {
+      lsSave('echo_last_notify', todayKey + '_am');
+      new Notification('Echo回声 · 周末愉快', {
+        body: '周末了，今天有啥安排？老E陪你唠唠。',
+        tag: 'echo-weekend'
+      });
+    }
+  }, 5 * 60 * 1000); // Check every 5 minutes
+}
+
+function showNotifySettings() {
+  var btn = document.getElementById('notifyToggleBtn');
+  if (!btn) return;
+  var settings = lsLoad(NOTIFICATION_KEY, { enabled: false });
+  if (settings.enabled && Notification.permission === 'granted') {
+    btn.textContent = '已开启每晚提醒';
+    btn.style.opacity = '0.7';
+  }
+}
+
+// ========== Add to Home Screen Prompt ==========
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install banner
+  var banner = document.getElementById('installBanner');
+  if (banner) banner.style.display = 'flex';
+});
+
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choice) {
+      deferredPrompt = null;
+      var banner = document.getElementById('installBanner');
+      if (banner) banner.style.display = 'none';
+    });
+  }
 }
 
 </script>
