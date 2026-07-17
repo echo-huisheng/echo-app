@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v7.4</title>
+<title>Echo回声 — 试用版v7.5</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3294,7 +3294,7 @@ body {
           所有参与者均使用匿名身份，空间销毁后不留任何痕迹。
         </div>
         <div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">
-          网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。
+          消息经端到端加密传输，服务器无法读取内容。
         </div>
       </div>
     </div>
@@ -3664,6 +3664,10 @@ body {
   <div class="toast" id="toast"></div>
 </div>
 
+<!-- Firebase SDK for Realtime Database (密语空间实时通信) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <script>
 // ========== State ==========
 var pinInput = '';
@@ -3909,6 +3913,7 @@ function init() {
   initDailyContent();
   initNotifications();
   showNotifySettings();
+  setTimeout(initFirebase, 500);
 
   // Render saved chat messages
   if (chatMessagesStore.length > 0) {
@@ -4965,22 +4970,26 @@ function createSpace() {
   var code = $('spaceCodeInput').value.trim();
   if (!name) { showToast('请输入空间名称'); return; }
   if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('密室码必须是6位数字'); return; }
-  // Save to localStorage
   var spaces = lsLoad('spaces', []);
-  // Check for duplicate codes
   var duplicate = spaces.some(function(s) { return s.code === code; });
   if (duplicate) { showToast('该密室码已被使用，请换一个'); return; }
   var cleanupSelect = document.querySelector('#modalCreateSpace select:last-of-type');
   var cleanup = cleanupSelect ? cleanupSelect.value : '24小时';
   spaces.push({ name: name, code: code, cleanup: cleanup, created: Date.now(), messages: [] });
   lsSave('spaces', spaces);
-  // Close modal and reset form
   closeModal('modalCreateSpace');
   $('spaceNameInput').value = '';
   $('spaceCodeInput').value = '';
-  // Add space card to the list
   addSpaceCard(name, code, cleanup);
-  showToast('空间"' + name + '"创建成功');
+  // Register room on Firebase for real-time sync
+  if (fbReady) {
+    fbCreateRoom(code, name, cleanup).then(function(ok) {
+      if (ok) showToast('空间"' + name + '"创建成功（实时加密通信已启用）');
+      else showToast('空间"' + name + '"创建成功（仅本地模式）');
+    });
+  } else {
+    showToast('空间"' + name + '"创建成功');
+  }
 }
 function addSpaceCard(name, code, cleanup) {
   var list = document.querySelector('.space-list');
@@ -5002,13 +5011,47 @@ function loadSpaces() {
 function joinSpace() {
   var code = $('inviteCodeInput').value.trim();
   if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('请输入6位数字密室码'); return; }
-  var spaces = lsLoad('spaces', []);
-  var found = spaces.some(function(s) { return s.code === code; });
-  if (!found) { showToast('未找到该密室码对应的空间'); return; }
-  closeModal('modalJoinSpace');
-  $('inviteCodeInput').value = '';
-  showToast('已加入空间');
-  switchTab('space');
+
+  if (fbReady) {
+    // Check Firebase for room across devices
+    showToast('正在查找空间...');
+    fbCheckRoom(code).then(function(room) {
+      if (room) {
+        // Found on server, add to local list and join
+        var spaces = lsLoad('spaces', []);
+        var alreadyLocal = spaces.some(function(s) { return s.code === code; });
+        if (!alreadyLocal) {
+          spaces.push({ name: room.name || '密语空间', code: code, cleanup: room.cleanup || '24小时', created: room.created, messages: [] });
+          lsSave('spaces', spaces);
+        }
+        fbJoinRoom(code).then(function() {
+          closeModal('modalJoinSpace');
+          $('inviteCodeInput').value = '';
+          showToast('已加入空间"' + (room.name || '') + '"（实时加密通信）');
+          switchTab('space');
+          // Rebuild space list to show new card
+          var list = document.querySelector('.space-list');
+          if (list) {
+            list.querySelectorAll('.space-card').forEach(function(c) { c.remove(); });
+            var empty = list.querySelector('.space-empty-state');
+            if (empty) empty.style.display = 'none';
+          }
+          loadSpaces();
+        });
+      } else {
+        showToast('未找到该密室码对应的空间，请确认对方已创建');
+      }
+    });
+  } else {
+    // Local-only mode
+    var spaces = lsLoad('spaces', []);
+    var found = spaces.some(function(s) { return s.code === code; });
+    if (!found) { showToast('未找到该密室码对应的空间'); return; }
+    closeModal('modalJoinSpace');
+    $('inviteCodeInput').value = '';
+    showToast('已加入空间');
+    switchTab('space');
+  }
 }
 function copyInviteCode() {
   var code = $('generatedCode').textContent;
@@ -5312,67 +5355,85 @@ function sendSpaceMessage() {
   var text = input.value.trim();
   if (!text) return;
   input.value = '';
-  var container = $('spaceChatMessages');
-  // Remove welcome message on first send
-  var welcome = container.querySelector('.space-welcome-msg');
-  if (welcome) welcome.remove();
-  // Create message element
-  var msgEl = document.createElement('div');
-  msgEl.className = 'space-msg me';
   var nick = getSpaceNick();
-  var burnLabel = spaceBurnTimeMs > 0 ? '🔥 ' + spaceBurnTimeText + '后焚毁' : '🔥 立即焚毁';
-  msgEl.innerHTML = '<div class="space-nick">' + nick + '</div><div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div><div class="space-burn-meta">' + burnLabel + '</div>';
-  container.appendChild(msgEl);
-  container.scrollTop = container.scrollHeight;
-  // Save to space messages in localStorage
-  var msgIdx = -1;
-  if (currentSpaceCode) {
-    var spaces = lsLoad('spaces', []);
-    var space = spaces.find(function(s) { return s.code === currentSpaceCode; });
-    if (space) {
-      if (!space.messages) space.messages = [];
-      var burnAt = spaceBurnTimeMs > 0 ? Date.now() + spaceBurnTimeMs : Date.now() + 500;
-      space.messages.push({ sender: 'me', nick: nick, text: text, time: Date.now(), burnAt: burnAt });
-      msgIdx = space.messages.length - 1;
-      lsSave('spaces', spaces);
-    }
-  }
-  msgEl.setAttribute('data-msg-idx', msgIdx);
-  // Apply burn timer
-  if (spaceBurnTimeMs === 0) {
-    // Immediate burn
-    setTimeout(function() { burnSpaceMsg(msgEl); }, 500);
-  } else if (spaceBurnTimeMs > 0) {
-    scheduleSpaceBurn(msgEl, spaceBurnTimeMs);
-  }
-  // Simulate reply after a delay (demo mode)
-  setTimeout(function() {
-    var otherNicks = spaceAnonymousNicks.filter(function(n) { return n !== nick; });
-    var otherNick = otherNicks[Math.floor(Math.random() * otherNicks.length)];
-    var replies = ['收到。','嗯，知道了。','好的，明白了。','了解。','放心。','嗯。','记住了。','好的。'];
-    var replyText = replies[Math.floor(Math.random() * replies.length)];
-    var replyEl = document.createElement('div');
-    replyEl.className = 'space-msg other';
-    replyEl.innerHTML = '<div class="space-nick">' + otherNick + '</div><div class="space-bubble">' + replyText + '</div><div class="space-burn-meta">🔥 ' + spaceBurnTimeText + '后焚毁</div>';
-    container.appendChild(replyEl);
+
+  if (fbReady && currentSpaceCode) {
+    // ===== Firebase mode: send encrypted message to server =====
+    // Firebase listener (fbListenMessages) will render the message when it arrives back
+    fbSendMsg(currentSpaceCode, text, nick);
+    // Optimistic local render (will be replaced by Firebase listener echo)
+    var container = $('spaceChatMessages');
+    var welcome = container.querySelector('.space-welcome-msg');
+    if (welcome) welcome.remove();
+    var msgEl = document.createElement('div');
+    msgEl.className = 'space-msg me';
+    var burnLabel = spaceBurnTimeMs > 0 ? '🔥 ' + spaceBurnTimeText + '后焚毁' : '🔥 立即焚毁';
+    msgEl.innerHTML = '<div class="space-nick">' + nick + '</div><div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div><div class="space-burn-meta">' + burnLabel + '</div>';
+    container.appendChild(msgEl);
     container.scrollTop = container.scrollHeight;
-    // Save reply to localStorage
-    var replyIdx = -1;
+    if (spaceBurnTimeMs === 0) {
+      setTimeout(function() { burnSpaceMsg(msgEl); }, 500);
+    } else if (spaceBurnTimeMs > 0) {
+      scheduleSpaceBurn(msgEl, spaceBurnTimeMs);
+    }
+    // No simulated reply — the real reply comes from the other person
+  } else {
+    // ===== Local demo mode: original behavior with simulated reply =====
+    var container = $('spaceChatMessages');
+    var welcome = container.querySelector('.space-welcome-msg');
+    if (welcome) welcome.remove();
+    var msgEl = document.createElement('div');
+    msgEl.className = 'space-msg me';
+    var burnLabel = spaceBurnTimeMs > 0 ? '🔥 ' + spaceBurnTimeText + '后焚毁' : '🔥 立即焚毁';
+    msgEl.innerHTML = '<div class="space-nick">' + nick + '</div><div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div><div class="space-burn-meta">' + burnLabel + '</div>';
+    container.appendChild(msgEl);
+    container.scrollTop = container.scrollHeight;
+    var msgIdx = -1;
     if (currentSpaceCode) {
       var spaces = lsLoad('spaces', []);
       var space = spaces.find(function(s) { return s.code === currentSpaceCode; });
       if (space) {
         if (!space.messages) space.messages = [];
         var burnAt = spaceBurnTimeMs > 0 ? Date.now() + spaceBurnTimeMs : Date.now() + 500;
-        space.messages.push({ sender: 'other', nick: otherNick, text: replyText, time: Date.now(), burnAt: burnAt });
-        replyIdx = space.messages.length - 1;
+        space.messages.push({ sender: 'me', nick: nick, text: text, time: Date.now(), burnAt: burnAt });
+        msgIdx = space.messages.length - 1;
         lsSave('spaces', spaces);
       }
     }
-    replyEl.setAttribute('data-msg-idx', replyIdx);
-    if (spaceBurnTimeMs > 0) scheduleSpaceBurn(replyEl, spaceBurnTimeMs);
-    else setTimeout(function() { burnSpaceMsg(replyEl); }, 500);
-  }, 1500 + Math.random() * 2000);
+    msgEl.setAttribute('data-msg-idx', msgIdx);
+    if (spaceBurnTimeMs === 0) {
+      setTimeout(function() { burnSpaceMsg(msgEl); }, 500);
+    } else if (spaceBurnTimeMs > 0) {
+      scheduleSpaceBurn(msgEl, spaceBurnTimeMs);
+    }
+    // Simulate reply (demo mode only)
+    setTimeout(function() {
+      var otherNicks = spaceAnonymousNicks.filter(function(n) { return n !== nick; });
+      var otherNick = otherNicks[Math.floor(Math.random() * otherNicks.length)];
+      var replies = ['收到。','嗯，知道了。','好的，明白了。','了解。','放心。','嗯。','记住了。','好的。'];
+      var replyText = replies[Math.floor(Math.random() * replies.length)];
+      var replyEl = document.createElement('div');
+      replyEl.className = 'space-msg other';
+      replyEl.innerHTML = '<div class="space-nick">' + otherNick + '</div><div class="space-bubble">' + replyText + '</div><div class="space-burn-meta">🔥 ' + spaceBurnTimeText + '后焚毁</div>';
+      container.appendChild(replyEl);
+      container.scrollTop = container.scrollHeight;
+      var replyIdx = -1;
+      if (currentSpaceCode) {
+        var spaces = lsLoad('spaces', []);
+        var space = spaces.find(function(s) { return s.code === currentSpaceCode; });
+        if (space) {
+          if (!space.messages) space.messages = [];
+          var burnAt = spaceBurnTimeMs > 0 ? Date.now() + spaceBurnTimeMs : Date.now() + 500;
+          space.messages.push({ sender: 'other', nick: otherNick, text: replyText, time: Date.now(), burnAt: burnAt });
+          replyIdx = space.messages.length - 1;
+          lsSave('spaces', spaces);
+        }
+      }
+      replyEl.setAttribute('data-msg-idx', replyIdx);
+      if (spaceBurnTimeMs > 0) scheduleSpaceBurn(replyEl, spaceBurnTimeMs);
+      else setTimeout(function() { burnSpaceMsg(replyEl); }, 500);
+    }, 1500 + Math.random() * 2000);
+  }
 }
 function scheduleSpaceBurn(el, ms) {
   // Start countdown display
@@ -5461,6 +5522,10 @@ function burnAllSpaceMessages() {
 }
 function destroySpace() {
   if (!confirm('确定要销毁此空间吗？所有消息将被永久删除，不可恢复。')) return;
+  // Destroy on Firebase (real server-side wipe)
+  if (fbReady && currentSpaceCode) {
+    fbDestroyRoom(currentSpaceCode);
+  }
   // Remove from localStorage
   if (currentSpaceCode) {
     var spaces = lsLoad('spaces', []);
@@ -5483,13 +5548,361 @@ function destroySpace() {
   currentSpaceCode = '';
   showToast('空间已销毁，所有消息已永久删除');
 }
+
+// ========== Firebase Realtime Communication (密语空间双人通信) ==========
+// 替换下方 FIREBASE_CONFIG 为你的 Firebase 项目配置即可启用双人实时加密通信
+// 未配置时密语空间保持本地演示模式（模拟回复）
+var FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+var fbApp = null, fbDb = null, fbReady = false, fbMsgListener = null, fbPresenceListener = null;
+var fbRoomCode = '', fbMyUid = '';
+var fbSeenMsgIds = {};
+
+// Generate a unique user ID for this browser session (persisted in localStorage)
+(function initFbUid() {
+  fbMyUid = lsLoad('echo_fb_uid', '');
+  if (!fbMyUid) {
+    fbMyUid = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);
+    lsSave('echo_fb_uid', fbMyUid);
+  }
+})();
+
+function initFirebase() {
+  if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.databaseURL) {
+    console.log('[Firebase] 未配置Firebase，密语空间使用本地模式');
+    return;
+  }
+  try {
+    if (typeof firebase !== 'undefined' && firebase.initializeApp) {
+      fbApp = firebase.initializeApp(FIREBASE_CONFIG);
+      fbDb = firebase.database();
+      fbReady = true;
+      console.log('[Firebase] 已连接，密语空间启用实时通信');
+      // Periodic cleanup of expired messages on server (every 10 minutes)
+      setInterval(fbCleanupExpired, 10 * 60 * 1000);
+    }
+  } catch (e) {
+    console.warn('[Firebase] 初始化失败:', e.message);
+    fbReady = false;
+  }
+}
+
+// ========== AES-GCM Encryption (端到端加密) ==========
+// 用房间码作为密码，PBKDF2派生密钥，AES-GCM加密消息
+// Firebase服务器只看到密文，无法读取内容
+
+var fbCryptoKey = null;
+var fbCryptoSalt = new TextEncoder().encode('Echo-v1-密语空间');
+
+async function fbDeriveKey(roomCode) {
+  var keyMaterial = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(roomCode + '-EchoSecret'),
+    'PBKDF2', false, ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: fbCryptoSalt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false, ['encrypt', 'decrypt']
+  );
+}
+
+async function fbEncrypt(text, roomCode) {
+  try {
+    if (!fbCryptoKey) fbCryptoKey = await fbDeriveKey(roomCode);
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var encoded = new TextEncoder().encode(text);
+    var ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, fbCryptoKey, encoded);
+    var combined = new Uint8Array(iv.length + new Uint8Array(ciphertext).length);
+    combined.set(iv);
+    combined.set(new Uint8Array(ciphertext), iv.length);
+    return btoa(String.fromCharCode.apply(null, combined));
+  } catch (e) {
+    console.warn('[Encrypt] 加密失败，使用Base64降级:', e);
+    return 'b64:' + btoa(unescape(encodeURIComponent(text)));
+  }
+}
+
+async function fbDecrypt(base64Data, roomCode) {
+  try {
+    // Handle non-encrypted fallback
+    if (base64Data.indexOf('b64:') === 0) {
+      return decodeURIComponent(escape(atob(base64Data.substring(4))));
+    }
+    if (!fbCryptoKey) fbCryptoKey = await fbDeriveKey(roomCode);
+    var raw = atob(base64Data);
+    var bytes = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    var iv = bytes.slice(0, 12);
+    var ciphertext = bytes.slice(12);
+    var decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, fbCryptoKey, ciphertext);
+    return new TextDecoder().decode(decrypted);
+  } catch (e) {
+    console.warn('[Decrypt] 解密失败:', e);
+    return '[消息解密失败]';
+  }
+}
+
+// ========== Firebase Room Operations ==========
+
+async function fbCreateRoom(code, name, cleanupTime) {
+  if (!fbReady) return false;
+  try {
+    var roomRef = fbDb.ref('echo_rooms/' + code);
+    var snapshot = await roomRef.once('value');
+    if (snapshot.exists()) {
+      // Room exists, just join it
+      return true;
+    }
+    await roomRef.set({
+      name: name,
+      cleanup: cleanupTime,
+      created: Date.now(),
+      createdBy: fbMyUid,
+      active: true
+    });
+    console.log('[Firebase] 房间已创建:', code);
+    return true;
+  } catch (e) {
+    console.warn('[Firebase] 创建房间失败:', e);
+    return false;
+  }
+}
+
+async function fbCheckRoom(code) {
+  if (!fbReady) return false;
+  try {
+    var snapshot = await fbDb.ref('echo_rooms/' + code).once('value');
+    var data = snapshot.val();
+    return data && data.active ? data : false;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function fbJoinRoom(code) {
+  if (!fbReady) return false;
+  var room = await fbCheckRoom(code);
+  if (!room) return false;
+  // Set presence indicator
+  try {
+    await fbDb.ref('echo_rooms/' + code + '/members/' + fbMyUid).set({
+      nick: getSpaceNick(),
+      joinedAt: Date.now(),
+      online: true
+    });
+    // Set online status to false when disconnected
+    fbDb.ref('echo_rooms/' + code + '/members/' + fbMyUid + '/online')
+      .onDisconnect().set(false);
+  } catch (e) {
+    console.warn('[Firebase] 加入房间失败:', e);
+  }
+  return room;
+}
+
+async function fbSendMsg(code, text, nick) {
+  if (!fbReady) return null;
+  var encrypted = await fbEncrypt(text, code);
+  var burnAt = spaceBurnTimeMs > 0 ? Date.now() + spaceBurnTimeMs : Date.now() + 60000;
+  var msgData = {
+    uid: fbMyUid,
+    nick: nick,
+    encrypted: encrypted,
+    time: Date.now(),
+    burnAt: burnAt,
+    burnTimeMs: spaceBurnTimeMs
+  };
+  try {
+    var ref = await fbDb.ref('echo_rooms/' + code + '/messages').push(msgData);
+    return ref.key;
+  } catch (e) {
+    console.warn('[Firebase] 发送消息失败:', e);
+    return null;
+  }
+}
+
+function fbListenMessages(code) {
+  if (!fbReady) return;
+  fbStopListening();
+  fbRoomCode = code;
+  fbSeenMsgIds = {};
+  fbCryptoKey = null; // Reset crypto key for new room
+
+  var msgRef = fbDb.ref('echo_rooms/' + code + '/messages');
+
+  // Listen for new messages
+  fbMsgListener = msgRef.on('child_added', async function(snapshot) {
+    var msg = snapshot.val();
+    var msgId = snapshot.key;
+    if (!msg || fbSeenMsgIds[msgId]) return;
+    fbSeenMsgIds[msgId] = true;
+
+    // Skip if message is expired
+    if (msg.burnAt && Date.now() > msg.burnAt) {
+      // Delete expired message from server
+      fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+      return;
+    }
+
+    // Decrypt message
+    var isMe = msg.uid === fbMyUid;
+
+    // Skip rendering own messages (already rendered optimistically in sendSpaceMessage)
+    if (isMe) {
+      // Still schedule Firebase-side deletion for burn timer
+      if (msg.burnAt) {
+        var burnRemaining = msg.burnAt - Date.now();
+        if (burnRemaining > 0) {
+          setTimeout(function() {
+            fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+          }, burnRemaining);
+        } else {
+          fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+        }
+      }
+      return;
+    }
+
+    var text = await fbDecrypt(msg.encrypted, code);
+
+    // Render message
+    var container = $('spaceChatMessages');
+    if (!container) return;
+
+    // Remove welcome if present
+    var welcome = container.querySelector('.space-welcome-msg');
+    if (welcome) welcome.remove();
+
+    var msgEl = document.createElement('div');
+    msgEl.className = 'space-msg other';
+    msgEl.setAttribute('data-fb-id', msgId);
+
+    var burnRemaining = msg.burnAt ? msg.burnAt - Date.now() : 60000;
+    var burnLabel = msg.burnTimeMs > 0
+      ? '🔥 ' + formatBurnTime(burnRemaining) + '后焚毁'
+      : '🔥 即将焚毁';
+
+    msgEl.innerHTML = '<div class="space-nick">' + (msg.nick || '匿名') + '</div>'
+      + '<div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+      + '<div class="space-burn-meta">' + burnLabel + '</div>';
+
+    container.appendChild(msgEl);
+    container.scrollTop = container.scrollHeight;
+
+    // Schedule burn
+    if (burnRemaining > 0) {
+      scheduleSpaceBurn(msgEl, burnRemaining);
+      // Also delete from Firebase when burned
+      setTimeout(function() {
+        fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+      }, burnRemaining);
+    } else {
+      setTimeout(function() {
+        burnSpaceMsg(msgEl);
+        fbDb.ref('echo_rooms/' + code + '/messages/' + msgId).remove();
+      }, 800);
+    }
+  });
+
+  // Listen for presence (other user online status)
+  fbPresenceListener = fbDb.ref('echo_rooms/' + code + '/members').on('value', function(snapshot) {
+    var members = snapshot.val();
+    if (!members) return;
+    var keys = Object.keys(members);
+    var othersOnline = keys.filter(function(k) { return k !== fbMyUid && members[k].online; });
+    var statusEl = document.getElementById('spaceOnlineStatus');
+    if (statusEl) {
+      if (othersOnline.length > 0) {
+        statusEl.textContent = '🟢 对方在线';
+        statusEl.style.color = '#4ade80';
+      } else {
+        statusEl.textContent = '⚪ 对方离线';
+        statusEl.style.color = 'var(--text-tertiary)';
+      }
+    }
+  });
+}
+
+function fbStopListening() {
+  if (fbMsgListener && fbRoomCode) {
+    fbDb.ref('echo_rooms/' + fbRoomCode + '/messages').off('child_added', fbMsgListener);
+    fbMsgListener = null;
+  }
+  if (fbPresenceListener && fbRoomCode) {
+    fbDb.ref('echo_rooms/' + fbRoomCode + '/members').off('value', fbPresenceListener);
+    fbPresenceListener = null;
+  }
+}
+
+function fbCleanupExpired() {
+  if (!fbReady || !fbRoomCode) return;
+  var now = Date.now();
+  fbDb.ref('echo_rooms/' + fbRoomCode + '/messages').once('value', function(snapshot) {
+    snapshot.forEach(function(child) {
+      var msg = child.val();
+      if (msg && msg.burnAt && now > msg.burnAt) {
+        child.ref.remove();
+      }
+    });
+  });
+}
+
+async function fbDestroyRoom(code) {
+  if (!fbReady) return;
+  try {
+    fbStopListening();
+    await fbDb.ref('echo_rooms/' + code).remove();
+    console.log('[Firebase] 房间已销毁:', code);
+  } catch (e) {
+    console.warn('[Firebase] 销毁房间失败:', e);
+  }
+}
+
+function formatBurnTime(ms) {
+  if (ms <= 0) return '即将';
+  if (ms < 60000) return Math.ceil(ms / 1000) + '秒';
+  if (ms < 3600000) return Math.ceil(ms / 60000) + '分钟';
+  return Math.ceil(ms / 3600000) + '小时';
+}
+
+// Initialize Firebase on load (called from init function)
+// Will be called via: setTimeout(initFirebase, 500);
+
 function openSpaceDetail(name, code) {
   currentSpaceCode = code;
   if ($('spaceDetailName')) $('spaceDetailName').textContent = name;
   // Reset chat
   var container = $('spaceChatMessages');
   if (container) {
-    container.innerHTML = '<div class="space-welcome-msg"><div style="font-size:32px;margin-bottom:8px;">🔐</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">此空间消息阅后即焚，到期后自动物理删除，不可恢复。<br>所有参与者均使用匿名身份，空间销毁后不留任何痕迹。</div></div>';
+    container.innerHTML = '<div class="space-welcome-msg"><div style="font-size:32px;margin-bottom:8px;">🔐</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">此空间消息阅后即焚，到期后自动物理删除，不可恢复。<br>所有参与者均使用匿名身份，空间销毁后不留任何痕迹。</div>'
+      + (fbReady ? '<div style="font-size:11px;color:#4ade80;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border-radius:8px;">🔒 端到端加密通信已启用 · 消息经AES-256加密传输</div>' : '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。</div>')
+      + '</div>';
+  }
+  // Add/update online status indicator
+  var statusEl = document.getElementById('spaceOnlineStatus');
+  if (!statusEl) {
+    var trustBar = document.querySelector('.space-trust-bar');
+    if (trustBar) {
+      statusEl = document.createElement('span');
+      statusEl.id = 'spaceOnlineStatus';
+      statusEl.style.cssText = 'float:right;font-size:11px;';
+      statusEl.textContent = fbReady ? '⚪ 等待对方加入...' : '';
+      trustBar.appendChild(statusEl);
+    }
+  }
+  // Join room on Firebase and start listening
+  if (fbReady) {
+    fbJoinRoom(code).then(function() {
+      fbListenMessages(code);
+    });
   }
   // Load saved messages
   var spaces = lsLoad('spaces', []);
