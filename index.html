@@ -2089,6 +2089,14 @@ body {
   margin-top: 2px;
 }
 /* Ambient Sound Panel */
+.music-section-divider {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 8px 16px 6px;
+  border-top: 1px solid var(--bg-surface-3);
+  flex-shrink: 0;
+}
 .ambient-desc {
   text-align: center;
   font-size: 12px;
@@ -3227,28 +3235,47 @@ body {
         <div class="voice-wave">🎤 录音中...</div>
         <div class="voice-time" id="spaceVoiceTime">00:00</div>
       </div>
-      <!-- Ambient Sound Panel -->
+      <!-- Music Player -->
       <div class="music-panel" id="spaceMusicPanel" style="display:none;">
         <div class="music-panel-header">
-          <span>🎵 声音氛围</span>
+          <span>🎵 一起听歌</span>
           <button class="music-panel-close" onclick="toggleMusicPanel()">✕</button>
         </div>
-        <div class="ambient-desc">点击开启声音，可同时播放多种声音</div>
+        <div class="music-list" id="musicList"></div>
+        <div class="music-player-bar" id="musicPlayerBar" style="display:none;">
+          <div class="music-now-playing">
+            <div class="music-disc" id="musicDisc">♫</div>
+            <div class="music-info">
+              <div class="music-title" id="musicTitle">--</div>
+              <div class="music-artist" id="musicArtist">--</div>
+            </div>
+          </div>
+          <div class="music-progress-row">
+            <span class="music-time" id="musicCurrentTime">0:00</span>
+            <div class="music-progress-bar" id="musicProgressBar" onclick="seekMusic(event)">
+              <div class="music-progress-fill" id="musicProgressFill"></div>
+            </div>
+            <span class="music-time" id="musicDuration">0:00</span>
+          </div>
+          <div class="music-controls">
+            <button class="music-ctrl-btn" onclick="prevSong()">⏮</button>
+            <button class="music-ctrl-btn music-play-btn" id="musicPlayBtn" onclick="toggleMusicPlay()">▶</button>
+            <button class="music-ctrl-btn" onclick="nextSong()">⏭</button>
+          </div>
+        </div>
+        <div class="music-section-divider">🌿 氛围音（可叠加播放）</div>
         <div class="ambient-grid" id="ambientGrid">
-          <div class="ambient-card" data-sound="rain" onclick="toggleAmbient('rain',this)"><div class="ambient-icon">🌧</div><div class="ambient-name">夜雨</div><div class="ambient-vol"><input type="range" min="0" max="100" value="60" oninput="setAmbientVol('rain',this.value)"></div></div>
-          <div class="ambient-card" data-sound="stream" onclick="toggleAmbient('stream',this)"><div class="ambient-icon">💧</div><div class="ambient-name">流水</div><div class="ambient-vol"><input type="range" min="0" max="100" value="50" oninput="setAmbientVol('stream',this.value)"></div></div>
-          <div class="ambient-card" data-sound="insects" onclick="toggleAmbient('insects',this)"><div class="ambient-icon">🦗</div><div class="ambient-name">虫鸣</div><div class="ambient-vol"><input type="range" min="0" max="100" value="40" oninput="setAmbientVol('insects',this.value)"></div></div>
-          <div class="ambient-card" data-sound="fire" onclick="toggleAmbient('fire',this)"><div class="ambient-icon">🔥</div><div class="ambient-name">篝火</div><div class="ambient-vol"><input type="range" min="0" max="100" value="50" oninput="setAmbientVol('fire',this.value)"></div></div>
-          <div class="ambient-card" data-sound="guqin" onclick="toggleAmbient('guqin',this)"><div class="ambient-icon">🎸</div><div class="ambient-name">古琴</div><div class="ambient-vol"><input type="range" min="0" max="100" value="45" oninput="setAmbientVol('guqin',this.value)"></div></div>
-          <div class="ambient-card" data-sound="birds" onclick="toggleAmbient('birds',this)"><div class="ambient-icon">🐦</div><div class="ambient-name">鸟鸣</div><div class="ambient-vol"><input type="range" min="0" max="100" value="35" oninput="setAmbientVol('birds',this.value)"></div></div>
-          <div class="ambient-card" data-sound="waves" onclick="toggleAmbient('waves',this)"><div class="ambient-icon">🌊</div><div class="ambient-name">海浪</div><div class="ambient-vol"><input type="range" min="0" max="100" value="55" oninput="setAmbientVol('waves',this.value)"></div></div>
-          <div class="ambient-card" data-sound="chime" onclick="toggleAmbient('chime',this)"><div class="ambient-icon">🎐</div><div class="ambient-name">风铃</div><div class="ambient-vol"><input type="range" min="0" max="100" value="40" oninput="setAmbientVol('chime',this.value)"></div></div>
+          <div class="ambient-card" data-sound="rain" onclick="toggleAmbient('rain',this)"><div class="ambient-icon">🌧</div><div class="ambient-name">夜雨</div></div>
+          <div class="ambient-card" data-sound="stream" onclick="toggleAmbient('stream',this)"><div class="ambient-icon">💧</div><div class="ambient-name">流水</div></div>
+          <div class="ambient-card" data-sound="insects" onclick="toggleAmbient('insects',this)"><div class="ambient-icon">🦗</div><div class="ambient-name">虫鸣</div></div>
+          <div class="ambient-card" data-sound="fire" onclick="toggleAmbient('fire',this)"><div class="ambient-icon">🔥</div><div class="ambient-name">篝火</div></div>
         </div>
         <div class="ambient-footer">
-          <button class="ambient-stop-btn" onclick="stopAllAmbient()">全部关闭</button>
-          <span class="ambient-active-count" id="ambientCount">0种声音播放中</span>
+          <button class="ambient-stop-btn" onclick="stopAllAmbient()">关闭氛围音</button>
+          <span class="ambient-active-count" id="ambientCount"></span>
         </div>
       </div>
+      <audio id="spaceAudioPlayer" preload="metadata"></audio>
     </div>
   </div>
 
@@ -5222,6 +5249,147 @@ function playSpaceVoice(el, dataUrl) {
   audio.play();
 }
 
+// ========== Music Player (一起听歌) ==========
+var MUSIC_BASE = 'https://wangyueyang2026.github.io/echo-app/music';
+var musicLibrary = [
+  { title: '月光曲', artist: 'Echo·古琴坊', file: 'moonlight.mp3' },
+  { title: '山间清风', artist: 'Echo·古琴坊', file: 'breeze.mp3' },
+  { title: '流水人家', artist: 'Echo·古琴坊', file: 'stream.mp3' },
+  { title: '秋夜思', artist: 'Echo·古琴坊', file: 'autumn.mp3' },
+  { title: '春江花月', artist: 'Echo·古琴坊', file: 'spring.mp3' },
+  { title: '竹影摇风', artist: 'Echo·古琴坊', file: 'bamboo.mp3' },
+  { title: '渔舟唱晚', artist: 'Echo·古琴坊', file: 'fishing.mp3' },
+  { title: '夜阑静', artist: 'Echo·古琴坊', file: 'nightcalm.mp3' }
+];
+var currentSongIndex = -1;
+
+function renderMusicList() {
+  var list = document.getElementById('musicList');
+  if (!list) return;
+  var html = '';
+  musicLibrary.forEach(function(song, i) {
+    var isActive = i === currentSongIndex;
+    html += '<div class="music-item' + (isActive ? ' active' : '') + '" onclick="playSong(' + i + ')">' +
+      '<div class="music-item-icon">' + (isActive ? '♫' : '♪') + '</div>' +
+      '<div class="music-item-info">' +
+      '<div class="music-item-title">' + song.title + '</div>' +
+      '<div class="music-item-artist">' + song.artist + '</div>' +
+      '</div></div>';
+  });
+  list.innerHTML = html;
+}
+
+function playSong(index) {
+  var audio = document.getElementById('spaceAudioPlayer');
+  var song = musicLibrary[index];
+  if (!song || !audio) return;
+  currentSongIndex = index;
+  audio.src = MUSIC_BASE + '/' + song.file;
+  audio.play().catch(function(e) { showToast('播放失败'); });
+  var titleEl = document.getElementById('musicTitle');
+  var artistEl = document.getElementById('musicArtist');
+  var bar = document.getElementById('musicPlayerBar');
+  var playBtn = document.getElementById('musicPlayBtn');
+  var disc = document.getElementById('musicDisc');
+  if (titleEl) titleEl.textContent = song.title;
+  if (artistEl) artistEl.textContent = song.artist;
+  if (bar) bar.style.display = 'block';
+  if (playBtn) playBtn.textContent = '⏸';
+  if (disc) disc.classList.add('spinning');
+  renderMusicList();
+  addMusicCardToChat(song);
+}
+
+function toggleMusicPlay() {
+  var audio = document.getElementById('spaceAudioPlayer');
+  if (!audio || !audio.src) return;
+  var playBtn = document.getElementById('musicPlayBtn');
+  var disc = document.getElementById('musicDisc');
+  if (audio.paused) {
+    audio.play();
+    if (playBtn) playBtn.textContent = '⏸';
+    if (disc) disc.classList.add('spinning');
+  } else {
+    audio.pause();
+    if (playBtn) playBtn.textContent = '▶';
+    if (disc) disc.classList.remove('spinning');
+  }
+}
+
+function prevSong() {
+  if (currentSongIndex <= 0) currentSongIndex = musicLibrary.length;
+  playSong(currentSongIndex - 1);
+}
+
+function nextSong() {
+  if (currentSongIndex >= musicLibrary.length - 1) currentSongIndex = -1;
+  playSong(currentSongIndex + 1);
+}
+
+function seekMusic(event) {
+  var audio = document.getElementById('spaceAudioPlayer');
+  if (!audio || !audio.duration) return;
+  var bar = document.getElementById('musicProgressBar');
+  var rect = bar.getBoundingClientRect();
+  var pct = (event.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+}
+
+function formatMusicTime(sec) {
+  if (!sec || isNaN(sec)) return '0:00';
+  var m = Math.floor(sec / 60);
+  var s = Math.floor(sec % 60);
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// Audio progress update
+(function() {
+  var audio = document.getElementById('spaceAudioPlayer');
+  if (!audio) return;
+  audio.addEventListener('timeupdate', function() {
+    if (!audio.duration) return;
+    var pct = (audio.currentTime / audio.duration) * 100;
+    var fill = document.getElementById('musicProgressFill');
+    var cur = document.getElementById('musicCurrentTime');
+    var dur = document.getElementById('musicDuration');
+    if (fill) fill.style.width = pct + '%';
+    if (cur) cur.textContent = formatMusicTime(audio.currentTime);
+    if (dur) dur.textContent = formatMusicTime(audio.duration);
+  });
+  audio.addEventListener('ended', function() { nextSong(); });
+  audio.addEventListener('error', function() {
+    var playBtn = document.getElementById('musicPlayBtn');
+    var disc = document.getElementById('musicDisc');
+    if (playBtn) playBtn.textContent = '▶';
+    if (disc) disc.classList.remove('spinning');
+  });
+})();
+
+function addMusicCardToChat(song) {
+  var container = document.getElementById('spaceChatMessages');
+  if (!container) return;
+  var nick = getSpaceNick();
+  var msg = document.createElement('div');
+  msg.className = 'space-msg me';
+  var cardHtml = '<div class="music-card-msg">' +
+    '<div class="music-card-icon">♫</div>' +
+    '<div class="music-card-info">' +
+    '<div class="music-card-title">' + song.title + '</div>' +
+    '<div class="music-card-label">正在听 · ' + song.artist + '</div>' +
+    '</div></div>';
+  msg.innerHTML = '<div class="space-nick">' + nick + '</div><div class="space-bubble">' + cardHtml + '</div>';
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
+}
+
+function toggleMusicPanel() {
+  var panel = document.getElementById('spaceMusicPanel');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'flex';
+  if (!isOpen) renderMusicList();
+}
+
 // ========== Ambient Sound Engine (Web Audio API) ==========
 var audioCtx = null;
 var ambientNodes = {};
@@ -5526,12 +5694,6 @@ function updateAmbientCount() {
   if (el) el.textContent = count + '种声音播放中';
 }
 
-function toggleMusicPanel() {
-  var panel = document.getElementById('spaceMusicPanel');
-  if (!panel) return;
-  var isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'flex';
-}
 </script>
 </body>
 </html>
