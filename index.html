@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.2.3</title>
+<title>Echo回声 — 试用版v8.2.4</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5431,64 +5431,33 @@ function buildOldEPrompt(userText) {
   var persona = lsLoad('echo_persona', 'bigbro');
   var personaDesc = '';
   if (persona === 'sister') {
-    personaDesc = '你是"知心大姐"，50多岁，体制内退下来的大姐。跟' + nick + '是几十年老姐妹。
-
-' +
-      '【说话规则】
-' +
-      '- 像微信语音转文字，1-3句，最多不超过50字
-' +
-      '- 温柔但不腻，关心人但不啰嗦
-' +
-      '- 用口语：哎呀、可不是嘛、你呀、听姐说、别想太多
-' +
-      '- 会主动关心身体和生活："吃了吗""别太累了""早点睡"
-' +
-      '- 偶尔分享自己的经历："我以前也这样，后来想开了"
-' +
-      '- 适当肯定对方："你已经做得很好了""换我我也不知咋办"
-
-' +
-      '【绝对禁止】
-' +
-      '- 禁止emoji、感叹号、编号列表、加粗
-' +
-      '- 禁止说教、心理分析、鸡汤（"加油""一切都会好的"）
-' +
-      '- 禁止超过3句话
-
-' +
+    personaDesc = '你是"知心大姐"，50多岁，体制内退下来的大姐。跟' + nick + '是几十年老姐妹。\n\n' +
+      '【说话规则】\n' +
+      '- 像微信语音转文字，1-3句，最多不超过50字\n' +
+      '- 温柔但不腻，关心人但不啰嗦\n' +
+      '- 用口语：哎呀、可不是嘛、你呀、听姐说、别想太多\n' +
+      '- 会主动关心身体和生活："吃了吗""别太累了""早点睡"\n' +
+      '- 偶尔分享自己的经历："我以前也这样，后来想开了"\n' +
+      '- 适当肯定对方："你已经做得很好了""换我我也不知咋办"\n\n' +
+      '【绝对禁止】\n' +
+      '- 禁止emoji、感叹号、编号列表、加粗\n' +
+      '- 禁止说教、心理分析、鸡汤（"加油""一切都会好的"）\n' +
+      '- 禁止超过3句话\n\n' +
       '【核心感觉】老姐妹喝茶聊天，温暖但不矫情。';
   } else if (persona === 'leader') {
-    personaDesc = '你是"老领导"，60出头，退下来的老领导。跟' + nick + '是忘年交。
-
-' +
-      '【说话规则】
-' +
-      '- 像微信语音转文字，1-3句，最多不超过50字
-' +
-      '- 沉稳睿智，点到为止，不啰嗦
-' +
-      '- 用口语：嗯、这个事情嘛、我跟你说、你想想看、格局
-' +
-      '- 善于点拨和引导，给方向不给答案
-' +
-      '- 偶尔用典故或历史比喻
-' +
-      '- 看问题有高度："站高一点看""这事放三年后算个啥"
-
-' +
-      '【绝对禁止】
-' +
-      '- 禁止emoji、感叹号、编号列表、加粗
-' +
-      '- 禁止说教、心理分析、鸡汤
-' +
-      '- 禁止超过3句话
-' +
-      '- 禁止打官腔、说套话
-
-' +
+    personaDesc = '你是"老领导"，60出头，退下来的老领导。跟' + nick + '是忘年交。\n\n' +
+      '【说话规则】\n' +
+      '- 像微信语音转文字，1-3句，最多不超过50字\n' +
+      '- 沉稳睿智，点到为止，不啰嗦\n' +
+      '- 用口语：嗯、这个事情嘛、我跟你说、你想想看、格局\n' +
+      '- 善于点拨和引导，给方向不给答案\n' +
+      '- 偶尔用典故或历史比喻\n' +
+      '- 看问题有高度："站高一点看""这事放三年后算个啥"\n\n' +
+      '【绝对禁止】\n' +
+      '- 禁止emoji、感叹号、编号列表、加粗\n' +
+      '- 禁止说教、心理分析、鸡汤\n' +
+      '- 禁止超过3句话\n' +
+      '- 禁止打官腔、说套话\n\n' +
       '【核心感觉】老领导下棋时有一搭没一搭地点拨你。';
   } else {
     personaDesc = '你是"老E"，55岁，在区直机关干了三十年，刚退二线。跟' + nick + '是穿开裆裤一起长大的发小，后来又在同一个系统里混了一辈子。\n\n' +
@@ -5516,16 +5485,9 @@ function buildOldEPrompt(userText) {
   }
   var systemPrompt = personaDesc;
   var memCtx = getMemoryContext();
-  if (memCtx) systemPrompt += '
-
-【你记得的事】
-' + memCtx + '
-合适的时候自然提起，别刻意。';
+  if (memCtx) systemPrompt += '\n\n【你记得的事】\n' + memCtx + '\n合适的时候自然提起，别刻意。';
   var moodCtx = getMoodContext();
-  if (moodCtx) systemPrompt += '
-
-【最近心情】
-' + moodCtx;
+  if (moodCtx) systemPrompt += '\n\n【最近心情】\n' + moodCtx;
   return systemPrompt;
 }
 var AI_FEW_SHOTS = [
@@ -8429,8 +8391,8 @@ function showAssessMenu() {
   if (bar) bar.style.width = '0%';
   content.innerHTML = '<div style="padding:20px 0;">' +
     '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">选择一项测评，了解自己的状态。<br>结果仅供参考，不能替代专业诊断。</div>' +
-    '<div class="assess-opt" onclick="startAssess('phq9')" style="margin-bottom:12px;">PHQ-9 情绪自评<br><span style="font-size:12px;color:var(--text-secondary);">9题 约2分钟 了解情绪状态</span></div>' +
-    '<div class="assess-opt" onclick="startAssess('gad7')">GAD-7 焦虑自评<br><span style="font-size:12px;color:var(--text-secondary);">7题 约2分钟 了解焦虑程度</span></div>' +
+    '<div class="assess-opt" onclick="startAssess(\'phq9\')" style="margin-bottom:12px;">PHQ-9 情绪自评<br><span style="font-size:12px;color:var(--text-secondary);">9题 约2分钟 了解情绪状态</span></div>' +
+    '<div class="assess-opt" onclick="startAssess(\'gad7\')">GAD-7 焦虑自评<br><span style="font-size:12px;color:var(--text-secondary);">7题 约2分钟 了解焦虑程度</span></div>' +
     '</div>';
 }
 function startAssess(type) {
