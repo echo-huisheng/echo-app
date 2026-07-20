@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.2.4</title>
+<title>Echo回声 — 试用版v8.2.5</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -39,7 +39,7 @@
   --radius-tag: 20px;
 }
 body {
-  background: #1a1a2e;
+  background: var(--bg-base);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -5423,9 +5423,6 @@ function recordProviderFailure(id) {
 function recordProviderSuccess(id) {
   aiCircuitBreaker[id] = { failures: 0, lastFail: 0 };
 }
-// v8.0: 记忆提取hook
-var _origRecordSuccess = recordProviderSuccess;
-recordProviderSuccess = function(id) { _origRecordSuccess(id); };
 function buildOldEPrompt(userText) {
   var nick = lsLoad('nickname', '静水流深');
   var persona = lsLoad('echo_persona', 'bigbro');
@@ -7181,6 +7178,8 @@ function addSpaceMediaMessage(bubbleHTML) {
 function startSpaceVoice() {
   // Prevent double-fire on touch devices (touch + emulated mouse events)
   if (spaceVoiceRecorder && spaceVoiceRecorder.state === 'recording') return;
+  // 防止重复开启录音时旧计时器泄漏
+  if (spaceVoiceTimer) { clearInterval(spaceVoiceTimer); spaceVoiceTimer = null; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showToast('当前浏览器不支持语音录制');
     return;
