@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.2.6</title>
+<title>Echo回声 — 试用版v8.2.7</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3226,6 +3226,7 @@ body {
 .home-big-btn:active { transform: scale(0.97); }
 .home-big-btn.chat-btn { background: linear-gradient(135deg, rgba(200,168,98,0.15), rgba(200,168,98,0.05)); border-color: rgba(200,168,98,0.3); }
 .home-big-btn.relax-btn { background: var(--bg-surface-2); }
+.home-big-btn.secret-btn { background: linear-gradient(135deg, rgba(74,222,128,0.12), rgba(74,222,128,0.04)); border-color: rgba(74,222,128,0.25); }
 .big-btn-icon { font-size: 36px; }
 .big-btn-text { font-size: 20px; font-weight: 600; color: var(--text-primary); font-family: var(--font-title); }
 .big-btn-sub { font-size: 13px; color: var(--text-secondary); }
@@ -3423,17 +3424,17 @@ body {
           <span class="big-btn-text">找Echo聊聊</span>
           <span class="big-btn-sub">说心里话，不留痕迹</span>
         </button>
-        <button class="home-big-btn relax-btn" onclick="switchTab('relax')">
-          <span class="big-btn-icon">🌿</span>
-          <span class="big-btn-text">放松一下</span>
-          <span class="big-btn-sub">呼吸·白噪音·静一静</span>
+        <button class="home-big-btn secret-btn" onclick="openSpaceOverlay()">
+          <span class="big-btn-icon">🔐</span>
+          <span class="big-btn-text">密聊</span>
+          <span class="big-btn-sub">加密空间·只有你俩</span>
         </button>
       </div>
       <!-- v8.2 Secondary Actions -->
       <div class="home-secondary-actions">
+        <button class="home-small-btn" onclick="switchTab('relax')">🌿 放松一下</button>
         <button class="home-small-btn" onclick="openMoodCalendar()">📅 心情日历</button>
         <button class="home-small-btn" onclick="openAssessment()">📋 心理测评</button>
-        <button class="home-small-btn" onclick="openSpaceOverlay()">🔐 密语空间</button>
         <button class="home-small-btn" onclick="switchTab('mine')">⚙️ 更多</button>
       </div>
 
