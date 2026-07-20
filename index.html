@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.2</title>
+<title>Echo回声 — 试用版v8.2.1</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -4895,7 +4895,20 @@ function checkPin() {
     dots.forEach(function(d){ d.classList.add('success'); });
     setTimeout(function(){
       $('pinScreen').classList.add('hidden');
-      $('immersionPage').classList.remove('hidden');
+      // Returning users skip onboarding, go straight to main UI
+      var onboarded = false;
+      try { onboarded = localStorage.getItem('echo_onboarded') === '1'; } catch(e){}
+      if (onboarded) {
+        // Restore nickname and go straight to home
+        var nick = lsLoad('nickname', '老伙计');
+        var hour = new Date().getHours();
+        var greet = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
+        if ($('homeGreeting')) $('homeGreeting').textContent = greet + '，' + nick;
+        var mineName = document.querySelector('.mine-name');
+        if (mineName) mineName.textContent = nick;
+      } else {
+        if ($('immersionPage')) $('immersionPage').classList.remove('hidden');
+      }
     }, 600);
   } else {
     dots.forEach(function(d){ d.classList.add('error'); });
@@ -4912,7 +4925,16 @@ function checkPin() {
 }
 $('pinSkip').addEventListener('click', function(){
   $('pinScreen').classList.add('hidden');
-  $('immersionPage').classList.remove('hidden');
+  var onboarded = false;
+  try { onboarded = localStorage.getItem('echo_onboarded') === '1'; } catch(e){}
+  if (onboarded) {
+    var nick = lsLoad('nickname', '老伙计');
+    var hour = new Date().getHours();
+    var greet = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
+    if ($('homeGreeting')) $('homeGreeting').textContent = greet + '，' + nick;
+  } else {
+    if ($('immersionPage')) $('immersionPage').classList.remove('hidden');
+  }
 });
 
 // ========== Immersion Page ==========
@@ -4984,6 +5006,8 @@ $('identityStartBtn').addEventListener('click', function(){
   lsSave('nickname', chosenName);
   lsSave('nicknameIndex', identityNicknameIndex);
   lsSave('avatarIndex', identityAvatarSelected);
+  // Mark onboarding as complete so returning users skip it
+  try { localStorage.setItem('echo_onboarded', '1'); } catch(e){}
   // Update home greeting
   var hour = new Date().getHours();
   var greet = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
