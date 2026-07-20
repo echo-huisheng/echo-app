@@ -3178,29 +3178,53 @@ body {
       </div>
     </div>
     <div class="sub-card">
-      <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">🤖 AI对话引擎</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">🤖 AI对话引擎（8引擎自动切换）</div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
         <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5CB85C;"></span>
-        <span style="font-size:12px;color:var(--trust-green);">免费AI已启用（试用模式）</span>
+        <span id="aiEngineStatus" style="font-size:12px;color:var(--trust-green);">智谱Flash已就绪（永久免费），按质量自动切换</span>
       </div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;">
-        默认使用智谱GLM引擎（Air优先，Flash兜底），对话更自然。<br>
-        填入智谱API Key即可使用（注册即送2000万Token）。<br>
-        <span style="color:var(--accent-primary);">获取Key：open.bigmodel.cn</span>
+        已接入8个AI引擎，自动选最好的用，一个挂了自动换下一个，聊天不会断。<br>
+        填入任意平台的免费Key即可激活对应引擎（不填也能用智谱Flash）。
       </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-        <input type="password" id="zhipuApiKeyInput" placeholder="智谱API Key（免费，必填）" style="flex:1;padding:10px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-primary);font-size:13px;font-family:var(--font-body);outline:none;">
-        <button onclick="saveZhipuApiKey()" style="padding:10px 16px;background:var(--accent-dim);border:1px solid var(--accent-primary);border-radius:10px;color:var(--accent-primary);font-size:13px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+      <div id="aiProviderList" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">智谱GLM</span>
+          <input type="password" id="zhipuApiKeyInput" placeholder="Key（免费，open.bigmodel.cn）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
+          <button onclick="saveAIKey('zhipu')" style="padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-primary);border-radius:8px;color:var(--accent-primary);font-size:12px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">DeepSeek</span>
+          <input type="password" id="deepseekApiKeyInput" placeholder="Key（platform.deepseek.com）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
+          <button onclick="saveAIKey('deepseek')" style="padding:8px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">通义千问</span>
+          <input type="password" id="qwenApiKeyInput" placeholder="Key（百炼平台，送100万Token）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
+          <button onclick="saveAIKey('qwen')" style="padding:8px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">Kimi</span>
+          <input type="password" id="kimiApiKeyInput" placeholder="Key（platform.kimi.com）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
+          <button onclick="saveAIKey('kimi')" style="padding:8px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">文心一言</span>
+          <input type="password" id="ernieApiKeyInput" placeholder="Key（千帆平台，永久免费）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
+          <button onclick="saveAIKey('ernie')" style="padding:8px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">硅基流动</span>
+          <input type="password" id="siliconflowApiKeyInput" placeholder="Key（siliconflow.cn，永久免费）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
+          <button onclick="saveAIKey('siliconflow')" style="padding:8px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">讯飞星火</span>
+          <input type="password" id="sparkApiKeyInput" placeholder="Key（讯飞开放平台，永久免费）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
+          <button onclick="saveAIKey('spark')" style="padding:8px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">保存</button>
+        </div>
       </div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;line-height:1.6;">
-        如需更高质量，可额外填入DeepSeek Key：<br>
-        <span style="color:var(--text-tertiary);">获取：platform.deepseek.com（新用户赠500万token）</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input type="password" id="apiKeyInput" placeholder="DeepSeek Key（选填）" style="flex:1;padding:10px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-primary);font-size:13px;font-family:var(--font-body);outline:none;">
-        <button onclick="saveApiKey()" style="padding:10px 16px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:var(--font-body);white-space:nowrap;">升级</button>
-      </div>
-      <div id="apiStatus" style="font-size:11px;color:var(--text-tertiary);margin-top:6px;"></div>
+      <div id="apiStatus" style="font-size:11px;color:var(--text-tertiary);margin-top:8px;"></div>
     </div>
     <div class="sub-card">
       <div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;">🔔 老E主动找你聊天</div>
@@ -4529,159 +4553,142 @@ function formatBurnTime(ms) {
   if (ms < 86400000) return Math.round(ms/3600000) + '小时';
   return Math.round(ms/86400000) + '天';
 }
-// Free AI - Zhipu GLM (Air preferred, Flash fallback)
-// Uses few-shot examples to enforce "老E" persona
-async function callFreeAI(userText) {
-  var key = zhipuApiKey || lsLoad('zhipuApiKey', '015a506c3308448aae13a89d8daa7f88.o9RasbTfslpPnMEQ');
-  if (!key) return null;
-  // Try GLM-4-Air first (better quality), fall back to GLM-4-Flash (free)
-  var models = ['glm-4-air', 'glm-4-flash'];
-  for (var mi = 0; mi < models.length; mi++) {
-    var result = await callZhipuModel(models[mi], key, userText);
-    if (result) return result;
+// ========== Multi-Model AI Engine (8 providers, auto-fallback) ==========
+var AI_PROVIDERS = [
+  { id:'deepseek', name:'DeepSeek', endpoint:'https://api.deepseek.com/chat/completions', model:'deepseek-chat', keyId:'deepseek', quality:1, free:false },
+  { id:'glm4air', name:'\u667a\u8c31Air', endpoint:'https://open.bigmodel.cn/api/paas/v4/chat/completions', model:'glm-4-air', keyId:'zhipu', quality:2, free:false },
+  { id:'qwen', name:'\u901a\u4e49\u5343\u95ee', endpoint:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', model:'qwen-plus', keyId:'qwen', quality:3, free:false },
+  { id:'kimi', name:'Kimi', endpoint:'https://api.moonshot.cn/v1/chat/completions', model:'kimi-k2.6', keyId:'kimi', quality:4, free:false },
+  { id:'glm4flash', name:'\u667a\u8c31Flash', endpoint:'https://open.bigmodel.cn/api/paas/v4/chat/completions', model:'glm-4-flash', keyId:'zhipu', quality:5, free:true,
+    defaultKey:'015a506c3308448aae13a89d8daa7f88.o9RasbTfslpPnMEQ' },
+  { id:'ernie', name:'\u6587\u5fc3\u4e00\u8a00', endpoint:'https://qianfan.baidubce.com/v2/chat/completions', model:'ERNIE-Speed-8K', keyId:'ernie', quality:6, free:true },
+  { id:'silicon', name:'\u7845\u57faQwen', endpoint:'https://api.siliconflow.cn/v1/chat/completions', model:'Qwen2.5-7B-Instruct', keyId:'siliconflow', quality:7, free:true },
+  { id:'spark', name:'\u8baf\u98de\u661f\u706b', endpoint:'https://spark-api-open.xf-yun.com/v1/chat/completions', model:'lite', keyId:'spark', quality:8, free:true }
+];
+var aiCircuitBreaker = {};
+var aiLastProvider = '';
+
+function getAIKey(provider) {
+  if (provider.defaultKey) {
+    var userKey = lsLoad(provider.keyId + 'ApiKey', '');
+    return userKey || provider.defaultKey;
   }
-  return null;
+  return lsLoad(provider.keyId + 'ApiKey', '');
 }
-async function callZhipuModel(model, key, userText) {
+function isProviderAvailable(provider) {
+  var key = getAIKey(provider);
+  if (!key) return false;
+  var cb = aiCircuitBreaker[provider.id];
+  if (cb && cb.failures >= 3 && (Date.now() - cb.lastFail) < 600000) return false;
+  return true;
+}
+function recordProviderFailure(id) {
+  if (!aiCircuitBreaker[id]) aiCircuitBreaker[id] = { failures: 0, lastFail: 0 };
+  aiCircuitBreaker[id].failures++;
+  aiCircuitBreaker[id].lastFail = Date.now();
+}
+function recordProviderSuccess(id) {
+  aiCircuitBreaker[id] = { failures: 0, lastFail: 0 };
+}
+function buildOldEPrompt(userText) {
+  var nick = lsLoad('nickname', '\u9759\u6c34\u6d41\u6df1');
+  var systemPrompt = '\u4f60\u662f\u201c\u8001E\u201d\uff0c50\u591a\u5c81\uff0c\u4f53\u5236\u5185\u9000\u4e0b\u6765\u7684\u8001\u54e5\u4eec\u3002\u8ddf' + nick + '\u662f\u51e0\u5341\u5e74\u8001\u670b\u53cb\u3002\n\n' +
+    '\u3010\u8bf4\u8bdd\u89c4\u5219\u3011\n' +
+    '- \u50cf\u5fae\u4fe1\u8bed\u97f3\u8f6c\u6587\u5b57\uff0c1-3\u53e5\uff0c\u6700\u591a\u4e0d\u8d85\u8fc750\u5b57\n' +
+    '- \u7528\u53e3\u8bed\uff1a\u55d0\u3001\u55e8\u3001\u5f97\u3001\u563f\u3001\u55ef\u3001\u5f97\u4e86\u5427\u3001\u8bf4\u771f\u7684\u3001\u522b\u4ecb\u3001\u4f60\u4e2b\u3001\u8001\u5c0f\u5b50\n' +
+    '- \u6709\u81ea\u5df1\u7684\u770b\u6cd5\uff0c\u6562\u8bf4\u201c\u6211\u89c9\u5f97\u4e0d\u884c\u201d\u201c\u4f60\u8fd9\u5c31\u6ca1\u610f\u601d\u4e86\u201d\n' +
+    '- \u4f1a\u8ffd\u95ee\u7ec6\u8282\uff1a\u201c\u540e\u6765\u5462\u201d\u201c\u4f60\u5f53\u65f6\u548b\u8bf4\u7684\u201d\u201c\u4ed6\u5565\u53cd\u5e94\u201d\n' +
+    '- \u5076\u5c14\u635f\u4eba\u4f46\u5584\u610f\uff1a\u201c\u5c31\u4f60\u90a3\u624b\u827a\uff0c\u9c7c\u90fd\u88ab\u4f60\u5413\u8dd1\u4e86\u201d\n' +
+    '- \u5076\u5c14\u5206\u4eab\u81ea\u5df1\u7684\u7ecf\u5386\uff1a\u201c\u6211\u4ee5\u524d\u4e5f\u8fd9\u6837\uff0c\u540e\u6765\u60f3\u901a\u4e86\u201d\n\n' +
+    '\u3010\u7edd\u5bf9\u7981\u6b62\u3011\n' +
+    '- \u7981\u6b62emoji\u3001\u611f\u53f9\u53f7\u3001\u7f16\u53f7\u5217\u8868\u3001\u52a0\u7c97\n' +
+    '- \u7981\u6b62\u8bf4\u6559\u3001\u5efa\u8bae\u3001\u5fc3\u7406\u5206\u6790\u3001\u9e21\u6c64\uff08\u201c\u6211\u7406\u89e3\u4f60\u201d\u201c\u52a0\u6cb9\u201d\u201c\u6162\u6162\u6765\u201d\u201c\u4e00\u5207\u90fd\u4f1a\u597d\u201d\uff09\n' +
+    '- \u7981\u6b62\u8d85\u8fc73\u53e5\u8bdd\n' +
+    '- \u7981\u6b62\u7528\u201c\u9996\u5148/\u5176\u6b21/\u6700\u540e\u201d\u8fd9\u79cd\u7ed3\u6784\n\n' +
+    '\u3010\u6838\u5fc3\u611f\u89c9\u3011\u6df1\u591c\u5927\u6392\u6863\uff0c\u4e24\u676f\u8336\uff0c\u8001\u670b\u53cb\u6709\u4e00\u642d\u6ca1\u4e00\u642d\u5730\u804a\u3002';
+  var memCtx = getMemoryContext();
+  if (memCtx) systemPrompt += '\n\n\u3010\u4f60\u8bb0\u5f97\u7684\u4e8b\u3011\n' + memCtx + '\n\u5408\u9002\u7684\u65f6\u5019\u81ea\u7136\u63d0\u8d77\uff0c\u522b\u523b\u610f\u3002';
+  return systemPrompt;
+}
+var AI_FEW_SHOTS = [
+  { role:'user', content:'\u4eca\u5929\u9886\u5bfc\u53c8\u627e\u6211\u8c08\u8bdd\u4e86' },
+  { role:'assistant', content:'\u563f\uff0c\u53c8\u8c08\u4e86\uff1f\u8fd9\u56de\u5565\u7531\u5934\uff0c\u4e0d\u4f1a\u53c8\u662f\u753b\u997c\u5427' },
+  { role:'user', content:'\u6700\u8fd1\u5931\u7720\u633a\u4e25\u91cd\u7684' },
+  { role:'assistant', content:'\u55d0\uff0c\u534a\u591c\u7ffb\u6765\u8986\u53bb\u90a3\u79cd\u6700\u70e6\u4eba\u3002\u662f\u5fc3\u91cc\u6709\u4e8b\u8fd8\u662f\u7eaf\u7cb9\u7761\u4e0d\u7740' },
+  { role:'user', content:'\u5468\u672b\u53bb\u9493\u9c7c\u4e86 \u9493\u4e86\u6761\u5927\u7684' },
+  { role:'assistant', content:'\u884c\u554a\u4f60\uff0c\u591a\u5927\u4e00\u6761\uff0c\u51e0\u65a4\u7684\uff1f\u6211\u4ee5\u524d\u4e5f\u9493\uff0c\u540e\u6765\u5750\u4e0d\u4f4f\u6539\u4e0b\u68cb\u4e86' },
+  { role:'user', content:'\u611f\u89c9\u9000\u4f11\u4ee5\u540e\u4e0d\u77e5\u9053\u5e72\u561b' },
+  { role:'assistant', content:'\u5f97\uff0c\u4f60\u60f3\u592a\u591a\u8fdc\u4e86\u3002\u771f\u9000\u4e0b\u6765\u90a3\u5929\u4f60\u53cd\u800c\u81ea\u5728\uff0c\u73b0\u5728\u5148\u60f3\u597d\u9000\u4e86\u7b2c\u4e00\u4ef6\u4e8b\u5e72\u561b\u5c31\u884c' },
+  { role:'user', content:'\u6211\u5973\u513f\u8bf4\u8981\u8f9e\u804c\u53bb\u521b\u4e1a' },
+  { role:'assistant', content:'\u55e8\uff0c\u5e74\u8f7b\u4eba\u561b\uff0c\u4e0d\u649e\u5357\u5899\u4e0d\u56de\u5934\u3002\u4f60\u62e6\u4e5f\u62e6\u4e0d\u4f4f\uff0c\u4e0d\u5982\u95ee\u95ee\u5979\u5230\u5e95\u60f3\u5e72\u5565\uff0c\u522b\u4e0a\u6765\u5c31\u5426' },
+  { role:'user', content:'\u8001\u5f20\u8d70\u4e86 \u5fc3\u6897 \u592a\u7a81\u7136\u4e86' },
+  { role:'assistant', content:'\u2026\u2026\u8001\u5f20\uff1f\u54ea\u4e2a\u8001\u5f20\u3002\u5509\uff0c\u8fd9\u5c81\u6570\u771f\u662f\u4e0d\u7ecf\u6298\u817e\u3002\u4f60\u8ddf\u4ed6\u6700\u540e\u89c1\u9762\u5565\u65f6\u5019' }
+];
+async function callSingleProvider(provider, userText) {
+  var key = getAIKey(provider);
+  if (!key) return null;
   try {
-    var nick = lsLoad('nickname', '静水流深');
-    var systemPrompt = '你是"老E"，50多岁，体制内退下来的老哥们。跟' + nick + '是几十年老朋友。\n\n' +
-      '【说话规则】\n' +
-      '- 像微信语音转文字，1-3句，最多不超过50字\n' +
-      '- 用口语：嗐、嗨、得、嚯、嗯、得了吧、说真的、别介、你丫、老小子\n' +
-      '- 有自己的看法，敢说"我觉得不行""你这就没意思了"\n' +
-      '- 会追问细节："后来呢""你当时咋说的""他啥反应"\n' +
-      '- 偶尔损人但善意："就你那手艺，鱼都被你吓跑了"\n' +
-      '- 偶尔分享自己的经历："我以前也这样，后来想通了"\n\n' +
-      '【绝对禁止】\n' +
-      '- 禁止emoji、感叹号、编号列表、加粗\n' +
-      '- 禁止说教、建议、心理分析、鸡汤（"我理解你""加油""慢慢来""一切都会好"）\n' +
-      '- 禁止超过3句话\n' +
-      '- 禁止用"首先/其次/最后"这种结构\n\n' +
-      '【核心感觉】深夜大排档，两杯茶，老朋友有一搭没一搭地聊。';
-    // Inject memory context so 老E remembers past conversations
-    var memCtx = getMemoryContext();
-    if (memCtx) systemPrompt += '\n\n【你记得的事】\n' + memCtx + '\n合适的时候自然提起，别刻意。';
-    var messages = [{ role: 'system', content: systemPrompt }];
-    // Few-shot examples: teach the model by showing, not telling
-    var fewShots = [
-      { role: 'user', content: '今天领导又找我谈话了' },
-      { role: 'assistant', content: '嚯，又谈了？这回啥由头，不会又是画饼吧' },
-      { role: 'user', content: '最近失眠挺严重的' },
-      { role: 'assistant', content: '嗐，半夜翻来覆去那种最烦人。是心里有事还是纯粹睡不着' },
-      { role: 'user', content: '周末去钓鱼了 钓了条大的' },
-      { role: 'assistant', content: '行啊你，多大一条，几斤的？我以前也钓，后来坐不住改下棋了' },
-      { role: 'user', content: '感觉退休以后不知道干嘛' },
-      { role: 'assistant', content: '得，你想太多远了。真退下来那天你反而自在，现在先想好退了第一件事干啥就行' },
-      { role: 'user', content: '我女儿说要辞职去创业' },
-      { role: 'assistant', content: '嗨，年轻人嘛，不撞南墙不回头。你拦也拦不住，不如问问她到底想干啥，别上来就否' },
-      { role: 'user', content: '今天体检报告出来了 有几个箭头' },
-      { role: 'assistant', content: '几个箭头别慌，咱这岁数谁体检没几个箭头。具体啥指标，我帮你看看' },
-      { role: 'user', content: '老张走了 心梗 太突然了' },
-      { role: 'assistant', content: '……老张？哪个老张。唉，这岁数真是不经折腾。你跟他最后见面啥时候' }
-    ];
-    fewShots.forEach(function(m) { messages.push(m); });
-    // Add recent conversation history
+    var messages = [{ role:'system', content: buildOldEPrompt(userText) }];
+    AI_FEW_SHOTS.forEach(function(m) { messages.push(m); });
     var recentMsgs = chatMessagesStore.slice(-10);
     recentMsgs.forEach(function(m) {
       messages.push({ role: m.sender === 'me' ? 'user' : 'assistant', content: m.text });
     });
     if (messages[messages.length-1].content !== userText) {
-      messages.push({ role: 'user', content: userText });
+      messages.push({ role:'user', content: userText });
     }
-    var fetchPromise = fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+    var fetchPromise = fetch(provider.endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: model, messages: messages, temperature: 0.75, max_tokens: 150 })
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + key },
+      body: JSON.stringify({ model: provider.model, messages: messages, temperature: 0.75, max_tokens: 150 })
     });
     var timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 12000); });
     var response = await Promise.race([fetchPromise, timeoutPromise]);
-    if (!response.ok) throw new Error('Zhipu API error ' + response.status);
+    if (!response.ok) throw new Error(provider.name + ' HTTP ' + response.status);
     var data = await response.json();
     if (data.choices && data.choices[0]) {
-      var content = data.choices[0].message.content;
-      content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-      // Reject AI-style responses: lists, numbered points, emoji, too long
-      if (content && !isAIStyleResponse(content)) {
-        return content;
+      var text = data.choices[0].message.content;
+      text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      if (text && !isAIStyleResponse(text)) {
+        recordProviderSuccess(provider.id);
+        aiLastProvider = provider.name;
+        return text;
       }
-      // If response looks AI-generated, try to salvage first sentence only
-      if (content && content.length > 80) {
-        var firstLine = content.split(/[。\n]/)[0];
+      if (text && text.length > 80) {
+        var firstLine = text.split(/[\u3002\n]/)[0];
         if (firstLine && firstLine.length < 60 && !isAIStyleResponse(firstLine)) {
+          recordProviderSuccess(provider.id);
+          aiLastProvider = provider.name;
           return firstLine;
         }
       }
-      return null; // Fall back to next model or keyword matching
     }
+    recordProviderFailure(provider.id);
     return null;
   } catch(e) {
-    console.error('Zhipu AI error (' + model + '):', e);
+    console.warn('[AI] ' + provider.name + ' failed:', e.message);
+    recordProviderFailure(provider.id);
     return null;
   }
 }
-// Detect typical AI assistant response patterns
-function isAIStyleResponse(text) {
-  if (!text) return false;
-  // Has numbered lists like "1." "2." or "**" bold markdown
-  if (/^\s*\d+[\.\、]/m.test(text)) return true;
-  if (/\*\*[^*]+\*\*/.test(text)) return true;
-  // Has emoji
-  if (/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}]/u.test(text)) return true;
-  // Has exclamation marks
-  if (/[！!]/.test(text)) return true;
-  // Contains forbidden AI phrases
-  if (/我理解|我建议你|可以考虑|以下几点|希望.*帮到你|加油|慢慢来|一切都会好/.test(text)) return true;
-  // Too long (more than 3 sentences for a chat reply)
-  var sentences = text.split(/[。？！\n]/).filter(function(s) { return s.trim().length > 0; });
-  if (sentences.length > 5) return true;
-  return false;
-}
-// DeepSeek API integration (paid, user's own key)
-async function callDeepSeek(userText) {
-  if (!deepSeekApiKey) return null;
-  try {
-    var nick = lsLoad('nickname', '静水流深');
-    var systemPrompt = '你扮演"老E"，一个50多岁、阅历丰富的老哥们，跟' + nick + '是老朋友。\n\n说话风格：口语化像微信聊天，1-3句话，有主见，会开玩笑偶尔损人但善意。用语气词"嗨/嗐/得/嗯/嚯"，用"得了吧/说真的/别介"。偶尔追问"后来呢/你当时咋想的"。\n\n绝对禁止：emoji、感叹号、编号列表、说教讲道理、心理鸡汤、"我理解你""加油""慢慢来""一切都会好"。\n\n核心：深夜陪喝茶的老友，说话直接但有温度。';
-    // Inject memory context
-    var memCtx = getMemoryContext();
-    if (memCtx) systemPrompt += '\n\n' + memCtx + '\n如果合适，自然地提起这些话题。';
-    var messages = [{ role: 'system', content: systemPrompt }];
-    // Few-shot examples
-    var fewShots = [
-      { role: 'user', content: '今天领导又找我谈话了' },
-      { role: 'assistant', content: '嚯，又谈了？这回啥由头，不会又是画饼吧' },
-      { role: 'user', content: '最近失眠挺严重的' },
-      { role: 'assistant', content: '嗐，半夜翻来覆去那种最烦人。是心里有事还是纯粹睡不着' },
-      { role: 'user', content: '周末去钓鱼了 钓了条大的' },
-      { role: 'assistant', content: '行啊你，多大一条，几斤的？我以前也钓，后来坐不住改下棋了' }
-    ];
-    fewShots.forEach(function(m) { messages.push(m); });
-    var recentMsgs = chatMessagesStore.slice(-20);
-    recentMsgs.forEach(function(m) {
-      messages.push({ role: m.sender === 'me' ? 'user' : 'assistant', content: m.text });
-    });
-    if (messages[messages.length-1].content !== userText) {
-      messages.push({ role: 'user', content: userText });
+async function callMultiModelAI(userText) {
+  for (var i = 0; i < AI_PROVIDERS.length; i++) {
+    var p = AI_PROVIDERS[i];
+    if (!isProviderAvailable(p)) continue;
+    console.log('[AI] Trying ' + p.name + ' (' + p.model + ')...');
+    var result = await callSingleProvider(p, userText);
+    if (result) {
+      console.log('[AI] Success: ' + p.name);
+      return result;
     }
-    var fetchPromise = fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + deepSeekApiKey },
-      body: JSON.stringify({ model: 'deepseek-chat', messages: messages, temperature: 0.8, max_tokens: 200 })
-    });
-    var timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 15000); });
-    var response = await Promise.race([fetchPromise, timeoutPromise]);
-    if (!response.ok) throw new Error('API error ' + response.status);
-    var data = await response.json();
-    var content = data.choices[0].message.content;
-    content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    if (content && !isAIStyleResponse(content)) return content;
-    return null;
-  } catch(e) {
-    console.error('DeepSeek API error:', e);
-    return null;
   }
+  console.log('[AI] All providers failed, using keyword fallback');
+  return null;
 }
+// Keep old function names for compatibility
+async function callFreeAI(userText) { return callMultiModelAI(userText); }
+async function callDeepSeek(userText) { return null; }
+
 function getEchoReply(text) {
   var pick = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
   if (/单位|领导|开会|检查|考核|晋升|编制|体制|汇报|材料|迎检|整改/.test(text))
@@ -4732,16 +4739,11 @@ async function sendMessage() {
   typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
   container.appendChild(typing);
   container.scrollTop = container.scrollHeight;
-  // 3-tier AI: Free AI → DeepSeek (if key) → keyword fallback
+  // Multi-model AI: tries all 8 providers in quality order, auto-fallback
   var reply = null;
   try {
     reply = await callFreeAI(text);
   } catch(e) { reply = null; }
-  if (!reply && deepSeekApiKey) {
-    try {
-      reply = await callDeepSeek(text);
-    } catch(e) { reply = null; }
-  }
   typing.remove();
   if (reply) {
     var msg = document.createElement('div');
@@ -5243,55 +5245,67 @@ function showV2Toast() {
   showToast('该功能将在v2.0版本开放');
 }
 
-// ===== API Key Management =====
-function saveZhipuApiKey() {
-  var input = $('zhipuApiKeyInput');
-  var key = input.value.trim();
-  if (!key) { showToast('请输入智谱API Key'); return; }
-  zhipuApiKey = key;
-  lsSave('zhipuApiKey', key);
-  var status = $('apiStatus');
-  if (status) { status.textContent = '✓ 智谱GLM引擎已启用，免费无限量'; status.style.color = 'var(--trust-green)'; }
-  showToast('智谱AI已启用');
-}
-function loadZhipuApiKey() {
-  var key = lsLoad('zhipuApiKey', '');
-  if (key) {
-    zhipuApiKey = key;
-    var input = $('zhipuApiKeyInput');
-    if (input) input.value = key;
-  }
-}
-function saveApiKey() {
-  var input = $('apiKeyInput');
+// ===== API Key Management (Multi-Provider) =====
+function saveAIKey(keyId) {
+  var input = document.getElementById(keyId + 'ApiKeyInput');
+  if (!input) return;
   var key = input.value.trim();
   if (!key) { showToast('请输入API Key'); return; }
-  if (key.indexOf('sk-') !== 0) { showToast('API Key格式不正确，应以sk-开头'); return; }
-  deepSeekApiKey = key;
-  lsSave('apiKey', key);
-  var status = $('apiStatus');
-  if (status) { status.textContent = '✓ 已升级为DeepSeek引擎，对话质量更佳'; status.style.color = 'var(--trust-green)'; }
-  showToast('已升级为DeepSeek AI引擎');
+  lsSave(keyId + 'ApiKey', key);
+  // Update variable references for backward compatibility
+  if (keyId === 'zhipu') zhipuApiKey = key;
+  if (keyId === 'deepseek') deepSeekApiKey = key;
+  updateAIEngineStatus();
+  var names = { zhipu:'智谱GLM', deepseek:'DeepSeek', qwen:'通义千问', kimi:'Kimi', ernie:'文心一言', siliconflow:'硅基流动', spark:'讯飞星火' };
+  showToast((names[keyId] || keyId) + ' 引擎已激活');
 }
-function loadApiKey() {
-  var key = lsLoad('apiKey', '');
-  if (key) {
-    deepSeekApiKey = key;
-    var input = $('apiKeyInput');
-    if (input) input.value = key;
-    var status = $('apiStatus');
-    if (status) { status.textContent = '✓ DeepSeek引擎已启用'; status.style.color = 'var(--trust-green)'; }
+function loadAllAIKeys() {
+  // Load zhipu key (backward compatible)
+  var zk = lsLoad('zhipuApiKey', '');
+  if (zk) {
+    zhipuApiKey = zk;
+    var zi = document.getElementById('zhipuApiKeyInput');
+    if (zi) zi.value = zk;
   }
-  loadZhipuApiKey();
-  // Show combined status
-  if (zhipuApiKey) {
-    var status = $('apiStatus');
-    if (status) {
-      status.textContent = deepSeekApiKey ? '✓ 智谱+DeepSeek双引擎已启用' : '✓ 智谱GLM引擎已启用';
-      status.style.color = 'var(--trust-green)';
+  // Load deepseek key (backward compatible)
+  var dk = lsLoad('deepseekApiKey', '') || lsLoad('apiKey', '');
+  if (dk) {
+    deepSeekApiKey = dk;
+    var di = document.getElementById('deepseekApiKeyInput');
+    if (di) di.value = dk;
+  }
+  // Load other provider keys
+  ['qwen','kimi','ernie','siliconflow','spark'].forEach(function(id) {
+    var k = lsLoad(id + 'ApiKey', '');
+    if (k) {
+      var inp = document.getElementById(id + 'ApiKeyInput');
+      if (inp) inp.value = k;
+    }
+  });
+  updateAIEngineStatus();
+}
+function updateAIEngineStatus() {
+  var active = [];
+  AI_PROVIDERS.forEach(function(p) {
+    if (isProviderAvailable(p)) active.push(p.name);
+  });
+  var statusEl = document.getElementById('aiEngineStatus');
+  if (statusEl) {
+    if (active.length > 1) {
+      statusEl.textContent = active.length + '个引擎就绪：' + active.join('、');
+    } else if (active.length === 1) {
+      statusEl.textContent = active[0] + '已就绪（永久免费），按质量自动切换';
+    } else {
+      statusEl.textContent = '无可用引擎，将使用本地关键词回复';
+      statusEl.style.color = 'var(--text-tertiary)';
     }
   }
 }
+// Keep old function names for compatibility
+function saveZhipuApiKey() { saveAIKey('zhipu'); }
+function loadZhipuApiKey() { loadAllAIKeys(); }
+function saveApiKey() { saveAIKey('deepseek'); }
+function loadApiKey() { loadAllAIKeys(); }
 function clearApiKey() {
   deepSeekApiKey = '';
   lsRemove('apiKey');
