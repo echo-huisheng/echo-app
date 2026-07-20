@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v7.7</title>
+<title>Echo回声 — 试用版v7.8</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5310,7 +5310,7 @@ function removePinCode() {
   var pin = input.value.trim();
   var saved = getUserPin();
   if (!saved) { showToast('当前没有设置密码'); return; }
-  if (pin && pin !== saved) { showToast('请输入当前密码来验证'); return; }
+  if (!pin || pin !== saved) { showToast('请输入当前密码来验证'); return; }
   localStorage.removeItem('echo_user_pin');
   input.value = '';
   showToast('已取消密码');
@@ -5481,7 +5481,9 @@ function sendSpaceMessage() {
   if (sbReady && currentSpaceCode) {
     // ===== Firebase mode: send encrypted message to server =====
     // Firebase listener (fbListenMessages) will render the message when it arrives back
-    fbSendMsg(currentSpaceCode, text, nick);
+    fbSendMsg(currentSpaceCode, text, nick).then(function(msgId) {
+      if (!msgId) showToast('消息发送失败');
+    });
     // Optimistic local render (will be replaced by Firebase listener echo)
     var container = $('spaceChatMessages');
     var welcome = container.querySelector('.space-welcome-msg');
@@ -6171,10 +6173,20 @@ function handleSpacePhoto(input) {
       var ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
       var compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      // If still too large, reduce quality further
+      if (compressedDataUrl.length > 700000) {
+        compressedDataUrl = canvas.toDataURL('image/jpeg', 0.4);
+      }
+      if (compressedDataUrl.length > 700000) {
+        showToast('照片太大，请尝试裁剪后发送');
+        return;
+      }
       // Send via Supabase (encrypted) if available
       if (sbReady && currentSpaceCode) {
         var msgText = '[IMG]' + compressedDataUrl;
-        fbSendMsg(currentSpaceCode, msgText, getSpaceNick());
+        fbSendMsg(currentSpaceCode, msgText, getSpaceNick()).then(function(msgId) {
+          if (!msgId) showToast('照片发送失败');
+        });
       }
       // Render locally
       addSpaceMediaMessage('<img src="' + compressedDataUrl + '" alt="照片" style="max-width:100%;border-radius:8px;">');
@@ -6221,6 +6233,8 @@ function addSpaceMediaMessage(bubbleHTML) {
 }
 
 function startSpaceVoice() {
+  // Prevent double-fire on touch devices (touch + emulated mouse events)
+  if (spaceVoiceRecorder && spaceVoiceRecorder.state === 'recording') return;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showToast('当前浏览器不支持语音录制');
     return;
@@ -6302,9 +6316,22 @@ function stopSpaceVoiceUI() {
 
 function playSpaceVoice(el, dataUrl) {
   var audio = new Audio(dataUrl);
-  el.querySelector('.voice-icon').textContent = '🔊';
-  audio.onended = function() { el.querySelector('.voice-icon').textContent = '🎤'; };
-  audio.play();
+  var iconEl = el.querySelector('.voice-icon');
+  if (iconEl) iconEl.textContent = '🔊';
+  audio.onended = function() {
+    var icon = el.querySelector('.voice-icon');
+    if (icon) icon.textContent = '🎤';
+  };
+  audio.onerror = function() {
+    var icon = el.querySelector('.voice-icon');
+    if (icon) icon.textContent = '🎤';
+    showToast('语音播放失败');
+  };
+  audio.play().catch(function() {
+    var icon = el.querySelector('.voice-icon');
+    if (icon) icon.textContent = '🎤';
+    showToast('语音播放失败');
+  });
 }
 
 // ========== Music Player (一起听歌) ==========
