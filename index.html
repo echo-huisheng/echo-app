@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v7.9</title>
+<title>Echo回声 — 试用版v8.0</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -2660,6 +2660,362 @@ body {
   background: var(--trust-green);
   color: white;
 }
+
+/* ===== v8.0 新增样式 ===== */
+
+/* 心情打卡卡片 */
+.mood-checkin-card {
+  background: var(--bg-surface-2);
+  border: 1px solid var(--bg-surface-4);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.mood-checkin-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.mood-emoji-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mood-emoji-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: var(--bg-surface-3);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 24px;
+}
+.mood-emoji-btn span {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.mood-emoji-btn.selected {
+  border-color: var(--accent-primary);
+  background: var(--accent-dim);
+}
+.mood-emoji-btn:active {
+  transform: scale(0.95);
+}
+
+/* 心情日历 */
+.mood-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 12px;
+}
+.mood-cal-header {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 4px 0;
+}
+.mood-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  background: var(--bg-surface-3);
+}
+.mood-cal-day.has-mood {
+  font-size: 16px;
+  background: var(--bg-surface-2);
+}
+.mood-cal-day.today {
+  border: 1px solid var(--accent-primary);
+}
+
+/* 呼吸动画 */
+.breath-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(11,14,20,0.95);
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+.breath-overlay.active { display: flex; }
+.breath-circle {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 3px solid var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--accent-primary);
+  transition: transform 4s ease-in-out;
+}
+.breath-circle.inhale { transform: scale(1.4); }
+.breath-circle.hold { transform: scale(1.4); }
+.breath-circle.exhale { transform: scale(1.0); }
+.breath-text {
+  font-size: 20px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+.breath-counter {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.breath-close {
+  position: absolute;
+  top: 40px;
+  right: 24px;
+  font-size: 24px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+/* 心理测评 */
+.assess-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-primary);
+  z-index: 9998;
+  display: none;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px;
+}
+.assess-overlay.active { display: flex; }
+.assess-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.assess-header h2 {
+  font-size: 18px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+.assess-progress {
+  height: 4px;
+  background: var(--bg-surface-3);
+  border-radius: 2px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.assess-progress-bar {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+.assess-question {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.assess-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.assess-opt {
+  padding: 14px 16px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--bg-surface-4);
+  border-radius: 12px;
+  font-size: 15px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.assess-opt:active, .assess-opt.selected {
+  border-color: var(--accent-primary);
+  background: var(--accent-dim);
+}
+.assess-result {
+  text-align: center;
+  padding: 30px 20px;
+}
+.assess-result .score {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--accent-primary);
+  font-family: var(--font-display);
+}
+.assess-result .level {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin: 12px 0;
+}
+.assess-result .advice {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+/* 白噪音/环境音 */
+.ambient-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--bg-surface-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ambient-btn.playing {
+  background: var(--accent-dim);
+  border-color: var(--accent-primary);
+}
+.ambient-panel {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg-surface-2);
+  border-top: 1px solid var(--bg-surface-4);
+  border-radius: 16px 16px 0 0;
+  padding: 20px;
+  z-index: 9990;
+  display: none;
+  transform: translateY(100%);
+  transition: transform 0.3s;
+}
+.ambient-panel.active {
+  display: block;
+  transform: translateY(0);
+}
+.ambient-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.ambient-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: var(--bg-surface-3);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 24px;
+}
+.ambient-item span {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.ambient-item.playing {
+  border-color: var(--accent-primary);
+  background: var(--accent-dim);
+}
+
+/* AI人设选择 */
+.persona-selector {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.persona-chip {
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
+  background: var(--bg-surface-3);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.persona-chip .p-icon { font-size: 20px; }
+.persona-chip .p-name {
+  font-size: 12px;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+.persona-chip .p-desc {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.persona-chip.selected {
+  border-color: var(--accent-primary);
+  background: var(--accent-dim);
+}
+
+/* 防复制 */
+.anti-copy-active .chat-messages {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 紧急清除按钮 */
+.emergency-clear-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(220,53,69,0.1);
+  border: 1px solid rgba(220,53,69,0.4);
+  border-radius: 12px;
+  color: #dc3545;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 16px;
+  font-family: var(--font-body);
+}
+.emergency-clear-btn:active {
+  background: rgba(220,53,69,0.2);
+}
+
+/* 语音录入动画增强 */
+.chat-voice-btn.recording {
+  animation: voicePulse 1.2s infinite;
+}
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200,168,98,0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(200,168,98,0); }
+}
+
+/* 主动关怀提示 */
+.care-toast {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--accent-primary);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 14px;
+  color: var(--text-primary);
+  z-index: 9995;
+  transition: transform 0.4s ease;
+  max-width: 85%;
+  text-align: center;
+}
+.care-toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
 </style>
 </head>
 <body>
@@ -2833,6 +3189,19 @@ body {
         <div onclick="switchTab('chat')" style="margin-left:auto;padding:8px 16px;background:var(--accent-dim);border:1px solid var(--accent-primary);border-radius:20px;font-size:13px;color:var(--accent-primary);cursor:pointer;white-space:nowrap;">💬 聊聊</div>
       </div>
 
+
+      <!-- v8.0 心情打卡 -->
+      <div class="mood-checkin-card" id="moodCheckinCard">
+        <div class="mood-checkin-title">📝 今日心情</div>
+        <div class="mood-emoji-row">
+          <div class="mood-emoji-btn" data-mood="great" onclick="checkinMood('great')">😊<span>开心</span></div>
+          <div class="mood-emoji-btn" data-mood="good" onclick="checkinMood('good')">🙂<span>还行</span></div>
+          <div class="mood-emoji-btn" data-mood="soso" onclick="checkinMood('soso')">😐<span>一般</span></div>
+          <div class="mood-emoji-btn" data-mood="bad" onclick="checkinMood('bad')">😔<span>低落</span></div>
+          <div class="mood-emoji-btn" data-mood="awful" onclick="checkinMood('awful')">😣<span>难受</span></div>
+        </div>
+      </div>
+
       <!-- Topics -->
       <div class="section-title">此刻想聊什么？</div>
       <div class="topics-grid">
@@ -2985,6 +3354,7 @@ body {
       </div>
       <div class="chat-input-row">
         <input type="text" class="chat-input" id="chatInput" placeholder="输入想说的话...">
+        <button class="ambient-btn" id="ambientBtn" onclick="toggleAmbientPanel()">🎵</button>
         <button class="chat-voice-btn" id="chatVoiceBtn" onclick="toggleVoiceInput()"><span class="voice-hint">正在听...</span>&#x1F3A4;</button>
         <button class="chat-send-btn" id="chatSendBtn">➤</button>
       </div>
@@ -2996,6 +3366,7 @@ body {
         <h2>私人空间</h2>
         <button class="space-add-btn" id="spaceAddBtn">+</button>
       </div>
+      <button class="emergency-clear-btn" id="emergencyClearBtn" onclick="emergencyClear()">🚨 紧急清除所有数据</button>
       <div class="space-trust-badges">
         <span class="trust-badge">🔒 隐私保护模式</span>
         <span class="trust-badge">消息定时清理</span>
@@ -3066,6 +3437,21 @@ body {
         <div class="mine-menu-item" data-sub="stage">
           <span class="mi-icon">🌅</span>
           <span class="mi-label">人生阶段</span>
+          <span class="mi-arrow">›</span>
+        </div>
+        <div class="mine-menu-item" onclick="openMoodCalendar()">
+          <span class="mi-icon">📅</span>
+          <span class="mi-label">心情日历</span>
+          <span class="mi-arrow">›</span>
+        </div>
+        <div class="mine-menu-item" onclick="openBreathing()">
+          <span class="mi-icon">🌬️</span>
+          <span class="mi-label">呼吸放松</span>
+          <span class="mi-arrow">›</span>
+        </div>
+        <div class="mine-menu-item" onclick="openAssessment()">
+          <span class="mi-icon">📋</span>
+          <span class="mi-label">心理测评</span>
           <span class="mi-arrow">›</span>
         </div>
       </div>
@@ -3175,6 +3561,27 @@ body {
       <div class="toggle-row">
         <div class="toggle-label">消息自动清理<span class="sub">到期后自动清理</span></div>
         <button class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+    <div class="sub-card">
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">🎭 AI性格风格</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">选择你喜欢的聊天风格</div>
+      <div class="persona-selector" id="personaSelector">
+        <div class="persona-chip selected" data-persona="bigbro" onclick="selectPersona('bigbro')">
+          <div class="p-icon">🧔</div>
+          <div class="p-name">老大哥</div>
+          <div class="p-desc">直爽·损友·靠谱</div>
+        </div>
+        <div class="persona-chip" data-persona="sister" onclick="selectPersona('sister')">
+          <div class="p-icon">👩</div>
+          <div class="p-name">知心大姐</div>
+          <div class="p-desc">温柔·细心·体贴</div>
+        </div>
+        <div class="persona-chip" data-persona="leader" onclick="selectPersona('leader')">
+          <div class="p-icon">👴</div>
+          <div class="p-name">老领导</div>
+          <div class="p-desc">沉稳·睿智·点拨</div>
+        </div>
       </div>
     </div>
     <div class="sub-card">
@@ -4619,24 +5026,117 @@ function recordProviderFailure(id) {
 function recordProviderSuccess(id) {
   aiCircuitBreaker[id] = { failures: 0, lastFail: 0 };
 }
+// v8.0: 记忆提取hook
+var _origRecordSuccess = recordProviderSuccess;
+recordProviderSuccess = function(id) { _origRecordSuccess(id); };
 function buildOldEPrompt(userText) {
-  var nick = lsLoad('nickname', '\u9759\u6c34\u6d41\u6df1');
-  var systemPrompt = '\u4f60\u662f\u201c\u8001E\u201d\uff0c50\u591a\u5c81\uff0c\u4f53\u5236\u5185\u9000\u4e0b\u6765\u7684\u8001\u54e5\u4eec\u3002\u8ddf' + nick + '\u662f\u51e0\u5341\u5e74\u8001\u670b\u53cb\u3002\n\n' +
-    '\u3010\u8bf4\u8bdd\u89c4\u5219\u3011\n' +
-    '- \u50cf\u5fae\u4fe1\u8bed\u97f3\u8f6c\u6587\u5b57\uff0c1-3\u53e5\uff0c\u6700\u591a\u4e0d\u8d85\u8fc750\u5b57\n' +
-    '- \u7528\u53e3\u8bed\uff1a\u55d0\u3001\u55e8\u3001\u5f97\u3001\u563f\u3001\u55ef\u3001\u5f97\u4e86\u5427\u3001\u8bf4\u771f\u7684\u3001\u522b\u4ecb\u3001\u4f60\u4e2b\u3001\u8001\u5c0f\u5b50\n' +
-    '- \u6709\u81ea\u5df1\u7684\u770b\u6cd5\uff0c\u6562\u8bf4\u201c\u6211\u89c9\u5f97\u4e0d\u884c\u201d\u201c\u4f60\u8fd9\u5c31\u6ca1\u610f\u601d\u4e86\u201d\n' +
-    '- \u4f1a\u8ffd\u95ee\u7ec6\u8282\uff1a\u201c\u540e\u6765\u5462\u201d\u201c\u4f60\u5f53\u65f6\u548b\u8bf4\u7684\u201d\u201c\u4ed6\u5565\u53cd\u5e94\u201d\n' +
-    '- \u5076\u5c14\u635f\u4eba\u4f46\u5584\u610f\uff1a\u201c\u5c31\u4f60\u90a3\u624b\u827a\uff0c\u9c7c\u90fd\u88ab\u4f60\u5413\u8dd1\u4e86\u201d\n' +
-    '- \u5076\u5c14\u5206\u4eab\u81ea\u5df1\u7684\u7ecf\u5386\uff1a\u201c\u6211\u4ee5\u524d\u4e5f\u8fd9\u6837\uff0c\u540e\u6765\u60f3\u901a\u4e86\u201d\n\n' +
-    '\u3010\u7edd\u5bf9\u7981\u6b62\u3011\n' +
-    '- \u7981\u6b62emoji\u3001\u611f\u53f9\u53f7\u3001\u7f16\u53f7\u5217\u8868\u3001\u52a0\u7c97\n' +
-    '- \u7981\u6b62\u8bf4\u6559\u3001\u5efa\u8bae\u3001\u5fc3\u7406\u5206\u6790\u3001\u9e21\u6c64\uff08\u201c\u6211\u7406\u89e3\u4f60\u201d\u201c\u52a0\u6cb9\u201d\u201c\u6162\u6162\u6765\u201d\u201c\u4e00\u5207\u90fd\u4f1a\u597d\u201d\uff09\n' +
-    '- \u7981\u6b62\u8d85\u8fc73\u53e5\u8bdd\n' +
-    '- \u7981\u6b62\u7528\u201c\u9996\u5148/\u5176\u6b21/\u6700\u540e\u201d\u8fd9\u79cd\u7ed3\u6784\n\n' +
-    '\u3010\u6838\u5fc3\u611f\u89c9\u3011\u6df1\u591c\u5927\u6392\u6863\uff0c\u4e24\u676f\u8336\uff0c\u8001\u670b\u53cb\u6709\u4e00\u642d\u6ca1\u4e00\u642d\u5730\u804a\u3002';
+  var nick = lsLoad('nickname', '静水流深');
+  var persona = lsLoad('echo_persona', 'bigbro');
+  var personaDesc = '';
+  if (persona === 'sister') {
+    personaDesc = '你是"知心大姐"，50多岁，体制内退下来的大姐。跟' + nick + '是几十年老姐妹。
+
+' +
+      '【说话规则】
+' +
+      '- 像微信语音转文字，1-3句，最多不超过50字
+' +
+      '- 温柔但不腻，关心人但不啰嗦
+' +
+      '- 用口语：哎呀、可不是嘛、你呀、听姐说、别想太多
+' +
+      '- 会主动关心身体和生活："吃了吗""别太累了""早点睡"
+' +
+      '- 偶尔分享自己的经历："我以前也这样，后来想开了"
+' +
+      '- 适当肯定对方："你已经做得很好了""换我我也不知咋办"
+
+' +
+      '【绝对禁止】
+' +
+      '- 禁止emoji、感叹号、编号列表、加粗
+' +
+      '- 禁止说教、心理分析、鸡汤（"加油""一切都会好的"）
+' +
+      '- 禁止超过3句话
+
+' +
+      '【核心感觉】老姐妹喝茶聊天，温暖但不矫情。';
+  } else if (persona === 'leader') {
+    personaDesc = '你是"老领导"，60出头，退下来的老领导。跟' + nick + '是忘年交。
+
+' +
+      '【说话规则】
+' +
+      '- 像微信语音转文字，1-3句，最多不超过50字
+' +
+      '- 沉稳睿智，点到为止，不啰嗦
+' +
+      '- 用口语：嗯、这个事情嘛、我跟你说、你想想看、格局
+' +
+      '- 善于点拨和引导，给方向不给答案
+' +
+      '- 偶尔用典故或历史比喻
+' +
+      '- 看问题有高度："站高一点看""这事放三年后算个啥"
+
+' +
+      '【绝对禁止】
+' +
+      '- 禁止emoji、感叹号、编号列表、加粗
+' +
+      '- 禁止说教、心理分析、鸡汤
+' +
+      '- 禁止超过3句话
+' +
+      '- 禁止打官腔、说套话
+
+' +
+      '【核心感觉】老领导下棋时有一搭没一搭地点拨你。';
+  } else {
+    personaDesc = '你是"老E"，50多岁，体制内退下来的老哥们。跟' + nick + '是几十年老朋友。
+
+' +
+      '【说话规则】
+' +
+      '- 像微信语音转文字，1-3句，最多不超过50字
+' +
+      '- 用口语：嗐、嘿、得、嘿、嗯、得了吧、说真的、别介、你个、老小子
+' +
+      '- 有自己的看法，敢说"我觉得不行""你这就没意思了"
+' +
+      '- 会追问细节："后来呢""你当时咋说的""他啥反应"
+' +
+      '- 偶尔损人但善意："就你那手艺，鱼都被你吓跑了"
+' +
+      '- 偶尔分享自己的经历："我以前也这样，后来想通了"
+
+' +
+      '【绝对禁止】
+' +
+      '- 禁止emoji、感叹号、编号列表、加粗
+' +
+      '- 禁止说教、建议、心理分析、鸡汤（"我理解你""加油""慢慢来""一切都会好"）
+' +
+      '- 禁止超过3句话
+' +
+      '- 禁止用"首先/其次/最后"这种结构
+
+' +
+      '【核心感觉】深夜大排档，两杯茶，老朋友有一搭没一搭地聊。';
+  }
+  var systemPrompt = personaDesc;
   var memCtx = getMemoryContext();
-  if (memCtx) systemPrompt += '\n\n\u3010\u4f60\u8bb0\u5f97\u7684\u4e8b\u3011\n' + memCtx + '\n\u5408\u9002\u7684\u65f6\u5019\u81ea\u7136\u63d0\u8d77\uff0c\u522b\u523b\u610f\u3002';
+  if (memCtx) systemPrompt += '
+
+【你记得的事】
+' + memCtx + '
+合适的时候自然提起，别刻意。';
+  var moodCtx = getMoodContext();
+  if (moodCtx) systemPrompt += '
+
+【最近心情】
+' + moodCtx;
   return systemPrompt;
 }
 var AI_FEW_SHOTS = [
@@ -6988,6 +7488,568 @@ function installPWA() {
   }
 }
 
+
+// ===== v8.0 新增功能 =====
+
+// --- 心情打卡 ---
+var MOOD_EMOJIS = { great:'\u{1F60A}', good:'\u{1F642}', soso:'\u{1F610}', bad:'\u{1F614}', awful:'\u{1F623}' };
+var MOOD_LABELS = { great:'开心', good:'还行', soso:'一般', bad:'低落', awful:'难受' };
+
+function checkinMood(mood) {
+  if (!mood) return;
+  var moods = lsLoad('echo_moods', []);
+  var today = new Date().toDateString();
+  var existing = -1;
+  for (var i = 0; i < moods.length; i++) {
+    if (new Date(moods[i].time).toDateString() === today) { existing = i; break; }
+  }
+  var entry = { mood: mood, time: Date.now() };
+  if (existing >= 0) { moods[existing] = entry; } else { moods.push(entry); }
+  var cutoff = Date.now() - 90 * 86400000;
+  moods = moods.filter(function(m) { return m.time > cutoff; });
+  lsSave('echo_moods', moods);
+  var btns = document.querySelectorAll('.mood-emoji-btn');
+  if (btns) {
+    btns.forEach(function(b) { b.classList.remove('selected'); });
+    var sel = document.querySelector('.mood-emoji-btn[data-mood="' + mood + '"]');
+    if (sel) sel.classList.add('selected');
+  }
+  showCareToast('已记录今日心情 ' + (MOOD_EMOJIS[mood] || ''));
+}
+
+function loadTodayMood() {
+  var moods = lsLoad('echo_moods', []);
+  var today = new Date().toDateString();
+  for (var i = moods.length - 1; i >= 0; i--) {
+    if (new Date(moods[i].time).toDateString() === today) {
+      var sel = document.querySelector('.mood-emoji-btn[data-mood="' + moods[i].mood + '"]');
+      if (sel) sel.classList.add('selected');
+      return;
+    }
+  }
+}
+
+function getMoodContext() {
+  var moods = lsLoad('echo_moods', []);
+  if (!moods || moods.length === 0) return '';
+  var recent = moods.slice(-3);
+  var lines = [];
+  recent.forEach(function(m) {
+    var d = new Date(m.time);
+    var label = (d.getMonth()+1) + '月' + d.getDate() + '日';
+    lines.push(label + '：' + (MOOD_LABELS[m.mood] || m.mood));
+  });
+  return '最近心情记录：' + lines.join('，');
+}
+
+// --- 心情日历 ---
+function openMoodCalendar() {
+  var overlay = document.getElementById('sub-mood-calendar');
+  if (overlay) overlay.classList.add('active');
+  renderMoodCalendar();
+}
+function closeMoodCalendar() {
+  var overlay = document.getElementById('sub-mood-calendar');
+  if (overlay) overlay.classList.remove('active');
+}
+function renderMoodCalendar() {
+  var grid = document.getElementById('moodCalendarGrid');
+  var monthEl = document.getElementById('moodCalendarMonth');
+  var statsEl = document.getElementById('moodStatsContent');
+  if (!grid || !monthEl) return;
+  var now = new Date();
+  var year = now.getFullYear(), month = now.getMonth();
+  monthEl.textContent = year + '年' + (month + 1) + '月';
+  var moods = lsLoad('echo_moods', []);
+  var moodMap = {};
+  moods.forEach(function(m) {
+    var d = new Date(m.time);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      moodMap[d.getDate()] = m.mood;
+    }
+  });
+  var headers = ['日','一','二','三','四','五','六'];
+  var htm = '';
+  headers.forEach(function(h) { htm += '<div class="mood-cal-header">' + h + '</div>'; });
+  var firstDay = new Date(year, month, 1).getDay();
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+  for (var i = 0; i < firstDay; i++) { htm += '<div class="mood-cal-day"></div>'; }
+  var today = now.getDate();
+  for (var d = 1; d <= daysInMonth; d++) {
+    var cls = 'mood-cal-day';
+    var content = d;
+    if (moodMap[d]) { cls += ' has-mood'; content = MOOD_EMOJIS[moodMap[d]] || d; }
+    if (d === today) cls += ' today';
+    htm += '<div class="' + cls + '">' + content + '</div>';
+  }
+  grid.innerHTML = htm;
+  if (statsEl) {
+    var counts = {};
+    Object.keys(moodMap).forEach(function(day) {
+      var m = moodMap[day];
+      counts[m] = (counts[m] || 0) + 1;
+    });
+    var total = Object.keys(moodMap).length;
+    var statLines = ['本月打卡 ' + total + ' 天'];
+    Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; }).forEach(function(m) {
+      statLines.push((MOOD_EMOJIS[m]||'') + ' ' + (MOOD_LABELS[m]||m) + '：' + counts[m] + '天');
+    });
+    statsEl.textContent = statLines.join('  ·  ');
+  }
+}
+
+// --- AI人设切换 ---
+function selectPersona(persona) {
+  if (!persona) return;
+  lsSave('echo_persona', persona);
+  var chips = document.querySelectorAll('.persona-chip');
+  if (chips) {
+    chips.forEach(function(c) { c.classList.remove('selected'); });
+    var sel = document.querySelector('.persona-chip[data-persona="' + persona + '"]');
+    if (sel) sel.classList.add('selected');
+  }
+  showCareToast('已切换AI风格');
+}
+function loadPersona() {
+  var persona = lsLoad('echo_persona', 'bigbro');
+  var chips = document.querySelectorAll('.persona-chip');
+  if (chips) {
+    chips.forEach(function(c) { c.classList.remove('selected'); });
+    var sel = document.querySelector('.persona-chip[data-persona="' + persona + '"]');
+    if (sel) sel.classList.add('selected');
+  }
+}
+
+// --- 呼吸放松 (4-4-6, 3轮) ---
+var breathTimer = null;
+function openBreathing() {
+  var overlay = document.getElementById('breathOverlay');
+  if (overlay) overlay.classList.add('active');
+  startBreathCycle();
+}
+function closeBreathing() {
+  var overlay = document.getElementById('breathOverlay');
+  if (overlay) overlay.classList.remove('active');
+  if (breathTimer) { clearTimeout(breathTimer); breathTimer = null; }
+}
+function startBreathCycle() {
+  var circle = document.getElementById('breathCircle');
+  var text = document.getElementById('breathText');
+  var counter = document.getElementById('breathCounter');
+  if (!circle || !text || !counter) return;
+  var round = 0, totalRounds = 3;
+  function doRound() {
+    if (round >= totalRounds) {
+      text.textContent = '放松完成';
+      circle.className = 'breath-circle';
+      counter.textContent = '感觉好些了吗？';
+      breathTimer = setTimeout(closeBreathing, 2500);
+      return;
+    }
+    round++;
+    counter.textContent = '第 ' + round + '/' + totalRounds + ' 轮';
+    text.textContent = '吸气...';
+    circle.className = 'breath-circle inhale';
+    breathTimer = setTimeout(function() {
+      text.textContent = '屏住...';
+      circle.className = 'breath-circle hold';
+      breathTimer = setTimeout(function() {
+        text.textContent = '呼气...';
+        circle.className = 'breath-circle exhale';
+        breathTimer = setTimeout(function() {
+          doRound();
+        }, 6000);
+      }, 4000);
+    }, 4000);
+  }
+  text.textContent = '准备...';
+  breathTimer = setTimeout(doRound, 1500);
+}
+
+// --- 心理测评 (PHQ-9 + GAD-7) ---
+var ASSESS_DATA = {
+  phq9: {
+    title: 'PHQ-9 情绪自评',
+    options: ['完全没有(0分)','好几天(1分)','一半以上天数(2分)','几乎每天(3分)'],
+    questions: [
+      '做事时提不起劲或没有兴趣',
+      '感到心情低落、沮丧或绝望',
+      '入睡困难、睡不安稳或睡眠过多',
+      '感觉疲倦或没有活力',
+      '食欲不振或吃太多',
+      '觉得自己很糟，或觉得自己很失败',
+      '对事物专注有困难，例如看报纸或看电视',
+      '动作或说话速度缓慢，或坐立不安',
+      '有不如死掉或用某种方式伤害自己的念头'
+    ]
+  },
+  gad7: {
+    title: 'GAD-7 焦虑自评',
+    options: ['完全没有(0分)','好几天(1分)','一半以上天数(2分)','几乎每天(3分)'],
+    questions: [
+      '感觉紧张、焦虑或急切',
+      '不能停止或控制担忧',
+      '对各种各样的事情担忧过多',
+      '很难放松下来',
+      '由于不安而无法静坐',
+      '变得容易烦恼或急躁',
+      '感到似乎将有可怕的事情发生'
+    ]
+  }
+};
+var assessState = { type: null, qIndex: 0, scores: [] };
+
+function openAssessment() {
+  var overlay = document.getElementById('assessOverlay');
+  if (overlay) overlay.classList.add('active');
+  showAssessMenu();
+}
+function closeAssessment() {
+  var overlay = document.getElementById('assessOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+function showAssessMenu() {
+  var content = document.getElementById('assessContent');
+  var title = document.getElementById('assessTitle');
+  var bar = document.getElementById('assessProgressBar');
+  if (!content) return;
+  if (title) title.textContent = '心理测评';
+  if (bar) bar.style.width = '0%';
+  content.innerHTML = '<div style="padding:20px 0;">' +
+    '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">选择一项测评，了解自己的状态。<br>结果仅供参考，不能替代专业诊断。</div>' +
+    '<div class="assess-opt" onclick="startAssess('phq9')" style="margin-bottom:12px;">PHQ-9 情绪自评<br><span style="font-size:12px;color:var(--text-secondary);">9题 约2分钟 了解情绪状态</span></div>' +
+    '<div class="assess-opt" onclick="startAssess('gad7')">GAD-7 焦虑自评<br><span style="font-size:12px;color:var(--text-secondary);">7题 约2分钟 了解焦虑程度</span></div>' +
+    '</div>';
+}
+function startAssess(type) {
+  assessState = { type: type, qIndex: 0, scores: [] };
+  renderAssessQuestion();
+}
+function renderAssessQuestion() {
+  var data = ASSESS_DATA[assessState.type];
+  if (!data) return;
+  var content = document.getElementById('assessContent');
+  var title = document.getElementById('assessTitle');
+  var bar = document.getElementById('assessProgressBar');
+  if (!content) return;
+  if (title) title.textContent = data.title;
+  var total = data.questions.length;
+  var idx = assessState.qIndex;
+  if (bar) bar.style.width = Math.round((idx / total) * 100) + '%';
+  var htm = '<div class="assess-question">' + (idx + 1) + '. ' + data.questions[idx] + '</div>';
+  htm += '<div class="assess-options">';
+  data.options.forEach(function(opt, i) {
+    htm += '<div class="assess-opt" onclick="answerAssess(' + i + ')">' + opt + '</div>';
+  });
+  htm += '</div>';
+  content.innerHTML = htm;
+}
+function answerAssess(score) {
+  assessState.scores.push(score);
+  assessState.qIndex++;
+  var data = ASSESS_DATA[assessState.type];
+  if (assessState.qIndex >= data.questions.length) {
+    showAssessResult();
+  } else {
+    renderAssessQuestion();
+  }
+}
+function showAssessResult() {
+  var content = document.getElementById('assessContent');
+  var bar = document.getElementById('assessProgressBar');
+  if (!content) return;
+  if (bar) bar.style.width = '100%';
+  var total = assessState.scores.reduce(function(a, b) { return a + b; }, 0);
+  var level = '', advice = '';
+  if (assessState.type === 'phq9') {
+    if (total <= 4) { level = '情绪状态良好'; advice = '继续保持，有烦恼随时来聊。'; }
+    else if (total <= 9) { level = '轻度情绪波动'; advice = '最近可能有些压力，注意调节作息，多跟朋友聊聊。'; }
+    else if (total <= 14) { level = '中度情绪困扰'; advice = '建议关注自己的状态，可以尝试呼吸放松，必要时跟信任的人倾诉。'; }
+    else if (total <= 19) { level = '中重度情绪困扰'; advice = '建议认真关注自己的情绪，考虑跟专业人士聊聊。'; }
+    else { level = '重度情绪困扰'; advice = '强烈建议寻求专业心理帮助，你值得被好好对待。'; }
+  } else {
+    if (total <= 4) { level = '心态平和'; advice = '状态不错，继续保持。'; }
+    else if (total <= 9) { level = '轻度焦虑'; advice = '有些紧张是正常的，试试呼吸放松，别给自己太大压力。'; }
+    else if (total <= 14) { level = '中度焦虑'; advice = '焦虑感比较明显了，建议规律运动，减少咖啡因，必要时咨询专业人士。'; }
+    else { level = '重度焦虑'; advice = '建议尽快寻求专业帮助，焦虑是可以被治疗的。'; }
+  }
+  content.innerHTML = '<div class="assess-result">' +
+    '<div class="score">' + total + '</div>' +
+    '<div class="level">' + level + '</div>' +
+    '<div class="advice">' + advice + '</div>' +
+    '<div style="margin-top:24px;display:flex;gap:12px;justify-content:center;">' +
+    '<button class="assess-opt" onclick="showAssessMenu()" style="padding:12px 20px;">重新测评</button>' +
+    '<button class="assess-opt" onclick="closeAssessment();openBreathing();" style="padding:12px 20px;">试试呼吸放松</button>' +
+    '</div></div>';
+  var results = lsLoad('echo_assess_results', []);
+  results.push({ type: assessState.type, score: total, level: level, time: Date.now() });
+  lsSave('echo_assess_results', results);
+}
+
+// --- 白噪音/环境音 (Web Audio API) ---
+var ambientCtx = null;
+var ambientNodes = {};
+var currentAmbient = null;
+
+function toggleAmbientPanel() {
+  var panel = document.getElementById('ambientPanel');
+  if (panel) panel.classList.toggle('active');
+}
+function toggleAmbientSound(type) {
+  if (currentAmbient === type) { stopAmbient(); return; }
+  stopAmbient();
+  currentAmbient = type;
+  if (!ambientCtx) {
+    try { ambientCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return; }
+  }
+  if (ambientCtx.state === 'suspended') ambientCtx.resume();
+  var gain = ambientCtx.createGain();
+  gain.gain.value = 0.3;
+  gain.connect(ambientCtx.destination);
+  var nodes = createNoiseNodes(type, gain);
+  ambientNodes = { gain: gain, nodes: nodes };
+  var items = document.querySelectorAll('.ambient-item');
+  if (items) {
+    items.forEach(function(it) { it.classList.remove('playing'); });
+    var sel = document.querySelector('.ambient-item[data-sound="' + type + '"]');
+    if (sel) sel.classList.add('playing');
+  }
+  var btn = document.getElementById('ambientBtn');
+  if (btn) btn.classList.add('playing');
+}
+function createNoiseNodes(type, output) {
+  var bufferSize = 2 * ambientCtx.sampleRate;
+  var buffer = ambientCtx.createBuffer(1, bufferSize, ambientCtx.sampleRate);
+  var data = buffer.getChannelData(0);
+  var lastOut = 0;
+  if (type === 'rain') {
+    for (var i = 0; i < bufferSize; i++) {
+      var white = Math.random() * 2 - 1;
+      data[i] = (lastOut + (0.02 * white)) / 1.02;
+      lastOut = data[i]; data[i] *= 3.5;
+    }
+  } else if (type === 'wave') {
+    for (var i = 0; i < bufferSize; i++) {
+      var white = Math.random() * 2 - 1;
+      data[i] = (lastOut + (0.01 * white)) / 1.01;
+      lastOut = data[i]; data[i] *= 5.0;
+    }
+  } else if (type === 'forest' || type === 'night') {
+    for (var i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.15;
+      if (Math.random() < 0.0001) data[i] += (Math.random() - 0.5) * 0.8;
+    }
+  } else if (type === 'fire') {
+    for (var i = 0; i < bufferSize; i++) {
+      var white = Math.random() * 2 - 1;
+      data[i] = (lastOut + (0.04 * white)) / 1.04;
+      lastOut = data[i]; data[i] *= 2.5;
+      if (Math.random() < 0.001) data[i] += (Math.random() - 0.5) * 0.5;
+    }
+  } else {
+    for (var i = 0; i < bufferSize; i++) {
+      var white = Math.random() * 2 - 1;
+      data[i] = (lastOut + (0.005 * white)) / 1.005;
+      lastOut = data[i]; data[i] *= 8.0;
+    }
+  }
+  var source = ambientCtx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  var filter = ambientCtx.createBiquadFilter();
+  if (type === 'rain') { filter.type = 'highpass'; filter.frequency.value = 400; }
+  else if (type === 'wave') { filter.type = 'lowpass'; filter.frequency.value = 500; }
+  else if (type === 'forest' || type === 'night') { filter.type = 'bandpass'; filter.frequency.value = 2000; filter.Q.value = 0.5; }
+  else if (type === 'fire') { filter.type = 'lowpass'; filter.frequency.value = 800; }
+  else { filter.type = 'lowpass'; filter.frequency.value = 300; }
+  source.connect(filter);
+  filter.connect(output);
+  source.start();
+  return [source, filter];
+}
+function stopAmbient() {
+  if (ambientNodes.nodes) {
+    ambientNodes.nodes.forEach(function(n) { try { if(n.stop) n.stop(); n.disconnect(); } catch(e){} });
+  }
+  if (ambientNodes.gain) { try { ambientNodes.gain.disconnect(); } catch(e){} }
+  ambientNodes = {};
+  currentAmbient = null;
+  var items = document.querySelectorAll('.ambient-item');
+  if (items) items.forEach(function(it) { it.classList.remove('playing'); });
+  var btn = document.getElementById('ambientBtn');
+  if (btn) btn.classList.remove('playing');
+}
+
+// --- 增强AI主动关怀 ---
+var careTimer = null;
+function startProactiveCare() {
+  if (careTimer) clearInterval(careTimer);
+  careTimer = setInterval(function() {
+    var hour = new Date().getHours();
+    var lastVisit = lsLoad('echo_last_visit', 0);
+    var gap = Date.now() - lastVisit;
+    var msg = '';
+    if (hour >= 22 || hour < 6) {
+      msg = '夜深了，早点休息吧，明天再聊';
+    } else if (hour >= 6 && hour < 9) {
+      msg = '早上好，新的一天开始了';
+    } else if (gap > 3 * 86400000) {
+      msg = '好几天没见你了，最近还好吗？';
+    } else if (hour >= 12 && hour < 14) {
+      msg = '中午了，记得吃饭休息';
+    }
+    if (msg && Math.random() < 0.3) { showCareToast(msg); }
+  }, 30 * 60000);
+}
+function showCareToast(msg) {
+  var toast = document.getElementById('careToast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, 4000);
+}
+
+// --- 截屏检测 + 防复制 ---
+function initScreenshotDetect() {
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      lsSave('echo_last_hidden', Date.now());
+    } else {
+      var lastHidden = lsLoad('echo_last_hidden', 0);
+      var gap = Date.now() - lastHidden;
+      if (gap > 0 && gap < 3000) {
+        showCareToast('检测到可能的截屏操作，注意保护隐私');
+        var msgs = document.querySelector('.chat-messages');
+        if (msgs) {
+          msgs.style.filter = 'blur(8px)';
+          setTimeout(function() { msgs.style.filter = ''; }, 2000);
+        }
+      }
+    }
+  });
+  var chatPage = document.getElementById('page-chat');
+  if (chatPage) chatPage.classList.add('anti-copy-active');
+}
+
+// --- 紧急清除 ---
+function emergencyClear() {
+  var btn = document.getElementById('emergencyClearBtn');
+  if (!btn) return;
+  if (btn.dataset.confirming !== 'yes') {
+    btn.textContent = '再次点击确认清除（不可恢复）';
+    btn.dataset.confirming = 'yes';
+    setTimeout(function() {
+      if (btn) { btn.textContent = '紧急清除所有数据'; btn.dataset.confirming = ''; }
+    }, 5000);
+    return;
+  }
+  var keys = ['echo_memory', 'echo_moods', 'echo_persona', 'echo_assess_results',
+              'echo_rooms', 'echo_room_messages', 'echo_last_visit', 'echo_last_hidden'];
+  keys.forEach(function(k) { try { localStorage.removeItem(k); } catch(e){} });
+  var msgs = document.querySelector('.chat-messages');
+  if (msgs) msgs.innerHTML = '';
+  btn.textContent = '已清除所有数据';
+  btn.dataset.confirming = '';
+  showCareToast('所有数据已安全清除');
+  setTimeout(function() { if (btn) btn.textContent = '紧急清除所有数据'; }, 3000);
+}
+
+// --- AI长期记忆增强 ---
+function extractAndSaveMemory(userText, aiReply) {
+  if (!userText || userText.length < 6) return;
+  var memEnabled = true;
+  var toggles = document.querySelectorAll('#sub-settings .toggle-switch');
+  if (toggles && toggles.length >= 3) {
+    memEnabled = toggles[2].classList.contains('on');
+  }
+  if (!memEnabled) return;
+  var memories = lsLoad('echo_memory', []);
+  var topics = ['工作','领导','同事','退休','家人','孩子','老伴','健康','失眠','钓鱼','下棋',
+                '散步','体检','血压','女儿','儿子','孙子','开会','考核','调动','工资'];
+  var found = '';
+  for (var i = 0; i < topics.length; i++) {
+    if (userText.indexOf(topics[i]) >= 0) { found = topics[i]; break; }
+  }
+  if (!found) return;
+  var fact = userText.length > 40 ? userText.substring(0, 40) + '...' : userText;
+  var now = Date.now();
+  var dup = memories.some(function(m) {
+    return m.topic === found && (now - m.time) < 86400000;
+  });
+  if (dup) return;
+  memories.push({ topic: found, fact: fact, time: now });
+  if (memories.length > 50) memories = memories.slice(-50);
+  lsSave('echo_memory', memories);
+}
+
+// --- 初始化v8.0功能 ---
+function initV8() {
+  loadTodayMood();
+  loadPersona();
+  initScreenshotDetect();
+  startProactiveCare();
+  lsSave('echo_last_visit', Date.now());
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initV8);
+} else {
+  setTimeout(initV8, 500);
+}
+
 </script>
+
+<!-- v8.0 呼吸放松覆盖层 -->
+<div class="breath-overlay" id="breathOverlay">
+  <button class="breath-close" onclick="closeBreathing()">✕</button>
+  <div class="breath-text" id="breathText">准备开始</div>
+  <div class="breath-circle" id="breathCircle">🌬️</div>
+  <div class="breath-counter" id="breathCounter">第 1/3 轮</div>
+</div>
+
+<!-- v8.0 心理测评覆盖层 -->
+<div class="assess-overlay" id="assessOverlay">
+  <div class="assess-header">
+    <button class="sub-back" onclick="closeAssessment()">←</button>
+    <h2 id="assessTitle">心理测评</h2>
+  </div>
+  <div class="assess-progress"><div class="assess-progress-bar" id="assessProgressBar" style="width:0%"></div></div>
+  <div id="assessContent"></div>
+</div>
+
+<!-- v8.0 心情日历覆盖层 -->
+<div class="sub-page-overlay" id="sub-mood-calendar">
+  <div class="sub-header">
+    <button class="sub-back" onclick="closeMoodCalendar()">←</button>
+    <h2>心情日历</h2>
+  </div>
+  <div class="sub-card">
+    <div id="moodCalendarMonth" style="text-align:center;font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:12px;"></div>
+    <div class="mood-calendar-grid" id="moodCalendarGrid"></div>
+  </div>
+  <div class="sub-card" id="moodStatsCard">
+    <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">本月心情统计</div>
+    <div id="moodStatsContent" style="font-size:13px;color:var(--text-secondary);line-height:1.8;"></div>
+  </div>
+</div>
+
+<!-- v8.0 白噪音面板 -->
+<div class="ambient-panel" id="ambientPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <span style="font-size:15px;font-weight:600;color:var(--text-primary);">🎵 环境音</span>
+    <button onclick="toggleAmbientPanel()" style="background:none;border:none;font-size:18px;color:var(--text-secondary);cursor:pointer;">✕</button>
+  </div>
+  <div class="ambient-grid">
+    <div class="ambient-item" data-sound="rain" onclick="toggleAmbientSound('rain')">🌧️<span>雨声</span></div>
+    <div class="ambient-item" data-sound="wave" onclick="toggleAmbientSound('wave')">🌊<span>海浪</span></div>
+    <div class="ambient-item" data-sound="forest" onclick="toggleAmbientSound('forest')">🌲<span>森林</span></div>
+    <div class="ambient-item" data-sound="fire" onclick="toggleAmbientSound('fire')">🔥<span>篝火</span></div>
+    <div class="ambient-item" data-sound="wind" onclick="toggleAmbientSound('wind')">💨<span>微风</span></div>
+    <div class="ambient-item" data-sound="night" onclick="toggleAmbientSound('night')">🌙<span>夏夜</span></div>
+  </div>
+</div>
+
+<!-- v8.0 主动关怀提示 -->
+<div class="care-toast" id="careToast"></div>
+
 </body>
 </html>
