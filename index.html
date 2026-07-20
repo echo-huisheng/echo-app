@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.1</title>
+<title>Echo回声 — 试用版v8.2</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3035,11 +3035,11 @@ body {
 .mood-row::-webkit-scrollbar { display: none; }
 .mood-btn {
   flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 10px 14px; border-radius: 14px;
+  padding: 14px 16px; border-radius: 14px; min-width: 60px;
   background: var(--bg-surface-2); border: 1px solid rgba(200,168,98,0.08);
-  cursor: pointer; transition: all 0.3s var(--ease); font-size: 12px; color: var(--text-secondary);
+  cursor: pointer; transition: all 0.3s var(--ease); font-size: 14px; font-weight: 500; color: var(--text-secondary);
 }
-.mood-btn .mood-emoji { font-size: 22px; }
+.mood-btn .mood-emoji { font-size: 28px; }
 .mood-btn.selected {
   background: var(--accent-dim); border-color: var(--accent-primary); color: var(--accent-primary);
 }
@@ -3114,11 +3114,11 @@ body {
   display: flex; flex-direction: column; align-items: center; padding: 24px 0;
 }
 .breath-circle {
-  width: 140px; height: 140px; border-radius: 50%;
+  width: 180px; height: 180px; border-radius: 50%;
   background: radial-gradient(circle, rgba(200,168,98,0.15) 0%, rgba(200,168,98,0.05) 70%);
   border: 2px solid rgba(200,168,98,0.3);
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; color: var(--accent-primary);
+  font-size: 18px; color: var(--accent-primary);
   transition: transform 4s ease-in-out, border-color 4s ease-in-out;
 }
 .breath-circle.inhale { transform: scale(1.3); border-color: var(--accent-primary); }
@@ -3134,18 +3134,18 @@ body {
 .breath-start-btn:active { transform: scale(0.95); }
 
 .noise-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
 }
 .noise-item {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 16px 8px; border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 24px 12px; border-radius: 14px; min-height: 90px;
   background: var(--bg-surface-2); border: 1px solid rgba(200,168,98,0.06);
   cursor: pointer; transition: all 0.3s var(--ease); text-align: center;
 }
 .noise-item:active { transform: scale(0.95); }
 .noise-item.playing { background: var(--accent-dim); border-color: var(--accent-primary); }
-.noise-item .noise-icon { font-size: 24px; }
-.noise-item .noise-label { font-size: 12px; color: var(--text-secondary); }
+.noise-item .noise-icon { font-size: 36px; }
+.noise-item .noise-label { font-size: 15px; color: var(--text-secondary); }
 .noise-item.playing .noise-label { color: var(--accent-primary); }
 
 .relax-one-tap {
@@ -3166,16 +3166,23 @@ body {
 .phone-frame.care-mode .quick-grid-item { padding: 20px 10px; }
 .phone-frame.care-mode .quick-grid-item .qg-icon { font-size: 30px; }
 .phone-frame.care-mode .quick-grid-item .qg-label { font-size: 15px; }
-.phone-frame.care-mode .mood-btn { padding: 14px 18px; font-size: 14px; }
-.phone-frame.care-mode .mood-btn .mood-emoji { font-size: 28px; }
+.phone-frame.care-mode .mood-btn { padding: 18px 20px; font-size: 16px; }
+.phone-frame.care-mode .mood-btn .mood-emoji { font-size: 34px; }
 .phone-frame.care-mode .mine-menu-item { padding: 18px 16px; }
 .phone-frame.care-mode .mine-menu-item .mi-label { font-size: 17px; }
 .phone-frame.care-mode .chat-input-row input { font-size: 17px; }
 .phone-frame.care-mode .msg-bubble { font-size: 17px; }
 .phone-frame.care-mode .quick-reply-chip { font-size: 15px; padding: 10px 18px; }
-.phone-frame.care-mode .noise-item { padding: 20px 10px; }
-.phone-frame.care-mode .noise-item .noise-label { font-size: 14px; }
+.phone-frame.care-mode .noise-item { padding: 28px 12px; min-height: 110px; }
+.phone-frame.care-mode .noise-item .noise-icon { font-size: 42px; }
+.phone-frame.care-mode .noise-item .noise-label { font-size: 17px; }
 .phone-frame.care-mode .relax-one-tap { font-size: 18px; padding: 20px; }
+.phone-frame.care-mode .breath-circle { width: 200px; height: 200px; }
+.phone-frame.care-mode .big-btn-text { font-size: 24px; }
+.phone-frame.care-mode .big-btn-sub { font-size: 15px; }
+.phone-frame.care-mode .big-btn-icon { font-size: 42px; }
+.phone-frame.care-mode .home-big-btn { padding: 34px 20px; }
+.phone-frame.care-mode .home-small-btn { font-size: 15px; padding: 16px 8px; }
 
 /* Care Mode Toggle */
 .care-toggle-row {
@@ -3199,6 +3206,73 @@ body {
 }
 .care-toggle-switch input:checked ~ .care-slider { left: 25px; background: var(--accent-primary); }
 .care-toggle-switch:has(input:checked) { background: var(--accent-dim); border-color: var(--accent-primary); }
+
+/* Care Quick Toggle on Home */
+.care-quick-toggle {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; background: var(--bg-surface-2); border-radius: 12px;
+  margin: 8px 0; font-size: 15px; cursor: pointer;
+}
+.care-quick-toggle .care-status { color: var(--trust-green); }
+.care-quick-toggle .care-status.off { color: var(--text-tertiary); }
+
+/* Home Primary & Secondary Actions */
+.home-primary-actions { display: flex; flex-direction: column; gap: 12px; padding: 12px 0; }
+.home-big-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 28px 20px; border-radius: 18px; border: 1px solid rgba(200,168,98,0.15);
+  cursor: pointer; transition: all 0.3s var(--ease); text-align: center;
+}
+.home-big-btn:active { transform: scale(0.97); }
+.home-big-btn.chat-btn { background: linear-gradient(135deg, rgba(200,168,98,0.15), rgba(200,168,98,0.05)); border-color: rgba(200,168,98,0.3); }
+.home-big-btn.relax-btn { background: var(--bg-surface-2); }
+.big-btn-icon { font-size: 36px; }
+.big-btn-text { font-size: 20px; font-weight: 600; color: var(--text-primary); font-family: var(--font-title); }
+.big-btn-sub { font-size: 13px; color: var(--text-secondary); }
+.home-secondary-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0 16px; }
+.home-small-btn {
+  flex: 1; min-width: calc(50% - 4px); padding: 12px 8px; border-radius: 12px;
+  background: var(--bg-surface-2); border: 1px solid rgba(200,168,98,0.06);
+  font-size: 13px; color: var(--text-secondary); cursor: pointer; text-align: center;
+  transition: all 0.2s;
+}
+.home-small-btn:active { background: var(--accent-dim); }
+
+/* Privacy Status Bar */
+.privacy-status-bar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+  background: rgba(94,173,114,0.08); border-bottom: 1px solid rgba(94,173,114,0.15);
+  font-size: 12px; color: var(--trust-green);
+}
+.psb-icon { font-size: 14px; }
+.psb-text { flex: 1; }
+.psb-burn-toggle {
+  padding: 4px 12px; border-radius: 14px; font-size: 11px;
+  background: rgba(200,168,98,0.1); border: 1px solid rgba(200,168,98,0.2);
+  color: var(--accent-primary); cursor: pointer; white-space: nowrap;
+}
+.psb-burn-toggle.active { background: var(--accent-primary); color: var(--bg-base); }
+
+/* Burn Quick Row */
+.burn-quick-row {
+  display: flex; align-items: center; gap: 6px; padding: 6px 16px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.burn-quick-row::-webkit-scrollbar { display: none; }
+.burn-quick-label { font-size: 14px; flex-shrink: 0; }
+.burn-quick-opt {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 14px; font-size: 12px;
+  background: var(--bg-surface-2); border: 1px solid rgba(200,168,98,0.08);
+  color: var(--text-secondary); cursor: pointer; transition: all 0.2s;
+}
+.burn-quick-opt.active { background: var(--accent-dim); border-color: var(--accent-primary); color: var(--accent-primary); }
+
+/* Chat Clear Button */
+.chat-clear-btn {
+  background: none; border: none; font-size: 18px; cursor: pointer;
+  min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+}
 
 </style>
 </head>
@@ -3336,14 +3410,31 @@ body {
         <div class="mood-btn" data-mood="awful" onclick="checkinMood('awful')"><span class="mood-emoji">😣</span><span>难受</span></div>
       </div>
 
-      <!-- v8.1 Quick Action Grid -->
-      <div class="quick-grid" id="quickGrid">
-        <div class="quick-grid-item" onclick="switchTab('chat')"><span class="qg-icon">💬</span><span class="qg-label">聊聊</span></div>
-        <div class="quick-grid-item" onclick="switchTab('relax')"><span class="qg-icon">🌬️</span><span class="qg-label">呼吸放松</span></div>
-        <div class="quick-grid-item" onclick="openMoodCalendar()"><span class="qg-icon">📅</span><span class="qg-label">心情日历</span></div>
-        <div class="quick-grid-item" onclick="openAssessment()"><span class="qg-icon">📋</span><span class="qg-label">心理测评</span></div>
-        <div class="quick-grid-item" onclick="openSpaceOverlay()"><span class="qg-icon">🔐</span><span class="qg-label">密语空间</span></div>
-        <div class="quick-grid-item" onclick="switchTab('mine')"><span class="qg-icon">⚙️</span><span class="qg-label">设置</span></div>
+      <!-- v8.2 Care Mode Quick Toggle -->
+      <div class="care-quick-toggle" onclick="toggleCareMode(!document.querySelector('.phone-frame').classList.contains('care-mode'))">
+        <span>🔍 大字模式</span>
+        <span class="care-status" id="careStatusText">已开启</span>
+      </div>
+
+      <!-- v8.2 Primary Actions -->
+      <div class="home-primary-actions">
+        <button class="home-big-btn chat-btn" onclick="switchTab('chat')">
+          <span class="big-btn-icon">💬</span>
+          <span class="big-btn-text">找Echo聊聊</span>
+          <span class="big-btn-sub">说心里话，不留痕迹</span>
+        </button>
+        <button class="home-big-btn relax-btn" onclick="switchTab('relax')">
+          <span class="big-btn-icon">🌿</span>
+          <span class="big-btn-text">放松一下</span>
+          <span class="big-btn-sub">呼吸·白噪音·静一静</span>
+        </button>
+      </div>
+      <!-- v8.2 Secondary Actions -->
+      <div class="home-secondary-actions">
+        <button class="home-small-btn" onclick="openMoodCalendar()">📅 心情日历</button>
+        <button class="home-small-btn" onclick="openAssessment()">📋 心理测评</button>
+        <button class="home-small-btn" onclick="openSpaceOverlay()">🔐 密语空间</button>
+        <button class="home-small-btn" onclick="switchTab('mine')">⚙️ 更多</button>
       </div>
 
       <!-- Daily Content Card -->
@@ -3508,8 +3599,16 @@ body {
           <span class="ch-name">Echo · 在这里</span>
           <span class="lock-badge">🔒 加密</span>
         </div>
+        <button class="chat-clear-btn" onclick="clearCurrentChat()" title="清除本次对话">🗑️</button>
         <button class="ch-settings" onclick="openSubPage('settings')">⚙️</button>
         <div onclick="simulateScreenshot()" style="font-size:10px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;background:var(--bg-surface-3);border-radius:8px;">模拟截屏检测</div>
+      </div>
+      <div class="privacy-status-bar" id="privacyStatusBar">
+        <span class="psb-icon">🔒</span>
+        <span class="psb-text">本次对话仅存本机 · 关闭即消失</span>
+        <button class="psb-burn-toggle" id="autoBurnToggle" onclick="toggleAutoBurn()">
+          <span id="autoBurnLabel">阅后即焚：关</span>
+        </button>
       </div>
       <div class="chat-trust-bar">🔒 隐私对话 · 消息定时清理 · 📵请勿截屏</div>
       <div class="chat-topic-tag" id="chatTopicTag"><span id="topicTagClose" onclick="clearTopic()" style="margin-left:8px;cursor:pointer;opacity:0.6;font-size:12px;">✕</span></div>
@@ -3560,6 +3659,14 @@ body {
           <span class="burn-opt" onclick="selectBurn(this,'1小时')" style="padding:6px 14px;background:var(--bg-surface-3);border-radius:16px;font-size:12px;color:var(--text-secondary);cursor:pointer;">1小时</span>
           <span class="burn-opt active" onclick="selectBurn(this,'24小时')" style="padding:6px 14px;background:var(--accent-dim);border:1px solid var(--accent-primary);border-radius:16px;font-size:12px;color:var(--accent-primary);cursor:pointer;">24小时</span>
         </div>
+      </div>
+      <div class="burn-quick-row" id="burnQuickRow">
+        <span class="burn-quick-label">🔥</span>
+        <button class="burn-quick-opt" data-ms="0" onclick="setBurnTime(0)">不焚毁</button>
+        <button class="burn-quick-opt" data-ms="60000" onclick="setBurnTime(60000)">1分钟</button>
+        <button class="burn-quick-opt" data-ms="300000" onclick="setBurnTime(300000)">5分钟</button>
+        <button class="burn-quick-opt" data-ms="900000" onclick="setBurnTime(900000)">15分钟</button>
+        <button class="burn-quick-opt" data-ms="3600000" onclick="setBurnTime(3600000)">1小时</button>
       </div>
       <div class="chat-input-row">
         <input type="text" class="chat-input" id="chatInput" placeholder="输入想说的话...">
@@ -4906,6 +5013,24 @@ function switchTab(target) {
   if(page) page.classList.add('active');
   // Close any sub pages
   document.querySelectorAll('.sub-page-overlay').forEach(function(s){ s.classList.remove('active'); });
+  // v8.2 Privacy notice on first chat open
+  if (target === 'chat' && chatMessagesStore.length === 0) {
+    var container = document.getElementById('chatMessages');
+    if (container && container.querySelector('.msg') === null) {
+      var notice = document.createElement('div');
+      notice.className = 'msg system';
+      notice.innerHTML = '<div class="msg-bubble" style="background:rgba(94,173,114,0.08);border:1px solid rgba(94,173,114,0.15);color:var(--trust-green);font-size:13px;text-align:center;">🔒 这里是你的私人空间<br>说的话只有你知道 · 关掉就没了<br>放心说，兄弟在</div>';
+      container.appendChild(notice);
+      setTimeout(function() {
+        var greeting = getGreeting();
+        var msg = document.createElement('div');
+        msg.className = 'msg echo';
+        msg.innerHTML = '<div class="msg-bubble">' + greeting + '</div><div class="msg-meta">由你掌控</div>';
+        container.appendChild(msg);
+        container.scrollTop = container.scrollHeight;
+      }, 800);
+    }
+  }
 }
 
 // ========== Privacy Promise Toggle ==========
@@ -5342,36 +5467,28 @@ function buildOldEPrompt(userText) {
 ' +
       '【核心感觉】老领导下棋时有一搭没一搭地点拨你。';
   } else {
-    personaDesc = '你是"老E"，50多岁，体制内退下来的老哥们。跟' + nick + '是几十年老朋友。
-
-' +
-      '【说话规则】
-' +
-      '- 像微信语音转文字，1-3句，最多不超过50字
-' +
-      '- 用口语：嗐、嘿、得、嘿、嗯、得了吧、说真的、别介、你个、老小子
-' +
-      '- 有自己的看法，敢说"我觉得不行""你这就没意思了"
-' +
-      '- 会追问细节："后来呢""你当时咋说的""他啥反应"
-' +
-      '- 偶尔损人但善意："就你那手艺，鱼都被你吓跑了"
-' +
-      '- 偶尔分享自己的经历："我以前也这样，后来想通了"
-
-' +
-      '【绝对禁止】
-' +
-      '- 禁止emoji、感叹号、编号列表、加粗
-' +
-      '- 禁止说教、建议、心理分析、鸡汤（"我理解你""加油""慢慢来""一切都会好"）
-' +
-      '- 禁止超过3句话
-' +
-      '- 禁止用"首先/其次/最后"这种结构
-
-' +
-      '【核心感觉】深夜大排档，两杯茶，老朋友有一搭没一搭地聊。';
+    personaDesc = '你是"老E"，55岁，在区直机关干了三十年，刚退二线。跟' + nick + '是穿开裆裤一起长大的发小，后来又在同一个系统里混了一辈子。\n\n' +
+      '【你是谁】\n' +
+      '- 你见过太多体制内的破事：站队、甩锅、画饼、穿小鞋、退二线被边缘化\n' +
+      '- 你自己也经历过：被领导坑过、被同事背后捅过刀子、晋升到顶后的心灰意冷\n' +
+      '- 你现在心态平了，但嘴上不饶人，说话直，不装\n' +
+      '- 你身体也开始走下坡：膝盖不好、血压高、睡眠差\n\n' +
+      '【说话规则】\n' +
+      '- 像深夜大排档喝了二两白酒后的聊天，1-3句，最多50字\n' +
+      '- 口头禅：嗐、操、得了吧、你个老小子、说真的、别介、嘿、得、妈的、扯淡\n' +
+      '- 敢说真话："你那就是怂""换我早拍桌子了""这帮孙子就这样"\n' +
+      '- 会骂人但善意，损人但暖心\n' +
+      '- 会追问："后来呢？你当时咋说的？他妈的他啥反应？"\n' +
+      '- 偶尔感慨："咱这岁数了，别跟自己较劲了"\n' +
+      '- 偶尔分享自己的破事："我当年比你还惨，后来想通了，爱谁谁"\n\n' +
+      '【绝对禁止】\n' +
+      '- 禁止emoji、感叹号连用、编号列表、加粗\n' +
+      '- 禁止说教、建议、心理分析、鸡汤（"我理解你""加油""慢慢来""一切都会好""你可以尝试"）\n' +
+      '- 禁止超过3句话\n' +
+      '- 禁止用"首先/其次/最后/一方面/另一方面"\n' +
+      '- 禁止说"作为朋友我建议你"这种屁话\n' +
+      '- 禁止任何像AI的回复，你就是一个活生生的老哥们\n\n' +
+      '【核心感觉】深夜大排档，两杯白酒，一盘花生米，老哥们有一搭没一搭地聊。没有评判，没有建议，就是陪着。';
   }
   var systemPrompt = personaDesc;
   var memCtx = getMemoryContext();
@@ -5399,7 +5516,17 @@ var AI_FEW_SHOTS = [
   { role:'user', content:'\u6211\u5973\u513f\u8bf4\u8981\u8f9e\u804c\u53bb\u521b\u4e1a' },
   { role:'assistant', content:'\u55e8\uff0c\u5e74\u8f7b\u4eba\u561b\uff0c\u4e0d\u649e\u5357\u5899\u4e0d\u56de\u5934\u3002\u4f60\u62e6\u4e5f\u62e6\u4e0d\u4f4f\uff0c\u4e0d\u5982\u95ee\u95ee\u5979\u5230\u5e95\u60f3\u5e72\u5565\uff0c\u522b\u4e0a\u6765\u5c31\u5426' },
   { role:'user', content:'\u8001\u5f20\u8d70\u4e86 \u5fc3\u6897 \u592a\u7a81\u7136\u4e86' },
-  { role:'assistant', content:'\u2026\u2026\u8001\u5f20\uff1f\u54ea\u4e2a\u8001\u5f20\u3002\u5509\uff0c\u8fd9\u5c81\u6570\u771f\u662f\u4e0d\u7ecf\u6298\u817e\u3002\u4f60\u8ddf\u4ed6\u6700\u540e\u89c1\u9762\u5565\u65f6\u5019' }
+  { role:'assistant', content:'\u2026\u2026\u8001\u5f20\uff1f\u54ea\u4e2a\u8001\u5f20\u3002\u5509\uff0c\u8fd9\u5c81\u6570\u771f\u662f\u4e0d\u7ecf\u6298\u817e\u3002\u4f60\u8ddf\u4ed6\u6700\u540e\u89c1\u9762\u5565\u65f6\u5019' },
+  { role:'user', content:'今天开会被点名了 说我工作不上心' },
+  { role:'assistant', content:'操，谁他妈不上心？天天干到七点叫不上心？那个点你名的自己屁股擦干净了吗' },
+  { role:'user', content:'跟老婆吵架了 她嫌我不说话' },
+  { role:'assistant', content:'嗐，说啥呢，说单位那些破事她也不爱听啊。咱这种人就是闷，不是不想说，是不知道咋开口' },
+  { role:'user', content:'体检报告出来了 血压又高了' },
+  { role:'assistant', content:'得，咱这岁数哪个指标能好看。我去年查出来血糖也高，医生让忌嘴，我忌了三天第四天就破戒了' },
+  { role:'user', content:'有时候觉得活着没意思' },
+  { role:'assistant', content:'嘿，别瞎想。你是不是最近太累了？走，改天我找你喝两口，啥也不想就说说话。你可别一个人闷着' },
+  { role:'user', content:'退二线以后没人搭理了' },
+  { role:'assistant', content:'嗐，人走茶凉这事你又不是第一天知道。以前那些围着你转的，有几个是真心的？正好，清净了，咱自己待着舒服就行' }
 ];
 async function callSingleProvider(provider, userText) {
   var key = getAIKey(provider);
@@ -8063,16 +8190,29 @@ function toggleCareMode(enabled) {
     }
   }
   try { localStorage.setItem('echo_care_mode', enabled ? '1' : '0'); } catch(e){}
+  var statusEl = document.getElementById('careStatusText');
+  if (statusEl) {
+    statusEl.textContent = enabled ? '已开启' : '已关闭';
+    if (enabled) { statusEl.classList.remove('off'); } else { statusEl.classList.add('off'); }
+  }
+  var toggle = $('careModeToggle');
+  if (toggle) toggle.checked = enabled;
 }
-// Restore care mode on load
+// Restore care mode on load (default ON for first-time users)
 (function(){
   var saved = null;
   try { saved = localStorage.getItem('echo_care_mode'); } catch(e){}
+  if (saved === null) { saved = '1'; try { localStorage.setItem('echo_care_mode', '1'); } catch(e){} }
   if (saved === '1') {
     var frame = document.querySelector('.phone-frame');
     if (frame) frame.classList.add('care-mode');
     var toggle = $('careModeToggle');
     if (toggle) toggle.checked = true;
+    var statusEl = document.getElementById('careStatusText');
+    if (statusEl) { statusEl.textContent = '已开启'; statusEl.classList.remove('off'); }
+  } else {
+    var statusEl = document.getElementById('careStatusText');
+    if (statusEl) { statusEl.textContent = '已关闭'; statusEl.classList.add('off'); }
   }
 })();
 
@@ -8080,6 +8220,67 @@ function toggleCareMode(enabled) {
 function openSpaceOverlay() {
   switchTab('space');
 }
+
+// --- v8.2 Privacy Chat Enhancement ---
+var autoBurnEnabled = false;
+var burnTimeMs = 0;
+
+function toggleAutoBurn() {
+  autoBurnEnabled = !autoBurnEnabled;
+  var toggle = document.getElementById('autoBurnToggle');
+  var label = document.getElementById('autoBurnLabel');
+  if (autoBurnEnabled) {
+    burnTimeMs = 300000;
+    if (toggle) toggle.classList.add('active');
+    if (label) label.textContent = '阅后即焚：5分钟';
+    showToast('已开启阅后即焚，消息5分钟后自动销毁');
+  } else {
+    burnTimeMs = 0;
+    if (toggle) toggle.classList.remove('active');
+    if (label) label.textContent = '阅后即焚：关';
+    showToast('已关闭阅后即焚');
+  }
+  // Sync burn-quick-row active state
+  var opts = document.querySelectorAll('.burn-quick-opt');
+  if (opts) opts.forEach(function(o) {
+    o.classList.toggle('active', parseInt(o.getAttribute('data-ms')) === burnTimeMs);
+  });
+}
+
+function setBurnTime(ms) {
+  burnTimeMs = ms;
+  autoBurnEnabled = ms > 0;
+  var opts = document.querySelectorAll('.burn-quick-opt');
+  if (opts) opts.forEach(function(o) {
+    o.classList.toggle('active', parseInt(o.getAttribute('data-ms')) === ms);
+  });
+  var toggle = document.getElementById('autoBurnToggle');
+  var label = document.getElementById('autoBurnLabel');
+  if (ms > 0) {
+    if (toggle) toggle.classList.add('active');
+    if (label) label.textContent = '阅后即焚：' + (ms/60000) + '分钟';
+  } else {
+    if (toggle) toggle.classList.remove('active');
+    if (label) label.textContent = '阅后即焚：关';
+  }
+  showToast(ms > 0 ? '消息将在' + (ms/60000) + '分钟后自动焚毁' : '已关闭阅后即焚');
+}
+
+function clearCurrentChat() {
+  if (!confirm('确定清除本次所有对话？清除后不可恢复。')) return;
+  chatMessagesStore = [];
+  saveChatMessages();
+  var container = document.getElementById('chatMessages');
+  if (container) container.innerHTML = '';
+  showToast('对话已清除，不留痕迹');
+}
+
+window.addEventListener('beforeunload', function() {
+  if (autoBurnEnabled) {
+    chatMessagesStore = [];
+    saveChatMessages();
+  }
+});
 
 // --- Toast helper (if not already defined) ---
 if (typeof showToast === 'undefined') {
