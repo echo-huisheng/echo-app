@@ -3184,9 +3184,9 @@ body {
         <span style="font-size:12px;color:var(--trust-green);">免费AI已启用（试用模式）</span>
       </div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.6;">
-        默认使用智谱GLM免费引擎，对话质量高、国内访问快。<br>
-        填入智谱API Key即可使用（免费，注册即送）。<br>
-        <span style="color:var(--accent-primary);">获取Key：open.bigmodel.cn</span>（GLM-4-Flash永久免费）
+        默认使用智谱GLM引擎（Air优先，Flash兜底），对话更自然。<br>
+        填入智谱API Key即可使用（注册即送2000万Token）。<br>
+        <span style="color:var(--accent-primary);">获取Key：open.bigmodel.cn</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
         <input type="password" id="zhipuApiKeyInput" placeholder="智谱API Key（免费，必填）" style="flex:1;padding:10px 14px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:10px;color:var(--text-primary);font-size:13px;font-family:var(--font-body);outline:none;">
@@ -4529,17 +4529,39 @@ function formatBurnTime(ms) {
   if (ms < 86400000) return Math.round(ms/3600000) + '小时';
   return Math.round(ms/86400000) + '天';
 }
-// Free AI - Zhipu GLM-4-Flash (free, fast in China)
-// Uses few-shot examples to enforce "老E" persona (GLM-4-Flash ignores long text instructions)
+// Free AI - Zhipu GLM (Air preferred, Flash fallback)
+// Uses few-shot examples to enforce "老E" persona
 async function callFreeAI(userText) {
   var key = zhipuApiKey || lsLoad('zhipuApiKey', '015a506c3308448aae13a89d8daa7f88.o9RasbTfslpPnMEQ');
   if (!key) return null;
+  // Try GLM-4-Air first (better quality), fall back to GLM-4-Flash (free)
+  var models = ['glm-4-air', 'glm-4-flash'];
+  for (var mi = 0; mi < models.length; mi++) {
+    var result = await callZhipuModel(models[mi], key, userText);
+    if (result) return result;
+  }
+  return null;
+}
+async function callZhipuModel(model, key, userText) {
   try {
     var nick = lsLoad('nickname', '静水流深');
-    var systemPrompt = '你扮演"老E"，一个50多岁的老哥们，跟' + nick + '是老朋友。说话像微信聊天，1-3句，口语化，有主见，偶尔损人但善意。禁止emoji、感叹号、列表、建议、说教、心理鸡汤。像深夜陪喝茶的老友。';
+    var systemPrompt = '你是"老E"，50多岁，体制内退下来的老哥们。跟' + nick + '是几十年老朋友。\n\n' +
+      '【说话规则】\n' +
+      '- 像微信语音转文字，1-3句，最多不超过50字\n' +
+      '- 用口语：嗐、嗨、得、嚯、嗯、得了吧、说真的、别介、你丫、老小子\n' +
+      '- 有自己的看法，敢说"我觉得不行""你这就没意思了"\n' +
+      '- 会追问细节："后来呢""你当时咋说的""他啥反应"\n' +
+      '- 偶尔损人但善意："就你那手艺，鱼都被你吓跑了"\n' +
+      '- 偶尔分享自己的经历："我以前也这样，后来想通了"\n\n' +
+      '【绝对禁止】\n' +
+      '- 禁止emoji、感叹号、编号列表、加粗\n' +
+      '- 禁止说教、建议、心理分析、鸡汤（"我理解你""加油""慢慢来""一切都会好"）\n' +
+      '- 禁止超过3句话\n' +
+      '- 禁止用"首先/其次/最后"这种结构\n\n' +
+      '【核心感觉】深夜大排档，两杯茶，老朋友有一搭没一搭地聊。';
     // Inject memory context so 老E remembers past conversations
     var memCtx = getMemoryContext();
-    if (memCtx) systemPrompt += '\n\n' + memCtx + '\n如果合适，自然地提起这些话题，像老朋友一样。';
+    if (memCtx) systemPrompt += '\n\n【你记得的事】\n' + memCtx + '\n合适的时候自然提起，别刻意。';
     var messages = [{ role: 'system', content: systemPrompt }];
     // Few-shot examples: teach the model by showing, not telling
     var fewShots = [
@@ -4550,7 +4572,13 @@ async function callFreeAI(userText) {
       { role: 'user', content: '周末去钓鱼了 钓了条大的' },
       { role: 'assistant', content: '行啊你，多大一条，几斤的？我以前也钓，后来坐不住改下棋了' },
       { role: 'user', content: '感觉退休以后不知道干嘛' },
-      { role: 'assistant', content: '得，你想太多远了。真退下来那天你反而自在，现在先想好退了第一件事干啥就行' }
+      { role: 'assistant', content: '得，你想太多远了。真退下来那天你反而自在，现在先想好退了第一件事干啥就行' },
+      { role: 'user', content: '我女儿说要辞职去创业' },
+      { role: 'assistant', content: '嗨，年轻人嘛，不撞南墙不回头。你拦也拦不住，不如问问她到底想干啥，别上来就否' },
+      { role: 'user', content: '今天体检报告出来了 有几个箭头' },
+      { role: 'assistant', content: '几个箭头别慌，咱这岁数谁体检没几个箭头。具体啥指标，我帮你看看' },
+      { role: 'user', content: '老张走了 心梗 太突然了' },
+      { role: 'assistant', content: '……老张？哪个老张。唉，这岁数真是不经折腾。你跟他最后见面啥时候' }
     ];
     fewShots.forEach(function(m) { messages.push(m); });
     // Add recent conversation history
@@ -4564,7 +4592,7 @@ async function callFreeAI(userText) {
     var fetchPromise = fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: 'glm-4-flash', messages: messages, temperature: 0.7, max_tokens: 200 })
+      body: JSON.stringify({ model: model, messages: messages, temperature: 0.75, max_tokens: 150 })
     });
     var timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 12000); });
     var response = await Promise.race([fetchPromise, timeoutPromise]);
@@ -4584,11 +4612,11 @@ async function callFreeAI(userText) {
           return firstLine;
         }
       }
-      return null; // Fall back to keyword matching if all else fails
+      return null; // Fall back to next model or keyword matching
     }
     return null;
   } catch(e) {
-    console.error('Zhipu AI error:', e);
+    console.error('Zhipu AI error (' + model + '):', e);
     return null;
   }
 }
