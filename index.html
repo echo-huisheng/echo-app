@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.2.1</title>
+<title>Echo回声 — 试用版v8.2.2</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -4425,7 +4425,7 @@ body {
   </div>
 
   <!-- Modal: Privacy Consent (first launch) -->
-  <div class="modal-overlay active" id="consentModal" style="z-index:9999;">
+  <div class="modal-overlay" id="consentModal" style="z-index:9999;">
     <div style="background:var(--bg-surface-2);border-radius:20px 20px 0 0;padding:28px 20px;width:100%;max-height:80vh;overflow-y:auto;">
       <div style="font-size:32px;text-align:center;margin-bottom:12px;">🌙</div>
       <div style="font-size:18px;font-weight:600;color:var(--text-primary);text-align:center;margin-bottom:20px;font-family:var(--font-title);">欢迎使用 Echo回声</div>
@@ -6248,9 +6248,10 @@ function clearApiKey() {
 function acceptConsent() {
   lsSave('consentGiven', true);
   lsSave('consentDate', new Date().toISOString());
-  $('consentModal').classList.remove('active');
+  var modal = $('consentModal');
+  if (modal) modal.classList.remove('active');
 }
-// Enable consent button when checkbox is checked
+// Enable consent button when checkbox is checked + show modal for first-time users
 (function(){
   var check = $('consentCheck');
   var btn = $('consentConfirmBtn');
@@ -6259,6 +6260,13 @@ function acceptConsent() {
       if (this.checked) { btn.disabled = false; btn.style.opacity = '1'; }
       else { btn.disabled = true; btn.style.opacity = '0.5'; }
     });
+  }
+  // Only show consent modal for first-time users
+  var consentGiven = false;
+  try { consentGiven = localStorage.getItem('echo_consentGiven') === 'true' || localStorage.getItem('echo_consentGiven') === '"true"'; } catch(e){}
+  if (!consentGiven) {
+    var modal = $('consentModal');
+    if (modal) modal.classList.add('active');
   }
 })();
 
