@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.2.2</title>
+<title>Echo回声 — 试用版v8.2.3</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -4440,7 +4440,7 @@ body {
         <input type="checkbox" id="consentCheck" style="width:18px;height:18px;accent-color:var(--accent-primary);">
         我已阅读并同意以上条款
       </label>
-      <button id="consentConfirmBtn" onclick="acceptConsent()" style="width:100%;padding:14px;background:var(--accent-primary);color:#0B0E14;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-body);opacity:0.5;" disabled>同意并进入</button>
+      <button id="consentConfirmBtn" style="width:100%;padding:14px;background:var(--accent-primary);color:#0B0E14;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-body);">同意并进入</button>
       <div style="height:12px;"></div>
     </div>
   </div>
@@ -6105,10 +6105,10 @@ function copyInviteCode() {
   showToast('密室码已复制：' + code);
   closeModal('modalInviteCode');
 }
-// Close modal on overlay click
+// Close modal on overlay click (except consent modal - must use button)
 document.querySelectorAll('.modal-overlay').forEach(function(overlay){
   overlay.addEventListener('click', function(e){
-    if (e.target === this) {
+    if (e.target === this && this.id !== 'consentModal') {
       this.classList.remove('active');
     }
   });
@@ -6251,14 +6251,20 @@ function acceptConsent() {
   var modal = $('consentModal');
   if (modal) modal.classList.remove('active');
 }
-// Enable consent button when checkbox is checked + show modal for first-time users
+// Consent button + checkbox logic (robust, no inline onclick)
 (function(){
   var check = $('consentCheck');
   var btn = $('consentConfirmBtn');
-  if (check && btn) {
-    check.addEventListener('change', function() {
-      if (this.checked) { btn.disabled = false; btn.style.opacity = '1'; }
-      else { btn.disabled = true; btn.style.opacity = '0.5'; }
+  // Button click: check if checkbox is checked, then proceed
+  if (btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (check && !check.checked) {
+        showToast('请先勾选同意以上条款');
+        return;
+      }
+      acceptConsent();
     });
   }
   // Only show consent modal for first-time users
