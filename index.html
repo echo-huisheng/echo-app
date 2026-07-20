@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v7.8</title>
+<title>Echo回声 — 试用版v7.9</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3990,16 +3990,30 @@ function init() {
   showNotifySettings();
   setTimeout(initFirebase, 300);
 
-  // Render saved chat messages
+  // Render saved chat messages (filter expired burns, re-apply timers)
   if (chatMessagesStore.length > 0) {
     var container = $('chatMessages');
+    var now = Date.now();
+    var kept = [];
     chatMessagesStore.forEach(function(m) {
+      // Skip messages that have already burned
+      if (m.burnAt && m.burnAt > 0 && now > m.burnAt) return;
+      kept.push(m);
       var msg = document.createElement('div');
       msg.className = 'msg ' + m.sender;
-      msg.innerHTML = '<div class="msg-bubble">' + m.text + '</div><div class="msg-meta">' + (m.sender === 'echo' ? '由你掌控' : '已发送') + '</div>';
+      var burnHtml = '';
+      var remaining = 0;
+      if (m.burnAt && m.burnAt > 0) {
+        remaining = m.burnAt - now;
+        burnHtml = ' · <span class="burn-countdown">' + formatBurnTime(remaining) + '后焚毁</span>';
+      }
+      msg.innerHTML = '<div class="msg-bubble">' + m.text + '</div><div class="msg-meta">' + (m.sender === 'echo' ? '由你掌控' : '已发送') + burnHtml + '</div>';
       container.appendChild(msg);
       if (m.sender === 'echo') addTTSButton(msg, m.text);
+      if (remaining > 0) scheduleBurn(msg, remaining);
     });
+    chatMessagesStore = kept;
+    saveChatMessages();
     container.scrollTop = container.scrollHeight;
     // Proactive greeting: if last message was over 4 hours ago, Echo greets
     var lastMsg = chatMessagesStore[chatMessagesStore.length - 1];
@@ -4512,7 +4526,7 @@ function addEchoMessage(text) {
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
     addTTSButton(msg, text);
-    chatMessagesStore.push({ sender: 'echo', text: text, time: Date.now() });
+    chatMessagesStore.push({ sender: 'echo', text: text, time: Date.now(), burnAt: burnTimeMs > 0 ? Date.now() + burnTimeMs : 0 });
     saveChatMessages();
     recordMessage();
     if (burnTimeMs > 0) scheduleBurn(msg, burnTimeMs);
@@ -4526,25 +4540,40 @@ function addUserMessage(text) {
   msg.innerHTML = '<div class="msg-bubble">' + text + '</div><div class="msg-meta">已发送' + burnHtml + '</div>';
   container.appendChild(msg);
   container.scrollTop = container.scrollHeight;
-  chatMessagesStore.push({ sender: 'me', text: text, time: Date.now() });
+  chatMessagesStore.push({ sender: 'me', text: text, time: Date.now(), burnAt: burnTimeMs > 0 ? Date.now() + burnTimeMs : 0 });
   saveChatMessages();
   recordMessage();
   if (burnTimeMs > 0) scheduleBurn(msg, burnTimeMs);
 }
 function scheduleBurn(msgEl, ms) {
-  setTimeout(function() {
-    if (msgEl && msgEl.parentNode) {
-      msgEl.style.transition = 'opacity 0.5s ease, max-height 0.5s ease';
-      msgEl.style.opacity = '0';
-      msgEl.style.maxHeight = '0';
-      msgEl.style.overflow = 'hidden';
-      setTimeout(function() {
-        if (msgEl.parentNode) msgEl.parentNode.removeChild(msgEl);
-        chatMessagesStore = chatMessagesStore.filter(function(m) { return m.time !== parseInt(msgEl.getAttribute('data-time')); });
-        saveChatMessages();
-      }, 500);
+  // Find or create countdown element
+  var countdownEl = msgEl.querySelector('.burn-countdown');
+  var remaining = ms;
+  var interval = setInterval(function() {
+    remaining -= 1000;
+    if (remaining <= 0) {
+      clearInterval(interval);
+      if (msgEl && msgEl.parentNode) {
+        msgEl.style.transition = 'opacity 0.5s ease, max-height 0.5s ease';
+        msgEl.style.opacity = '0';
+        msgEl.style.maxHeight = '0';
+        msgEl.style.overflow = 'hidden';
+        setTimeout(function() {
+          if (msgEl.parentNode) msgEl.parentNode.removeChild(msgEl);
+          chatMessagesStore = chatMessagesStore.filter(function(m) { return m.time !== parseInt(msgEl.getAttribute('data-time')); });
+          saveChatMessages();
+        }, 500);
+      }
+      return;
     }
-  }, ms);
+    if (countdownEl) {
+      var mins = Math.floor(remaining / 60000);
+      var secs = Math.floor((remaining % 60000) / 1000);
+      if (mins > 0) countdownEl.textContent = mins + '分' + secs + '秒后焚毁';
+      else countdownEl.textContent = secs + '秒后焚毁';
+    }
+  }, 1000);
+  msgEl._burnInterval = interval;
 }
 function formatBurnTime(ms) {
   if (ms <= 0) return '立即';
@@ -4753,7 +4782,7 @@ async function sendMessage() {
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
     addTTSButton(msg, reply);
-    chatMessagesStore.push({ sender: 'echo', text: reply, time: Date.now() });
+    chatMessagesStore.push({ sender: 'echo', text: reply, time: Date.now(), burnAt: burnTimeMs > 0 ? Date.now() + burnTimeMs : 0 });
     saveChatMessages();
     recordMessage();
     if (burnTimeMs > 0) scheduleBurn(msg, burnTimeMs);
@@ -5618,8 +5647,8 @@ function scheduleSpaceBurn(el, ms) {
       else metaEl.textContent = '🔥 ' + secs + '秒后焚毁';
     }
   }, 1000);
-  // Schedule actual burn
-  setTimeout(function() { clearInterval(interval); burnSpaceMsg(el); }, ms);
+  // Store interval ID for cleanup
+  el._burnInterval = interval;
 }
 function burnSpaceMsg(el) {
   if (!el || !el.parentNode) return;
@@ -5883,7 +5912,7 @@ async function fbJoinRoom(code) {
 async function fbSendMsg(code, text, nick) {
   if (!sbReady) return null;
   var encrypted = await fbEncrypt(text, code);
-  var burnAt = spaceBurnTimeMs > 0 ? Date.now() + spaceBurnTimeMs : Date.now() + 60000;
+  var burnAt = spaceBurnTimeMs > 0 ? Date.now() + spaceBurnTimeMs : Date.now() + 5000;
   try {
     var result = await sbClient.from('echo_room_messages').insert({
       room_code: code, uid: sbMyUid, nick: nick,
