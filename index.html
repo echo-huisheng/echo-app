@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.3.6';
+  var APP_VERSION = '8.3.7';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -36,6 +36,26 @@
   } catch(e) {}
 })();
 </script>
+<script>
+// ========== 移动端真实高度自适应（修复鸿蒙/微信等浏览器显示不全）==========
+// 原因：手机浏览器里 CSS 的 100vh 常把地址栏、底部工具栏挡住的部分也算进去，
+//       导致页面底部被切掉（聊天输入框/底部按钮看不见）。
+// 方案：用 window.innerHeight（浏览器当前真实可见高度）动态设置 --app-height，
+//       页面高度始终等于可见区域，兼容所有手机浏览器。
+(function(){
+  function setAppHeight(){
+    try {
+      document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+    } catch(e){}
+  }
+  setAppHeight();
+  window.addEventListener('resize', setAppHeight);
+  window.addEventListener('orientationchange', setAppHeight);
+  window.addEventListener('load', setAppHeight);
+  setTimeout(setAppHeight, 300);
+  setTimeout(setAppHeight, 1200);
+})();
+</script>
 <meta name="theme-color" content="#0B0E14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -44,7 +64,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.3.6</title>
+<title>Echo回声 — 试用版v8.3.7</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -80,6 +100,10 @@
   --glass-bg: rgba(255,255,255,0.045);
   --glass-border: rgba(255,255,255,0.09);
 }
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
 body {
   background: var(--bg-base);
   display: flex;
@@ -92,8 +116,8 @@ body {
 
 /* ========== 2. Phone Frame ========== */
 .phone-frame {
-  width: 100%; height: 100dvh;
-  max-height: 100vh;
+  width: 100%;
+  height: var(--app-height, 100dvh);
   background:
     radial-gradient(1200px 800px at 50% -10%, rgba(200,168,98,0.07), transparent 60%),
     radial-gradient(900px 700px at 85% 110%, rgba(94,173,114,0.05), transparent 55%),
@@ -112,7 +136,7 @@ body {
 }
 /* Fallback for browsers without dvh support */
 @supports not (height: 100dvh) {
-  .phone-frame { height: 100vh; }
+  .phone-frame { height: var(--app-height, 100vh); }
 }
 @media (min-width: 500px) {
   .phone-frame { width: 460px; }
