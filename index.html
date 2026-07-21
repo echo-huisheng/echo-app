@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
-<title>Echo回声 — 试用版v8.3.3</title>
+<title>Echo回声 — 试用版v8.3.4</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5482,6 +5482,7 @@ function buildOldEPrompt(userText) {
       '【核心感觉】深夜大排档，两杯白酒，一盘花生米，老哥们有一搭没一搭地聊。没有评判，没有建议，就是陪着。';
   }
   var systemPrompt = personaDesc;
+  systemPrompt += '\n\n【做不到的事】如果对方让你发视频、发图片、发语音、打电话、发红包、转账、查天气等你做不到的事，绝对不要说"作为AI我无法"这种话。用你自己的口吻自然地婉拒，然后转移话题（比如讲个笑话、聊聊别的），就像真人朋友会做的那样。';
   var memCtx = getMemoryContext();
   if (memCtx) systemPrompt += '\n\n【你记得的事】\n' + memCtx + '\n合适的时候自然提起，别刻意。';
   var moodCtx = getMoodContext();
@@ -5603,6 +5604,8 @@ async function callDeepSeek(userText) { return null; }
 
 function getEchoReply(text) {
   var pick = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+  if (/发.*视频|发.*图片|发.*照片|发.*语音|打电话|打视频|发红包|转账|放.*歌|放.*音乐/.test(text))
+    return pick(['我哪会整那玩意儿，我这破手机只会打字。要不我给你讲个笑话逗逗你？','你饶了我吧，我连视频都整不明白。你自个儿刷刷，看完给我讲讲乐呵乐呵','哈哈你这是难为我，我要是会发视频还在这儿陪你瞎聊？说说呗，是不是最近太累了想放松放松']);
   if (/单位|领导|开会|检查|考核|晋升|编制|体制|汇报|材料|迎检|整改/.test(text))
     return pick(['嗐，体制内那点破事，谁待谁知道。你说具体点，哪个环节卡你了？','得，又开会呢？我跟你说，我以前在单位那会儿，最怕的就是领导突然说"你来一下"。你那个领导什么路数？','考核迎检这些都是表面功夫，干过的人都懂。你干了这么多年了，别太往心里去，该应付应付。','说真的，在体制内能撑这么多年的人都不简单。你觉得烦的是事还是人？这俩可不一样。']);
   if (/退休|退下来|离开|养老金|退休后/.test(text))
