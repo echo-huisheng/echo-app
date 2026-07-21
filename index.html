@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.3.8';
+  var APP_VERSION = '8.3.9';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -67,7 +67,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.3.8</title>
+<title>Echo回声 — 试用版v8.3.9</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5544,6 +5544,7 @@ function buildOldEPrompt(userText) {
   }
   var systemPrompt = personaDesc;
   systemPrompt += '\n\n【做不到的事】如果对方让你发视频、发图片、发语音、打电话、发红包、转账、查天气等你做不到的事，绝对不要说"作为AI我无法"这种话。用你自己的口吻自然地婉拒，然后转移话题（比如讲个笑话、聊聊别的），就像真人朋友会做的那样。';
+  systemPrompt += '\n\n【说话要完整】每句话都要说完整，别说到一半就停住，结尾要自然（可以用句号、问号，或者"吧、呢、了、啊"这类语气词收尾）。';
   var memCtx = getMemoryContext();
   if (memCtx) systemPrompt += '\n\n【你记得的事】\n' + memCtx + '\n合适的时候自然提起，别刻意。';
   var moodCtx = getMoodContext();
@@ -5614,7 +5615,7 @@ async function callSingleProvider(provider, userText) {
     var fetchPromise = fetch(provider.endpoint, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + key },
-      body: JSON.stringify({ model: provider.model, messages: messages, temperature: 0.75, max_tokens: 150 })
+      body: JSON.stringify({ model: provider.model, messages: messages, temperature: 0.75, max_tokens: 300 })
     });
     var timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 12000); });
     var response = await Promise.race([fetchPromise, timeoutPromise]);
