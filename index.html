@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
-<title>Echo回声 — 试用版v8.3.1</title>
+<title>Echo回声 — 试用版v8.3.2</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3999,10 +3999,11 @@ body {
       <h3 style="margin-bottom:12px;">🔒 进入密码</h3>
       <div id="pinSettingArea">
         <div id="pinStatus" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">未设置密码</div>
-        <input type="password" id="pinSettingInput" maxlength="4" placeholder="输入4位数字密码" style="width:100%;padding:12px 16px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:12px;color:var(--text-primary);font-size:16px;text-align:center;letter-spacing:8px;margin-bottom:10px;outline:none;font-family:var(--font-body);">
+        <input type="password" id="pinSettingInput" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="onPinSettingInput()" placeholder="输入4位数字密码" style="width:100%;padding:14px 16px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:12px;color:var(--text-primary);font-size:20px;text-align:center;letter-spacing:10px;margin-bottom:6px;outline:none;font-family:var(--font-body);">
+        <div id="pinInputHint" style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px;min-height:16px;">请输入4位数字，会直接弹出数字键盘</div>
         <div style="display:flex;gap:8px;">
-          <button onclick="setPinCode()" style="flex:1;background:var(--accent-dim);border:1px solid var(--accent-primary);color:var(--accent-primary);padding:12px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);">设置密码</button>
-          <button onclick="removePinCode()" id="pinRemoveBtn" style="flex:1;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);color:var(--text-secondary);padding:12px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);display:none;">取消密码</button>
+          <button onclick="setPinCode()" id="pinSetBtn" style="flex:1;background:var(--accent-dim);border:1px solid var(--accent-primary);color:var(--accent-primary);padding:16px;border-radius:var(--radius-btn);font-size:16px;font-weight:600;cursor:pointer;font-family:var(--font-body);">设置密码</button>
+          <button onclick="removePinCode()" id="pinRemoveBtn" style="flex:1;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);color:var(--text-secondary);padding:16px;border-radius:var(--radius-btn);font-size:15px;cursor:pointer;font-family:var(--font-body);display:none;">取消密码</button>
         </div>
       </div>
     </div>
@@ -6239,12 +6240,37 @@ function acceptConsent() {
 function getUserPin() {
   try { return localStorage.getItem('echo_user_pin') || ''; } catch(e) { return ''; }
 }
+function onPinSettingInput() {
+  var input = $('pinSettingInput');
+  var hint = $('pinInputHint');
+  if (!input) return;
+  // Keep only digits, cap at 4
+  var cleaned = input.value.replace(/\D/g, '').slice(0, 4);
+  if (cleaned !== input.value) input.value = cleaned;
+  var n = cleaned.length;
+  if (hint) {
+    if (n === 0) hint.textContent = '请输入4位数字，会直接弹出数字键盘';
+    else if (n < 4) hint.textContent = '已输入 ' + n + ' / 4 位数字';
+    else hint.textContent = '✅ 已输满4位，点击下方"设置密码"保存';
+  }
+  // When 4 digits are in, close the phone keyboard and make the button obvious
+  if (n === 4) {
+    input.blur();
+    var btn = $('pinSetBtn');
+    if (btn && btn.scrollIntoView) {
+      setTimeout(function(){ btn.scrollIntoView({behavior:'smooth', block:'center'}); }, 120);
+    }
+  }
+}
 function setPinCode() {
   var input = $('pinSettingInput');
+  if (!input) { showToast('页面未加载完成，请重试'); return; }
   var pin = input.value.trim();
   if (pin.length !== 4 || !/^\d{4}$/.test(pin)) { showToast('请输入4位数字密码'); return; }
   localStorage.setItem('echo_user_pin', pin);
   input.value = '';
+  var hint = $('pinInputHint');
+  if (hint) hint.textContent = '请输入4位数字，会直接弹出数字键盘';
   showToast('密码设置成功！下次打开需要输入密码');
   updatePinSettingUI();
 }
