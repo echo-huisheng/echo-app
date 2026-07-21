@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
-<title>Echo回声 — 试用版v8.3.0</title>
+<title>Echo回声 — 试用版v8.3.1</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -194,6 +194,44 @@ body {
   0%,100% { transform: translateX(0); }
   20%,60% { transform: translateX(-8px); }
   40%,80% { transform: translateX(8px); }
+}
+
+/* ========== 密语空间 PIN 门禁（每次进入房间都要验证） ========== */
+.space-pin-overlay {
+  position: absolute; inset: 0;
+  z-index: 650;
+  background: var(--bg-base);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.4s var(--ease);
+}
+.space-pin-overlay.hidden { opacity: 0; pointer-events: none; }
+.space-pin-overlay .pin-brand { margin-bottom: 32px; }
+.space-pin-overlay .spin-dots {
+  display: flex; gap: 20px;
+  margin-bottom: 40px;
+}
+.spin-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-primary);
+  background: transparent;
+  transition: all 0.3s var(--ease);
+}
+.spin-dot.filled {
+  background: var(--accent-primary);
+  transform: scale(1.3);
+  animation: dotPop 0.3s var(--ease) forwards;
+}
+.spin-dot.success { background: var(--trust-green); border-color: var(--trust-green); }
+.spin-dot.error { background: var(--danger); border-color: var(--danger); }
+.space-pin-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 16px;
+  text-align: center;
+  line-height: 1.6;
+  padding: 0 32px;
 }
 
 /* ========== 4. Immersion Page ========== */
@@ -3366,6 +3404,38 @@ body {
       <button class="pin-key delete" data-num="del">⌫</button>
     </div>
     <button class="pin-skip" id="pinSkip">首次使用？跳过设置</button>
+  </div>
+
+  <!-- 密语空间 PIN 门禁：每次进入房间都要验证 -->
+  <div class="space-pin-overlay hidden" id="spacePinOverlay">
+    <div class="pin-brand">
+      <div style="font-size:40px;margin-bottom:10px;">🔐</div>
+      <h1 style="font-size:20px;">密语空间</h1>
+      <div id="spacePinTitle" style="font-size:14px;color:var(--text-secondary);margin-top:6px;">输入密码进入</div>
+    </div>
+    <div class="spin-dots" id="spacePinDots">
+      <div class="spin-dot"></div>
+      <div class="spin-dot"></div>
+      <div class="spin-dot"></div>
+      <div class="spin-dot"></div>
+    </div>
+    <div class="pin-error-msg" id="spacePinError"></div>
+    <div class="pin-keypad" id="spacePinKeypad">
+      <button class="pin-key" data-spnum="1">1</button>
+      <button class="pin-key" data-spnum="2">2</button>
+      <button class="pin-key" data-spnum="3">3</button>
+      <button class="pin-key" data-spnum="4">4</button>
+      <button class="pin-key" data-spnum="5">5</button>
+      <button class="pin-key" data-spnum="6">6</button>
+      <button class="pin-key" data-spnum="7">7</button>
+      <button class="pin-key" data-spnum="8">8</button>
+      <button class="pin-key" data-spnum="9">9</button>
+      <button class="pin-key empty"></button>
+      <button class="pin-key" data-spnum="0">0</button>
+      <button class="pin-key delete" data-spnum="del">⌫</button>
+    </div>
+    <div class="space-pin-hint">🔒 每次进入密语空间都需要验证密码<br>即使是同一个房间，也不会例外</div>
+    <button class="pin-skip" id="spacePinCancel">取消</button>
   </div>
 
   <!-- Immersion Page -->
@@ -6951,7 +7021,128 @@ function formatBurnTime(ms) {
   return Math.ceil(ms / 3600000) + '小时';
 }
 
+// ========== 密语空间 PIN 门禁 ==========
+// 需求：每次进入密语空间（即使是同一个房间）都必须重新输入密码
+var pendingSpaceName = '';
+var pendingSpaceCode = '';
+var spacePinInput = '';
+var spacePinMode = 'verify'; // verify=验证已有密码 | set=设置新密码 | confirm=确认新密码
+var spacePinFirst = '';
+
+function setSpacePinTitle(t) { var el = $('spacePinTitle'); if (el) el.textContent = t; }
+function setSpacePinError(t) { var el = $('spacePinError'); if (el) el.textContent = t; }
+function updateSpacePinDots() {
+  var dots = document.querySelectorAll('#spacePinOverlay .spin-dot');
+  dots.forEach(function(d, i) {
+    d.classList.remove('filled', 'success', 'error');
+    if (i < spacePinInput.length) d.classList.add('filled');
+  });
+}
+
+// 门禁入口：拦截进入房间，先验证密码
 function openSpaceDetail(name, code) {
+  pendingSpaceName = name;
+  pendingSpaceCode = code;
+  spacePinInput = '';
+  spacePinFirst = '';
+  if (getUserPin() !== '') {
+    spacePinMode = 'verify';
+    setSpacePinTitle('输入密码进入"' + name + '"');
+  } else {
+    spacePinMode = 'set';
+    setSpacePinTitle('首次使用，请设置4位密码');
+  }
+  setSpacePinError('');
+  updateSpacePinDots();
+  var overlay = $('spacePinOverlay');
+  if (overlay) overlay.classList.remove('hidden');
+}
+
+function spacePinFail(msg) {
+  var dots = document.querySelectorAll('#spacePinOverlay .spin-dot');
+  dots.forEach(function(d) { d.classList.add('error'); });
+  var dotsWrap = $('spacePinDots');
+  if (dotsWrap) {
+    dotsWrap.style.animation = 'pinShake 0.5s ease';
+    setTimeout(function() { dotsWrap.style.animation = ''; }, 600);
+  }
+  setSpacePinError(msg);
+  setTimeout(function() {
+    spacePinInput = '';
+    updateSpacePinDots();
+  }, 800);
+  setTimeout(function() { setSpacePinError(''); }, 2000);
+}
+
+function spacePinCheck() {
+  var dots = document.querySelectorAll('#spacePinOverlay .spin-dot');
+  if (spacePinMode === 'verify') {
+    if (spacePinInput === getUserPin()) {
+      dots.forEach(function(d) { d.classList.add('success'); });
+      setTimeout(function() {
+        $('spacePinOverlay').classList.add('hidden');
+        enterSpaceDetail(pendingSpaceName, pendingSpaceCode);
+      }, 500);
+    } else {
+      spacePinFail('密码错误');
+    }
+  } else if (spacePinMode === 'set') {
+    spacePinFirst = spacePinInput;
+    spacePinInput = '';
+    spacePinMode = 'confirm';
+    setSpacePinTitle('请再次输入以确认');
+    updateSpacePinDots();
+  } else if (spacePinMode === 'confirm') {
+    if (spacePinInput === spacePinFirst) {
+      try { localStorage.setItem('echo_user_pin', spacePinInput); } catch(e) {}
+      dots.forEach(function(d) { d.classList.add('success'); });
+      setSpacePinTitle('密码设置成功');
+      setTimeout(function() {
+        $('spacePinOverlay').classList.add('hidden');
+        if (typeof updatePinSettingUI === 'function') updatePinSettingUI();
+        enterSpaceDetail(pendingSpaceName, pendingSpaceCode);
+      }, 600);
+    } else {
+      spacePinFirst = '';
+      spacePinMode = 'set';
+      setSpacePinTitle('首次使用，请设置4位密码');
+      spacePinFail('两次输入不一致，请重新设置');
+    }
+  }
+}
+
+// 绑定空间门禁键盘（data-spnum，避免与主锁屏 data-num 冲突）
+document.querySelectorAll('#spacePinKeypad .pin-key[data-spnum]').forEach(function(key) {
+  key.addEventListener('click', function() {
+    var overlay = $('spacePinOverlay');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+    var num = this.getAttribute('data-spnum');
+    if (num === 'del') {
+      spacePinInput = spacePinInput.slice(0, -1);
+    } else if (spacePinInput.length < 4) {
+      spacePinInput += num;
+    }
+    updateSpacePinDots();
+    if (spacePinInput.length === 4) {
+      setTimeout(spacePinCheck, 200);
+    }
+  });
+});
+// 取消进入
+(function() {
+  var cancelBtn = $('spacePinCancel');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      var overlay = $('spacePinOverlay');
+      if (overlay) overlay.classList.add('hidden');
+      spacePinInput = '';
+      spacePinFirst = '';
+      spacePinMode = 'verify';
+    });
+  }
+})();
+
+function enterSpaceDetail(name, code) {
   currentSpaceCode = code;
   if ($('spaceDetailName')) $('spaceDetailName').textContent = name;
   // Reset chat
