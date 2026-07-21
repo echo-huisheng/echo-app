@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
-<title>Echo回声 — 试用版v8.3.2</title>
+<title>Echo回声 — 试用版v8.3.3</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5512,6 +5512,30 @@ var AI_FEW_SHOTS = [
   { role:'user', content:'退二线以后没人搭理了' },
   { role:'assistant', content:'嗐，人走茶凉这事你又不是第一天知道。以前那些围着你转的，有几个是真心的？正好，清净了，咱自己待着舒服就行' }
 ];
+// Detect obviously AI-style replies (lists / preachy / emoji / self-reference) so we can
+// reject them in favor of the conversational persona. Returns true = AI-style (bad).
+// NOTE: This function MUST exist — callSingleProvider() calls it; if it's undefined every
+// provider throws a ReferenceError and the chat silently falls back to canned replies.
+function isAIStyleResponse(text) {
+  if (!text) return true;
+  // Emoji / pictographs -> AI-style
+  try {
+    if (/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F0FF}\u{1F900}-\u{1F9FF}]/u.test(text)) return true;
+  } catch(e) {}
+  // Markdown bold / headers / bullet lists / numbered lists
+  if (/(\*\*|^#|^\s*[-*•]\s|\n\s*\d+\s*[.、)）])/.test(text)) return true;
+  // Circled digits (①②③)
+  if (/[\u2460-\u2473]/.test(text)) return true;
+  // Structural connectives (essay / list style)
+  if (/(首先|其次|再次|再者|最后|一方面|另一方面|总而言之|综上所述|总的来说)/.test(text)) return true;
+  // AI self-reference or refusal
+  if (/(作为AI|作为一个AI|我是AI|我是人工智能|我无法|我不能为您|抱歉[，,]我|对不起[，,]我)/.test(text)) return true;
+  // Preachy / chicken-soup phrases the persona forbids
+  if (/(我理解你|我理解您|你可以尝试|您可以尝试|建议你|建议您|一切都会好|加油[！!]|慢慢来[，,]别急|相信你自己)/.test(text)) return true;
+  // Very long ramble -> send to first-line extraction instead of using as-is
+  if (text.length > 200) return true;
+  return false;
+}
 async function callSingleProvider(provider, userText) {
   var key = getAIKey(provider);
   if (!key) return null;
