@@ -6,6 +6,36 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<script>
+// ========== 版本自愈：检测服务器最新版本，缓存过期自动强刷 ==========
+// 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
+// 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
+(function(){
+  var APP_VERSION = '8.3.5';
+  window.APP_VERSION = APP_VERSION;
+  try {
+    var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+    var base = location.origin + dir;
+    fetch(base + 'version.txt?v=' + Date.now(), { cache:'no-store' })
+      .then(function(r){ return r.ok ? r.text() : null; })
+      .then(function(t){
+        if (!t) return;
+        var latest = t.trim();
+        if (!latest || latest === APP_VERSION) {
+          try { sessionStorage.removeItem('echo_v_target'); } catch(e2){}
+          return;
+        }
+        // 服务器版本比本地新 -> 强制刷新加载最新版（带版本号参数绕过缓存）
+        var target = null;
+        try { target = sessionStorage.getItem('echo_v_target'); } catch(e3){}
+        if (target === latest) return; // 已为本版本刷新过一次，避免GitHub Pages重建延迟导致死循环
+        try { sessionStorage.setItem('echo_v_target', latest); } catch(e4){}
+        location.replace(base + '?v=' + latest);
+      })
+      .catch(function(){});
+  } catch(e) {}
+})();
+</script>
 <meta name="theme-color" content="#0B0E14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,7 +45,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
-<title>Echo回声 — 试用版v8.3.4</title>
+<title>Echo回声 — 试用版v8.3.5</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3805,6 +3835,11 @@ body {
             <input type="checkbox" id="careModeToggle" onchange="toggleCareMode(this.checked)">
             <span class="care-slider"></span>
           </label>
+        </div>
+        <div class="mine-menu-item" style="cursor:default;" onclick="showToast('当前版本 v'+(window.APP_VERSION||'?')+'，发现新版本会自动更新')">
+          <span class="mi-icon">ℹ️</span>
+          <span class="mi-label">当前版本 <span id="appVersionLabel" style="color:var(--text-tertiary);font-size:13px;">v--</span></span>
+          <span class="mi-arrow" style="font-size:11px;color:var(--text-tertiary);">自动更新</span>
         </div>
       </div>
     </div>
@@ -8836,6 +8871,12 @@ function initV8() {
   initScreenshotDetect();
   startProactiveCare();
   lsSave('echo_last_visit', Date.now());
+  // 显示真实加载的版本号（便于确认是否为最新版）
+  try {
+    var vLabel = document.getElementById('appVersionLabel');
+    if (vLabel) vLabel.textContent = 'v' + (window.APP_VERSION || '?');
+    console.log('[Echo] 当前版本 v' + window.APP_VERSION);
+  } catch(e) {}
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initV8);
