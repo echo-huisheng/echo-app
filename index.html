@@ -11,7 +11,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
-<title>Echo回声 — 试用版v8.2.7</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Echo回声 — 试用版v8.2.8</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -4368,7 +4372,7 @@ body {
 </div>
 
 <!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
 
 <script>
 // ========== State ==========
@@ -4400,6 +4404,7 @@ function lsRemove(key) {
 
 // ========== Utility ==========
 function $(id) { return document.getElementById(id); }
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function showToast(msg) {
   var t = $('toast');
   t.textContent = msg;
@@ -5763,11 +5768,11 @@ function sendHealthMessage() {
   var msgs = document.getElementById('healthChatMessages');
   var userDiv = document.createElement('div');
   userDiv.className = 'msg user';
-  userDiv.innerHTML = '<div class="msg-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+  userDiv.innerHTML = '<div class="msg-bubble">' + escapeHtml(text) + '</div>';
   msgs.appendChild(userDiv);
   input.value = '';
   msgs.scrollTop = msgs.scrollHeight;
-  healthMessagesStore.push({ sender: 'user', text: text.replace(/</g,'&lt;').replace(/>/g,'&gt;'), time: Date.now() });
+  healthMessagesStore.push({ sender: 'user', text: escapeHtml(text), time: Date.now() });
   saveHealthMessages();
   setTimeout(function(){
     var replyText = getHealthReply(text);
@@ -6315,7 +6320,7 @@ function sendSpaceMessage() {
     var msgEl = document.createElement('div');
     msgEl.className = 'space-msg me';
     var burnLabel = spaceBurnTimeMs > 0 ? '🔥 ' + spaceBurnTimeText + '后焚毁' : '🔥 立即焚毁';
-    msgEl.innerHTML = '<div class="space-nick">' + nick + '</div><div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div><div class="space-burn-meta">' + burnLabel + '</div>';
+    msgEl.innerHTML = '<div class="space-nick">' + escapeHtml(nick) + '</div><div class="space-bubble">' + escapeHtml(text) + '</div><div class="space-burn-meta">' + burnLabel + '</div>';
     container.appendChild(msgEl);
     container.scrollTop = container.scrollHeight;
     if (spaceBurnTimeMs === 0) {
@@ -6332,7 +6337,7 @@ function sendSpaceMessage() {
     var msgEl = document.createElement('div');
     msgEl.className = 'space-msg me';
     var burnLabel = spaceBurnTimeMs > 0 ? '🔥 ' + spaceBurnTimeText + '后焚毁' : '🔥 立即焚毁';
-    msgEl.innerHTML = '<div class="space-nick">' + nick + '</div><div class="space-bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div><div class="space-burn-meta">' + burnLabel + '</div>';
+    msgEl.innerHTML = '<div class="space-nick">' + escapeHtml(nick) + '</div><div class="space-bubble">' + escapeHtml(text) + '</div><div class="space-burn-meta">' + burnLabel + '</div>';
     container.appendChild(msgEl);
     container.scrollTop = container.scrollHeight;
     var msgIdx = -1;
@@ -6576,14 +6581,14 @@ async function fbEncrypt(text, roomCode) {
     return btoa(String.fromCharCode.apply(null, combined));
   } catch (e) {
     console.warn('[Encrypt] 加密失败，使用Base64降级:', e);
-    return 'b64:' + btoa(unescape(encodeURIComponent(text)));
+    return 'b64:' + btoa(String.fromCharCode.apply(null, new TextEncoder().encode(text)));
   }
 }
 
 async function fbDecrypt(base64Data, roomCode) {
   try {
     if (base64Data.indexOf('b64:') === 0) {
-      return decodeURIComponent(escape(atob(base64Data.substring(4))));
+      return new TextDecoder().decode(Uint8Array.from(atob(base64Data.substring(4)), function(c){ return c.charCodeAt(0); }));
     }
     if (!sbCryptoKey) sbCryptoKey = await fbDeriveKey(roomCode);
     var raw = atob(base64Data);
@@ -6818,7 +6823,7 @@ async function sbProcessIncomingMsg(msg, code) {
     var voiceDataUrl = voicePayload.substring(pipeIdx + 1);
     bubbleContent = '<div class="voice-msg" onclick="playSpaceVoice(this, \'' + voiceDataUrl + '\')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 0;"><span class="voice-icon">🎤</span><span class="voice-duration">' + voiceDuration + '″</span></div>';
   } else {
-    bubbleContent = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    bubbleContent = escapeHtml(text);
   }
 
   msgEl.innerHTML = '<div class="space-nick">' + (msg.nick || '匿名') + '</div>'
@@ -7032,7 +7037,7 @@ function handleSpaceFile(input) {
   else if (file.type.indexOf('video/') === 0) icon = '🎬';
   else if (file.type.indexOf('audio/') === 0) icon = '🎵';
   else if (file.name.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$/i)) icon = '📋';
-  var html = '<div class="file-attachment"><div class="file-icon">' + icon + '</div><div class="file-info"><div class="file-name">' + file.name.replace(/</g,'&lt;') + '</div><div class="file-size">' + sizeText + '</div></div></div>';
+  var html = '<div class="file-attachment"><div class="file-icon">' + icon + '</div><div class="file-info"><div class="file-name">' + escapeHtml(file.name) + '</div><div class="file-size">' + sizeText + '</div></div></div>';
   addSpaceMediaMessage(html);
   input.value = '';
 }
