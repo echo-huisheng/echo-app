@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.3.9';
+  var APP_VERSION = '8.4.0';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -67,7 +67,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.3.9</title>
+<title>Echo回声 — 试用版v8.4.0</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5599,6 +5599,20 @@ function isAIStyleResponse(text) {
   if (text.length > 200) return true;
   return false;
 }
+// v8.4.0: 保证AI回复永远在完整句子处结束，绝不显示"说一半就断"的残句
+function ensureCompleteEnding(text) {
+  if (!text) return text;
+  text = text.trim();
+  // 已经以句末标点收尾 → 完整，原样返回
+  if (/[。！？…~～"』」\)）\]】]$/.test(text)) return text;
+  // 以口语语气词收尾（吧呢了啦啊呗嘛咯）→ 算完整，补个句号
+  if (/[吧呢了啦啊呗嘛咯]$/.test(text)) return text + '。';
+  // 其余情况：裁到上一个完整句子，宁可短一点也不留半截话
+  var cut = Math.max(text.lastIndexOf('。'), text.lastIndexOf('！'), text.lastIndexOf('？'), text.lastIndexOf('…'), text.lastIndexOf('\n'));
+  if (cut > 0) return text.substring(0, cut + 1).trim();
+  // 全句没有任何句末标点：短回复原样返回，长回复视为不完整丢弃
+  return text.length <= 30 ? text : '';
+}
 async function callSingleProvider(provider, userText) {
   var key = getAIKey(provider);
   if (!key) return null;
@@ -5624,6 +5638,8 @@ async function callSingleProvider(provider, userText) {
     if (data.choices && data.choices[0]) {
       var text = data.choices[0].message.content;
       text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      // v8.4.0: 先保证句子完整（模型偶尔少说半句时，裁到上一个完整句子）
+      text = ensureCompleteEnding(text);
       if (text && !isAIStyleResponse(text)) {
         recordProviderSuccess(provider.id);
         aiLastProvider = provider.name;
@@ -5634,7 +5650,7 @@ async function callSingleProvider(provider, userText) {
         if (firstLine && firstLine.length < 60 && !isAIStyleResponse(firstLine)) {
           recordProviderSuccess(provider.id);
           aiLastProvider = provider.name;
-          return firstLine;
+          return ensureCompleteEnding(firstLine);
         }
       }
     }
