@@ -1,6 +1,6 @@
-// Echo回声 Service Worker v1.0
+// Echo回声 Service Worker v1.1
 // 策略：HTML网络优先（保证更新），静态资源缓存优先（秒开）
-var CACHE_NAME = 'echo-v1';
+var CACHE_NAME = 'echo-v2';
 var STATIC_ASSETS = [
   '/echo-app/manifest.json',
   '/echo-app/icons/icon-192.png',
@@ -18,7 +18,12 @@ var STATIC_ASSETS = [
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(STATIC_ASSETS);
+      // 逐个缓存并各自容错：单个资源 404 不会导致整个 install 失败
+      return Promise.all(STATIC_ASSETS.map(function(asset) {
+        return cache.add(asset).catch(function(err) {
+          console.warn('[SW] 预缓存失败(跳过):', asset, err);
+        });
+      }));
     }).then(function() {
       return self.skipWaiting();
     })

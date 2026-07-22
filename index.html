@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.5.0';
+  var APP_VERSION = '8.5.1';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.5.0</title>
+<title>Echo回声 — 试用版v8.5.1</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -6115,16 +6115,10 @@ function joinSpace() {
   var code = $('inviteCodeInput').value.trim();
   if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('请输入6位数字密室码'); return; }
 
-  // DEBUG: 显示连接状态
-  console.log('[DEBUG] joinSpace: sbReady=' + sbReady + ', code=' + code);
-  console.log('[DEBUG] sbClient=' + (sbClient ? 'exists' : 'null'));
-
   if (sbReady) {
     // Check Supabase for room across devices
     showToast('正在查找空间...');
-    console.log('[DEBUG] 调用 fbCheckRoom(' + code + ')');
     fbCheckRoom(code).then(function(room) {
-      console.log('[DEBUG] fbCheckRoom 返回:', JSON.stringify(room));
       if (room) {
         // Found on server, add to local list and join
         var spaces = lsLoad('spaces', []);
@@ -6149,10 +6143,8 @@ function joinSpace() {
         });
       } else {
         showToast('服务器上未找到房间' + code + '。可能已被创建者销毁。');
-        console.warn('[DEBUG] fbCheckRoom 返回空，服务器无此房间');
       }
     }).catch(function(err) {
-      console.error('[DEBUG] fbCheckRoom Promise rejected:', err);
       showToast('查询服务器失败: ' + err.message);
     });
   } else {
@@ -6904,15 +6896,11 @@ async function fbCreateRoom(code, name, cleanupTime) {
 }
 
 async function fbCheckRoom(code) {
-  if (!sbReady) { console.warn('[DEBUG] fbCheckRoom: sbReady=false'); return false; }
+  if (!sbReady) { return false; }
   try {
-    console.log('[DEBUG] fbCheckRoom: 查询 code=' + code);
     var result = await sbClient.from('echo_rooms').select('*').eq('code', code).eq('active', true).maybeSingle();
-    console.log('[DEBUG] fbCheckRoom: result.data=', JSON.stringify(result.data), 'error=', result.error ? result.error.message : 'null');
     return result.data || false;
   } catch (e) {
-    console.error('[DEBUG] fbCheckRoom 异常:', e);
-    alert('fbCheckRoom异常: ' + e.message);
     return false;
   }
 }
@@ -8732,7 +8720,7 @@ function showAssessResult() {
 
 // --- 白噪音/环境音 (Web Audio API) ---
 var ambientCtx = null;
-var ambientNodes = {};
+var ambientSingle = {};
 var currentAmbient = null;
 
 function toggleAmbientPanel() {
@@ -8751,7 +8739,7 @@ function toggleAmbientSound(type) {
   gain.gain.value = 0.3;
   gain.connect(ambientCtx.destination);
   var nodes = createNoiseNodes(type, gain);
-  ambientNodes = { gain: gain, nodes: nodes };
+  ambientSingle = { gain: gain, nodes: nodes };
   var items = document.querySelectorAll('.ambient-item');
   if (items) {
     items.forEach(function(it) { it.classList.remove('playing'); });
@@ -8812,11 +8800,11 @@ function createNoiseNodes(type, output) {
   return [source, filter];
 }
 function stopAmbient() {
-  if (ambientNodes.nodes) {
-    ambientNodes.nodes.forEach(function(n) { try { if(n.stop) n.stop(); n.disconnect(); } catch(e){} });
+  if (ambientSingle.nodes) {
+    ambientSingle.nodes.forEach(function(n) { try { if(n.stop) n.stop(); n.disconnect(); } catch(e){} });
   }
-  if (ambientNodes.gain) { try { ambientNodes.gain.disconnect(); } catch(e){} }
-  ambientNodes = {};
+  if (ambientSingle.gain) { try { ambientSingle.gain.disconnect(); } catch(e){} }
+  ambientSingle = {};
   currentAmbient = null;
   var items = document.querySelectorAll('.ambient-item');
   if (items) items.forEach(function(it) { it.classList.remove('playing'); });
