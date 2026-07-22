@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.5.2';
+  var APP_VERSION = '8.5.3';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.5.2</title>
+<title>Echo回声 — 试用版v8.5.3</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -2928,7 +2928,7 @@ body {
 .assess-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--bg-primary);
+  background: var(--bg-base);
   z-index: 9998;
   display: none;
   flex-direction: column;
@@ -3761,6 +3761,7 @@ body {
           <div class="noise-item" data-noise="wind" onclick="toggleNoise(this,'wind')"><span class="noise-icon">🍃</span><span class="noise-label">微风</span></div>
           <div class="noise-item" data-noise="night" onclick="toggleNoise(this,'night')"><span class="noise-icon">🌙</span><span class="noise-label">夏夜</span></div>
         </div>
+        <button id="noiseStopBtn" onclick="stopNoiseAll()" style="display:none;margin-top:14px;width:100%;padding:12px;background:var(--bg-surface-3);color:var(--text-primary);border:1px solid var(--bg-surface-4);border-radius:var(--radius-btn);font-size:14px;font-weight:500;cursor:pointer;">⏹ 停止白噪音</button>
       </div>
       <!-- One-tap Relax -->
       <div class="relax-section" style="text-align:center;">
@@ -8410,20 +8411,33 @@ var noiseGain = null;
 function toggleNoise(el, type) {
   if (!el) return;
   var grid = $('noiseGrid');
+  var stopBtn = $('noiseStopBtn');
   if (activeNoise === type) {
     // Stop
-    el.classList.remove('active');
+    el.classList.remove('playing');
     activeNoise = null;
     stopRelaxNoise();
+    if (stopBtn) stopBtn.style.display = 'none';
     return;
   }
   // Deactivate previous
   if (grid) {
-    grid.querySelectorAll('.noise-item').forEach(function(n){ n.classList.remove('active'); });
+    grid.querySelectorAll('.noise-item').forEach(function(n){ n.classList.remove('playing'); });
   }
-  el.classList.add('active');
+  el.classList.add('playing');
   activeNoise = type;
   playRelaxNoise(type);
+  if (stopBtn) stopBtn.style.display = 'block';
+}
+function stopNoiseAll() {
+  var grid = $('noiseGrid');
+  if (grid) {
+    grid.querySelectorAll('.noise-item').forEach(function(n){ n.classList.remove('playing'); });
+  }
+  activeNoise = null;
+  stopRelaxNoise();
+  var stopBtn = $('noiseStopBtn');
+  if (stopBtn) stopBtn.style.display = 'none';
 }
 function playRelaxNoise(type) {
   stopRelaxNoise();
