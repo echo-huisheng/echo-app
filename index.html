@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.4.0';
+  var APP_VERSION = '8.5.0';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.4.0</title>
+<title>Echo回声 — 试用版v8.5.0</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3358,10 +3358,10 @@ body {
 .care-quick-toggle .care-status.off { color: var(--text-tertiary); }
 
 /* Home Primary & Secondary Actions */
-.home-primary-actions { display: flex; flex-direction: column; gap: 14px; padding: 12px 0; }
+.home-primary-actions { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 10px; }
 .home-big-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  padding: 30px 20px; border-radius: 20px; border: 1px solid rgba(200,168,98,0.15);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 24px 18px; border-radius: 20px; border: 1px solid rgba(200,168,98,0.15);
   cursor: pointer; transition: all 0.3s var(--ease); text-align: center;
   box-shadow: var(--shadow-md);
 }
@@ -3578,6 +3578,20 @@ body {
         <p>今天想聊点什么？</p>
       </div>
 
+      <!-- v8.5 核心入口上移：聊天+密聊必须首屏可见 -->
+      <div class="home-primary-actions">
+        <button class="home-big-btn chat-btn" onclick="switchTab('chat')">
+          <span class="big-btn-icon">💬</span>
+          <span class="big-btn-text">找Echo聊聊</span>
+          <span class="big-btn-sub">说心里话，不留痕迹</span>
+        </button>
+        <button class="home-big-btn secret-btn" onclick="openSpaceOverlay()">
+          <span class="big-btn-icon">🔐</span>
+          <span class="big-btn-text">密聊</span>
+          <span class="big-btn-sub">加密空间·只有你俩</span>
+        </button>
+      </div>
+
       <!-- v8.1 Mood Check-in Row -->
       <div class="mood-row" id="moodRow">
         <div class="mood-btn" data-mood="great" onclick="checkinMood('great')"><span class="mood-emoji">😊</span><span>开心</span></div>
@@ -3593,19 +3607,6 @@ body {
         <span class="care-status" id="careStatusText">已开启</span>
       </div>
 
-      <!-- v8.2 Primary Actions -->
-      <div class="home-primary-actions">
-        <button class="home-big-btn chat-btn" onclick="switchTab('chat')">
-          <span class="big-btn-icon">💬</span>
-          <span class="big-btn-text">找Echo聊聊</span>
-          <span class="big-btn-sub">说心里话，不留痕迹</span>
-        </button>
-        <button class="home-big-btn secret-btn" onclick="openSpaceOverlay()">
-          <span class="big-btn-icon">🔐</span>
-          <span class="big-btn-text">密聊</span>
-          <span class="big-btn-sub">加密空间·只有你俩</span>
-        </button>
-      </div>
       <!-- v8.2 Secondary Actions -->
       <div class="home-secondary-actions">
         <button class="home-small-btn" onclick="switchTab('relax')">🌿 放松一下</button>
@@ -4549,8 +4550,7 @@ body {
   <div class="toast" id="toast"></div>
 </div>
 
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+<!-- Supabase SDK 改为懒加载（v8.5）：移除阻塞脚本，密聊首次需要时才动态加载，首屏秒开 -->
 
 <script>
 // ========== State ==========
@@ -6766,6 +6766,29 @@ var sbSeenMsgIds = {};
   }
 })();
 
+// v8.5: Supabase SDK 懒加载器 — 密聊首次需要时才动态注入脚本，不阻塞首屏渲染
+var sbSdkLoading = false, sbSdkCallbacks = [];
+function loadSupabaseSDK(cb) {
+  if (window.supabase && window.supabase.createClient) { if (cb) cb(); return; }
+  if (cb) sbSdkCallbacks.push(cb);
+  if (sbSdkLoading) return;
+  sbSdkLoading = true;
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js';
+  s.onload = function() {
+    sbSdkLoading = false;
+    var cbs = sbSdkCallbacks.slice(); sbSdkCallbacks = [];
+    for (var i = 0; i < cbs.length; i++) { try { cbs[i](); } catch(err) {} }
+  };
+  s.onerror = function() {
+    sbSdkLoading = false;
+    console.warn('[Supabase] SDK加载失败，密聊使用本地模式');
+    var el = document.getElementById('sbConnStatus');
+    if (el) { el.textContent = '🔴 SDK加载失败'; el.style.color = 'var(--danger)'; }
+  };
+  document.head.appendChild(s);
+}
+
 function initFirebase() { // 保留函数名兼容调用
   if (sbReady) return; // 防止重复初始化
   if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL.indexOf('supabase.co') === -1) {
@@ -6774,6 +6797,7 @@ function initFirebase() { // 保留函数名兼容调用
     if (el) { el.textContent = '⚪ 未配置'; el.style.color = 'var(--text-tertiary)'; }
     return;
   }
+  loadSupabaseSDK(function() {
   try {
     if (typeof supabase !== 'undefined' && supabase.createClient) {
       sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -6797,6 +6821,7 @@ function initFirebase() { // 保留函数名兼容调用
     var el = document.getElementById('sbConnStatus');
     if (el) { el.textContent = '🔴 连接失败'; el.style.color = 'var(--danger)'; }
   }
+  });
 }
 
 // ========== AES-GCM Encryption (端到端加密) ==========
