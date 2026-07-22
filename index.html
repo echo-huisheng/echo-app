@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.5.1';
+  var APP_VERSION = '8.5.2';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.5.1</title>
+<title>Echo回声 — 试用版v8.5.2</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3504,7 +3504,7 @@ body {
     </div>
     <div class="immersion-mid">
       <div class="immersion-greeting" id="immersionGreeting">夜深了。想聊点什么，我都在。</div>
-      <div class="immersion-streak">陪伴第42天 · 🔥连续15天</div>
+      <div class="immersion-streak">陪伴第—天 · 🔥连续—天</div>
       <div class="immersion-slogan">有些话，说给懂的人听。</div>
     </div>
     <div class="immersion-bottom">
@@ -3801,9 +3801,9 @@ body {
         <div class="mine-avatar">🧑</div>
         <div class="mine-name">静水流深</div>
         <div class="mine-stats">
-          <div class="mine-stat"><div class="val">42</div><div class="lbl">陪伴天数</div></div>
-          <div class="mine-stat"><div class="val">15</div><div class="lbl">连续天数</div></div>
-          <div class="mine-stat"><div class="val">128</div><div class="lbl">对话次数</div></div>
+          <div class="mine-stat"><div class="val">—</div><div class="lbl">陪伴天数</div></div>
+          <div class="mine-stat"><div class="val">—</div><div class="lbl">连续天数</div></div>
+          <div class="mine-stat"><div class="val">—</div><div class="lbl">对话次数</div></div>
         </div>
         <div class="mine-privacy-badge">🛡️ 隐私分 92分</div>
       </div>
@@ -3811,8 +3811,8 @@ body {
       <!-- Weekly Insight Card -->
       <div class="mine-weekly-card" data-sub="weekly-insight">
         <h3>📊 本周情绪洞察</h3>
-        <div class="detail">本周聊天5次 · 共45分钟<br>心情趋势：平静 → 疲惫 → 轻松</div>
-        <div class="echo-observe">"你这周前半段压力较大，但周末似乎放松了不少。"</div>
+        <div class="detail">本周还没有心情打卡<br>去首页记录一下今天的心情吧</div>
+        <div class="echo-observe">“记录心情后，我会在这里给你一些回应。”</div>
         <span class="view-more">查看详细报告 →</span>
       </div>
 
@@ -3898,8 +3898,8 @@ body {
       <h3>数据概览</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
         <div><div style="font-size:22px;font-weight:700;color:var(--accent-primary);">0</div><div style="font-size:12px;color:var(--text-secondary);">数据泄露事件</div></div>
-        <div><div style="font-size:22px;font-weight:700;color:var(--trust-green);">128</div><div style="font-size:12px;color:var(--text-secondary);">已加密对话</div></div>
-        <div><div style="font-size:22px;font-weight:700;color:var(--accent-primary);">42</div><div style="font-size:12px;color:var(--text-secondary);">自动清理消息</div></div>
+        <div><div id="statEncryptedChats" style="font-size:22px;font-weight:700;color:var(--trust-green);">—</div><div style="font-size:12px;color:var(--text-secondary);">已加密对话</div></div>
+        <div><div style="font-size:22px;font-weight:700;color:var(--accent-primary);">—</div><div style="font-size:12px;color:var(--text-secondary);">自动清理消息</div></div>
         <div><div style="font-size:22px;font-weight:700;color:var(--trust-green);">100%</div><div style="font-size:12px;color:var(--text-secondary);">加密保护率</div></div>
       </div>
     </div>
@@ -3928,30 +3928,9 @@ body {
       <button class="memory-filter">心情</button>
       <button class="memory-filter">重要事件</button>
     </div>
-    <div class="memory-card">
-      <span class="mc-tag">工作</span>
-      <div class="mc-content">提到最近单位在搞年度考核，压力比较大。</div>
-      <div class="mc-date">2024年7月12日</div>
-    </div>
-    <div class="memory-card">
-      <span class="mc-tag">家庭</span>
-      <div class="mc-content">女儿今年大学毕业，在考虑要不要回老家发展。</div>
-      <div class="mc-date">2024年7月10日</div>
-    </div>
-    <div class="memory-card">
-      <span class="mc-tag">心情</span>
-      <div class="mc-content">周末和老伴去了公园散步，感觉心情好了很多。</div>
-      <div class="mc-date">2024年7月8日</div>
-    </div>
-    <div class="memory-card">
-      <span class="mc-tag">重要事件</span>
-      <div class="mc-content">还有3年就到了退休年龄，开始思考退休后的生活。</div>
-      <div class="mc-date">2024年7月5日</div>
-    </div>
-    <div class="memory-card">
-      <span class="mc-tag">工作</span>
-      <div class="mc-content">新来的年轻同事很努力，觉得自己也应该跟上节奏。</div>
-      <div class="mc-date">2024年7月3日</div>
+    <div class="memory-empty" style="text-align:center;padding:48px 24px;color:var(--text-tertiary);">
+      <div style="font-size:42px;margin-bottom:14px;opacity:0.5;">📖</div>
+      <div style="font-size:14px;line-height:1.9;">还没有记忆存档<br>和 Echo 聊聊后，重要的内容会在这里留下记录</div>
     </div>
   </div>
 
@@ -4084,20 +4063,20 @@ body {
     </div>
     <div class="sub-card" style="text-align:center;">
       <div class="companion-big-num">
-        <div class="num">42</div>
+        <div class="num">—</div>
         <div class="unit">天</div>
-        <div class="sub">🔥 连续陪伴15天</div>
+        <div class="sub">🔥 连续陪伴—天</div>
       </div>
     </div>
     <div class="sub-card">
       <h3>陪伴里程碑</h3>
       <ul class="milestone-list">
-        <li><span class="ml-icon">🌟</span> 首次对话 <span class="ml-date">6月1日</span></li>
-        <li><span class="ml-icon">📅</span> 连续7天 <span class="ml-date">6月7日</span></li>
-        <li><span class="ml-icon">💬</span> 第50次对话 <span class="ml-date">6月18日</span></li>
-        <li><span class="ml-icon">🔥</span> 连续30天 <span class="ml-date">7月1日</span></li>
-        <li><span class="ml-icon">📖</span> 首个记忆存档 <span class="ml-date">7月5日</span></li>
-        <li><span class="ml-icon">🏆</span> 第100次对话 <span class="ml-date">7月10日</span></li>
+        <li><span class="ml-icon">🌟</span> 首次对话 <span class="ml-date">—</span></li>
+        <li><span class="ml-icon">📅</span> 连续7天 <span class="ml-date">—</span></li>
+        <li><span class="ml-icon">💬</span> 第50次对话 <span class="ml-date">—</span></li>
+        <li><span class="ml-icon">🔥</span> 连续30天 <span class="ml-date">—</span></li>
+        <li><span class="ml-icon">📖</span> 首个记忆存档 <span class="ml-date">—</span></li>
+        <li><span class="ml-icon">🏆</span> 第100次对话 <span class="ml-date">—</span></li>
       </ul>
     </div>
   </div>
@@ -4115,25 +4094,9 @@ body {
       <button class="memory-filter">感悟</button>
     </div>
     <div class="timeline">
-      <div class="timeline-item">
-        <div class="ti-date">2024年7月</div>
-        <div class="ti-title">开始思考退休生活</div>
-        <div class="ti-desc">还有三年到退休年龄，对未来既期待又有些不安。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="ti-date">2024年6月</div>
-        <div class="ti-title">女儿的毕业选择</div>
-        <div class="ti-desc">女儿即将大学毕业，关于是否回老家发展进行了深入的思考。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="ti-date">2024年5月</div>
-        <div class="ti-title">年度考核压力</div>
-        <div class="ti-desc">单位的年度考核带来了不小的压力，但学会了适当放松。</div>
-      </div>
-      <div class="timeline-item">
-        <div class="ti-date">2024年3月</div>
-        <div class="ti-title">和老伴的公园时光</div>
-        <div class="ti-desc">周末和老伴在公园散步，享受简单而温馨的时光。</div>
+      <div class="archive-empty" style="text-align:center;padding:40px 20px;color:var(--text-tertiary);">
+        <div style="font-size:42px;margin-bottom:14px;opacity:0.5;">🗂️</div>
+        <div style="font-size:14px;line-height:1.9;">还没有人生档案记录<br>随着你和 Echo 的交流，这里会慢慢沉淀下属于你的故事</div>
       </div>
     </div>
   </div>
@@ -4266,41 +4229,36 @@ body {
       <button class="sub-back" onclick="closeSubPage('weekly-insight')">←</button>
       <h2>本周情绪洞察</h2>
     </div>
-    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">本周概览（7月8日 - 14日）</p>
+    <p id="wiDateRange" style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">本周概览</p>
     <div class="wi-overview">
-      <div class="wi-stat-card"><div class="val">5</div><div class="lbl">聊天次数</div></div>
-      <div class="wi-stat-card"><div class="val">45</div><div class="lbl">总时长(分钟)</div></div>
-      <div class="wi-stat-card"><div class="val">3</div><div class="lbl">心情打卡</div></div>
-      <div class="wi-stat-card"><div class="val">↗</div><div class="lbl">趋势向好</div></div>
+      <div class="wi-stat-card"><div class="val" id="wiChatCount">—</div><div class="lbl">聊天次数</div></div>
+      <div class="wi-stat-card"><div class="val" id="wiDuration">—</div><div class="lbl">总时长(分钟)</div></div>
+      <div class="wi-stat-card"><div class="val" id="wiMoodCount">—</div><div class="lbl">心情打卡</div></div>
+      <div class="wi-stat-card"><div class="val" id="wiTrend">—</div><div class="lbl">心情趋势</div></div>
     </div>
     <div class="wi-chart-placeholder">
       <h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px;">心情趋势</h3>
       <div class="wi-chart-bars">
-        <div class="wi-bar-col"><div class="wi-bar-emoji">😊</div><div class="wi-bar" style="height:60%;background:var(--trust-green);"></div><div class="wi-bar-label">一</div></div>
-        <div class="wi-bar-col"><div class="wi-bar-emoji">😮‍💨</div><div class="wi-bar" style="height:30%;background:var(--accent-primary);"></div><div class="wi-bar-label">二</div></div>
-        <div class="wi-bar-col"><div class="wi-bar-emoji">😔</div><div class="wi-bar" style="height:20%;background:var(--danger);"></div><div class="wi-bar-label">三</div></div>
-        <div class="wi-bar-col"><div class="wi-bar-emoji">😮‍💨</div><div class="wi-bar" style="height:35%;background:var(--accent-primary);"></div><div class="wi-bar-label">四</div></div>
-        <div class="wi-bar-col"><div class="wi-bar-emoji">😊</div><div class="wi-bar" style="height:55%;background:var(--trust-green);"></div><div class="wi-bar-label">五</div></div>
-        <div class="wi-bar-col"><div class="wi-bar-emoji">😊</div><div class="wi-bar" style="height:65%;background:var(--trust-green);"></div><div class="wi-bar-label">六</div></div>
-        <div class="wi-bar-col"><div class="wi-bar-emoji">🙏</div><div class="wi-bar" style="height:70%;background:var(--trust-green);"></div><div class="wi-bar-label">日</div></div>
+        <div class="wi-bar-col"><div class="wi-bar-emoji" data-day="6"></div><div class="wi-bar" data-day="6" style="height:4px;background:var(--bg-surface-4);"></div><div class="wi-bar-label" data-day="6"></div></div>
+        <div class="wi-bar-col"><div class="wi-bar-emoji" data-day="5"></div><div class="wi-bar" data-day="5" style="height:4px;background:var(--bg-surface-4);"></div><div class="wi-bar-label" data-day="5"></div></div>
+        <div class="wi-bar-col"><div class="wi-bar-emoji" data-day="4"></div><div class="wi-bar" data-day="4" style="height:4px;background:var(--bg-surface-4);"></div><div class="wi-bar-label" data-day="4"></div></div>
+        <div class="wi-bar-col"><div class="wi-bar-emoji" data-day="3"></div><div class="wi-bar" data-day="3" style="height:4px;background:var(--bg-surface-4);"></div><div class="wi-bar-label" data-day="3"></div></div>
+        <div class="wi-bar-col"><div class="wi-bar-emoji" data-day="2"></div><div class="wi-bar" data-day="2" style="height:4px;background:var(--bg-surface-4);"></div><div class="wi-bar-label" data-day="2"></div></div>
+        <div class="wi-bar-col"><div class="wi-bar-emoji" data-day="1"></div><div class="wi-bar" data-day="1" style="height:4px;background:var(--bg-surface-4);"></div><div class="wi-bar-label" data-day="1"></div></div>
+        <div class="wi-bar-col"><div class="wi-bar-emoji" data-day="0"></div><div class="wi-bar" data-day="0" style="height:4px;background:var(--bg-surface-4);"></div><div class="wi-bar-label" data-day="0"></div></div>
       </div>
     </div>
     <div class="sub-card">
       <h3>最常聊的话题</h3>
-      <ul class="wi-topic-list">
-        <li>工作压力 <span class="pct">40%</span></li>
-        <li>家庭 <span class="pct">30%</span></li>
-        <li>退休规划 <span class="pct">15%</span></li>
-        <li>随便聊聊 <span class="pct">15%</span></li>
-      </ul>
+      <p style="font-size:13px;color:var(--text-tertiary);line-height:1.8;">还没有足够的数据<br>和 Echo 多聊聊后，这里会显示你们常聊的话题</p>
     </div>
     <div class="sub-card">
       <h3>Echo观察</h3>
-      <p style="font-style:italic;color:var(--accent-soft);">"你这周前半段压力较大，尤其是周三前后情绪比较低落。但好消息是，从周五开始你的心情明显好转了。周末和家人在一起的时间似乎让你恢复了不少能量。继续保持这种节奏，累的时候记得歇一歇。"</p>
+      <p id="wiObserve" style="font-style:italic;color:var(--accent-soft);">"记录心情后，我会在这里给你一些回应。"</p>
     </div>
     <div class="sub-card">
       <h3>下周建议</h3>
-      <p>试试在周三安排一些轻松的活动，打破压力的连续感。周末继续保持和家人的互动，这是你最好的充电方式。</p>
+      <p style="font-size:13px;color:var(--text-tertiary);line-height:1.8;">累了就歇一歇，有需要随时来找 Echo 聊聊。</p>
     </div>
   </div>
 
@@ -6444,6 +6402,79 @@ function updateWeeklyChart() {
     else if (ratio >= 0.3) insightEl.textContent = '这周心情有些起伏，记得给自己留点空间。';
     else insightEl.textContent = '这周似乎不太轻松，辛苦了。有需要随时来聊聊。';
   }
+  // Update mine weekly detail（原为写死的"本周聊天5次·共45分钟·心情趋势：平静→疲惫→轻松"，改为真实数据）
+  var mineDetail = document.querySelector('.mine-weekly-card .detail');
+  var mineObserve = document.querySelector('.mine-weekly-card .echo-observe');
+  var mNameMap = { calm:'平静', tired:'疲惫', down:'低落', angry:'烦躁', grateful:'感恩' };
+  if (mineDetail) {
+    if (weekMoods.length > 0) {
+      var trendText = weekMoods.map(function(m){ return mNameMap[m] || m; }).join(' → ');
+      mineDetail.innerHTML = '本周心情打卡' + weekMoods.length + '次<br>心情趋势：' + trendText;
+    } else {
+      mineDetail.innerHTML = '本周还没有心情打卡<br>去首页记录一下今天的心情吧';
+    }
+  }
+  if (mineObserve) {
+    if (weekMoods.length > 0) {
+      var calmCnt = weekMoods.filter(function(m){ return m === 'calm' || m === 'grateful'; }).length;
+      var r = calmCnt / weekMoods.length;
+      mineObserve.textContent = r >= 0.6 ? '“这周你的状态整体不错，继续保持。”' : (r >= 0.3 ? '“这周心情有些起伏，记得给自己留点空间。”' : '“这周似乎不太轻松，辛苦了，有需要随时来聊聊。”');
+    } else {
+      mineObserve.textContent = '“记录心情后，我会在这里给你一些回应。”';
+    }
+  }
+  renderWeeklyDetail();
+}
+
+// ===== Detailed Weekly Insight Sub-Page（真实数据驱动，未追踪的指标诚实留白）=====
+function renderWeeklyDetail() {
+  if (!document.getElementById('sub-weekly-insight')) return;
+  var moodHistory = lsLoad('moodHistory', []);
+  var scoreMap = { calm: 4, grateful: 5, tired: 2, down: 1, angry: 1 };
+  var emojiMap = { calm: '😊', grateful: '🙏', tired: '😮‍💨', down: '😔', angry: '😣' };
+  var colorMap = { calm: 'var(--trust-green)', grateful: 'var(--trust-green)', tired: 'var(--accent-primary)', down: 'var(--danger)', angry: 'var(--danger)' };
+  var dayLabels = ['日','一','二','三','四','五','六'];
+  var today = new Date();
+  // 真实日期范围（近7天）
+  var rangeEl = document.getElementById('wiDateRange');
+  if (rangeEl) {
+    var s = new Date(today); s.setDate(s.getDate() - 6);
+    rangeEl.textContent = '本周概览（' + (s.getMonth()+1) + '月' + s.getDate() + '日 - ' + (today.getMonth()+1) + '月' + today.getDate() + '日）';
+  }
+  // 收集近7天心情
+  var weekMoods = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date(today); d.setDate(d.getDate() - i);
+    var key = d.toISOString().slice(0, 10);
+    var found = moodHistory.find(function(m) { return m.date === key; });
+    if (found) weekMoods.push(found.mood);
+    var bar = document.querySelector('.wi-bar[data-day="' + i + '"]');
+    var emo = document.querySelector('.wi-bar-emoji[data-day="' + i + '"]');
+    var lbl = document.querySelector('.wi-bar-label[data-day="' + i + '"]');
+    if (lbl) lbl.textContent = dayLabels[d.getDay()];
+    if (bar) {
+      if (found) {
+        var sc = scoreMap[found.mood] || 0;
+        bar.style.height = (sc * 18 + 8) + 'px';
+        bar.style.background = colorMap[found.mood] || 'var(--accent-primary)';
+      } else {
+        bar.style.height = '4px';
+        bar.style.background = 'var(--bg-surface-4)';
+      }
+    }
+    if (emo) emo.textContent = found ? (emojiMap[found.mood] || '') : '';
+  }
+  var setVal = function(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; };
+  setVal('wiMoodCount', weekMoods.length);
+  if (weekMoods.length > 0) {
+    var calmCount = weekMoods.filter(function(m){ return m === 'calm' || m === 'grateful'; }).length;
+    var ratio = calmCount / weekMoods.length;
+    setVal('wiTrend', ratio >= 0.6 ? '↗ 向好' : (ratio >= 0.3 ? '→ 平稳' : '↘ 偏低'));
+    var obs = document.getElementById('wiObserve');
+    if (obs) obs.textContent = ratio >= 0.6 ? '“这周你的状态整体不错，继续保持。”' : (ratio >= 0.3 ? '“这周心情有些起伏，记得给自己留点空间。”' : '“这周似乎不太轻松，辛苦了，有需要随时来聊聊。”');
+  } else {
+    setVal('wiTrend', '—');
+  }
 }
 
 // ===== Companion & Message Stats =====
@@ -6472,18 +6503,32 @@ function updateCompanionStats() {
     } else break;
   }
   lsSave('currentStreak', streak);
-  // Update mine page stats
-  var mineDays = document.querySelector('.mine-stat-num');
-  if (mineDays) mineDays.textContent = days;
-  var mineStreak = document.querySelectorAll('.mine-stat-num');
-  if (mineStreak.length > 1) mineStreak[1].textContent = streak;
-  var mineChats = document.querySelectorAll('.mine-stat-num');
-  if (mineChats.length > 2) mineChats[2].textContent = totalMsgs;
+  // Update mine page stats（修复：原选择器 .mine-stat-num 与页面 .mine-stat .val 不匹配，导致统计永远显示假数据）
+  var mineVals = document.querySelectorAll('.mine-stat .val');
+  if (mineVals.length > 0) mineVals[0].textContent = days;
+  if (mineVals.length > 1) mineVals[1].textContent = streak;
+  if (mineVals.length > 2) mineVals[2].textContent = totalMsgs;
   // Update companion page
   var companionDays = document.querySelector('.companion-big-num .num');
   if (companionDays) companionDays.textContent = days;
   var companionStreak = document.querySelector('.companion-big-num .sub');
   if (companionStreak) companionStreak.textContent = '🔥 连续打卡' + streak + '天';
+  // Update immersion opening（原为写死的"陪伴第42天·连续15天"，改为真实数据）
+  var immersionStreak = document.querySelector('.immersion-streak');
+  if (immersionStreak) immersionStreak.textContent = '陪伴第' + days + '天 · 🔥连续' + streak + '天';
+  // Update milestones（原为写死的假日期，改为基于真实数据的状态）
+  var ms = document.querySelectorAll('.milestone-list .ml-date');
+  if (ms.length >= 6) {
+    ms[0].textContent = totalMsgs >= 1 ? '已达成' : '未达成';
+    ms[1].textContent = streak >= 7 ? '已达成' : '进行中';
+    ms[2].textContent = totalMsgs >= 50 ? '已达成' : totalMsgs + '/50';
+    ms[3].textContent = streak >= 30 ? '已达成' : '进行中';
+    ms[4].textContent = totalMsgs >= 1 ? '已达成' : '未达成';
+    ms[5].textContent = totalMsgs >= 100 ? '已达成' : totalMsgs + '/100';
+  }
+  // Update privacy report（原为写死的"已加密对话128"，改为真实对话数）
+  var statEncrypted = document.getElementById('statEncryptedChats');
+  if (statEncrypted) statEncrypted.textContent = totalMsgs;
 }
 
 // ===== Space Chat =====
