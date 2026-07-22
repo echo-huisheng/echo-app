@@ -64,6 +64,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Echo回声">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="192x192" href="/echo-app/icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/echo-app/icons/icon-512.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
@@ -7993,17 +7995,9 @@ function initNotifications() {
 
   // Register service worker for PWA install support
   if ('serviceWorker' in navigator) {
-    // Create a minimal SW inline via blob (for PWA install prompt on supported browsers)
-    var swCode = "self.addEventListener('install', function(e) { self.skipWaiting(); });" +
-      "self.addEventListener('activate', function(e) { e.waitUntil(clients.claim()); });" +
-      "self.addEventListener('notificationclick', function(e) {" +
-      "  e.notification.close(); e.waitUntil(clients.openWindow('/'));" +
-      "});";
-    var swBlob = new Blob([swCode], { type: 'application/javascript' });
-    var swUrl = URL.createObjectURL(swBlob);
-    // Note: blob URLs won't persist as SW on all browsers, but won't error either
-    // Real SW file would be needed for full PWA; this is a graceful attempt
-    try { navigator.serviceWorker.register(swUrl).catch(function() {}); } catch(e) {}
+    navigator.serviceWorker.register('/echo-app/sw.js').catch(function(e) {
+      console.log('SW registration failed:', e);
+    });
   }
 }
 
