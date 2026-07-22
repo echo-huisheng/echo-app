@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.5.3';
+  var APP_VERSION = '8.5.4';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.5.3</title>
+<title>Echo回声 — 试用版v8.5.4</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -8787,7 +8787,7 @@ function toggleAmbientPanel() {
   if (panel) panel.classList.toggle('active');
 }
 function toggleAmbientSound(type) {
-  if (currentAmbient === type) { stopAmbient(); return; }
+  if (currentAmbient === type) { stopAmbient(); closeAmbientPanel(); return; }
   stopAmbient();
   currentAmbient = type;
   if (!ambientCtx) {
@@ -8807,6 +8807,11 @@ function toggleAmbientSound(type) {
   }
   var btn = document.getElementById('ambientBtn');
   if (btn) btn.classList.add('playing');
+  closeAmbientPanel();
+}
+function closeAmbientPanel() {
+  var panel = document.getElementById('ambientPanel');
+  if (panel) panel.classList.remove('active');
 }
 function createNoiseNodes(type, output) {
   var bufferSize = 2 * ambientCtx.sampleRate;
