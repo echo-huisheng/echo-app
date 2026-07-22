@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.5.4';
+  var APP_VERSION = '8.5.5';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.5.4</title>
+<title>Echo回声 — 试用版v8.5.5</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -4034,7 +4034,7 @@ body {
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">开启后，老E会在每晚8点提醒你聊天，周末早上也会打个招呼。</div>
       <button id="notifyToggleBtn" onclick="requestNotificationPermission()" style="background:var(--accent-primary);border:none;color:var(--bg-base);padding:12px 20px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);width:100%;font-weight:500;">开启每晚提醒</button>
     </div>
-    <div class="sub-card" id="installBanner" style="display:none;">
+    <div class="sub-card" id="installBanner">
       <div style="font-size:14px;color:var(--text-primary);margin-bottom:8px;">📱 添加到手机主屏幕</div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">像APP一样使用，获得更好的体验。</div>
       <button onclick="installPWA()" style="background:var(--bg-surface-3);border:1px solid var(--accent-primary);color:var(--accent-primary);padding:12px 20px;border-radius:var(--radius-btn);font-size:14px;cursor:pointer;font-family:var(--font-body);width:100%;">安装Echo到桌面</button>
@@ -8151,10 +8151,12 @@ var deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
   deferredPrompt = e;
-  // Show install banner
-  var banner = document.getElementById('installBanner');
-  if (banner) banner.style.display = 'flex';
 });
+// 已以 standalone 方式安装运行时，隐藏安装横幅
+if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+  var _ib = document.getElementById('installBanner');
+  if (_ib) _ib.style.display = 'none';
+}
 
 function installPWA() {
   if (deferredPrompt) {
@@ -8164,7 +8166,14 @@ function installPWA() {
       var banner = document.getElementById('installBanner');
       if (banner) banner.style.display = 'none';
     });
+    return;
   }
+  // 拿不到原生安装提示（iOS Safari 不支持 beforeinstallprompt / 已安装 / 曾关闭提示），给出手动指引
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var msg = isIOS
+    ? '点击底部分享按钮 ↑，选择"添加到主屏幕"即可'
+    : '点击浏览器菜单（⋮ 或 ⋯），选择"安装应用"或"添加到主屏幕"';
+  showToast(msg);
 }
 
 
