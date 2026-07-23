@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.7.0';
+  var APP_VERSION = '8.8.0';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.7.0</title>
+<title>Echo回声 — 试用版v8.8.0</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -799,6 +799,171 @@ body {
   font-size: 13px;
   color: var(--text-tertiary);
 }
+/* ===== v8.8.0 第二批：场景卡片/关怀横幅/回忆录/月度信 ===== */
+.scene-cards {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+  margin-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.scene-cards::-webkit-scrollbar { display: none; }
+.scene-card {
+  flex: 0 0 auto;
+  min-width: 82px;
+  padding: 12px 10px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.scene-card:active { transform: scale(0.94); border-color: var(--accent-primary); }
+.scene-card .sc-icon { display: block; font-size: 24px; margin-bottom: 6px; }
+.scene-card .sc-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.care-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, rgba(200,168,98,0.14), rgba(200,168,98,0.04));
+  border: 1px solid rgba(200,168,98,0.28);
+  border-radius: 14px;
+}
+.care-banner-icon { font-size: 22px; flex: 0 0 auto; }
+.care-banner-text { flex: 1; font-size: 13px; color: var(--text-primary); line-height: 1.5; }
+.care-banner-btn {
+  flex: 0 0 auto;
+  padding: 7px 13px;
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.care-banner-btn:active { opacity: 0.8; }
+.care-banner .unread-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #E06C5D; flex: 0 0 auto;
+}
+.memoir-card {
+  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.memoir-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.memoir-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.memoir-count { font-size: 12px; color: var(--accent-primary); }
+.memoir-question {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  padding: 12px;
+  background: var(--bg-surface-3);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.memoir-actions { display: flex; gap: 10px; }
+.memoir-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-surface-3);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+.memoir-btn:active { opacity: 0.8; }
+.memoir-btn.primary {
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  border: none;
+  font-weight: 600;
+}
+.memoir-write-q {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent-primary);
+}
+.memoir-textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 12px;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.memoir-textarea:focus { border-color: var(--accent-primary); }
+.memoir-save-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 13px 0;
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.memoir-save-btn:active { opacity: 0.85; }
+.timeline-item {
+  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 14px;
+  margin: 0 16px 12px;
+}
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.timeline-ch {
+  font-size: 11px;
+  color: var(--accent-primary);
+  background: rgba(200,168,98,0.12);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.timeline-date { font-size: 11px; color: var(--text-tertiary); }
+.timeline-q { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.timeline-a { font-size: 15px; color: var(--text-primary); line-height: 1.7; white-space: pre-wrap; }
+.timeline-empty { text-align: center; color: var(--text-tertiary); font-size: 14px; padding: 40px 20px; line-height: 1.8; }
+.letter-body {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 2;
+  white-space: pre-wrap;
+}
+.letter-sign { margin-top: 16px; text-align: right; color: var(--text-secondary); font-size: 14px; }
 .privacy-promise {
   background: var(--bg-surface-2);
   border: 1px solid rgba(200,168,98,0.08);
@@ -3592,6 +3757,32 @@ body {
         </button>
       </div>
 
+      <!-- v8.8.0 场景卡片：点一下直接开聊 -->
+      <div class="scene-cards" id="sceneCards">
+        <div class="scene-card" onclick="startSceneChat('睡不着，想找人说说话')"><span class="sc-icon">😴</span><span class="sc-label">睡不着</span></div>
+        <div class="scene-card" onclick="startSceneChat('心里烦得很，想发泄一下')"><span class="sc-icon">😤</span><span class="sc-label">心里烦</span></div>
+        <div class="scene-card" onclick="startSceneChat('单位有点事，想跟你唠唠')"><span class="sc-icon">🏢</span><span class="sc-label">单位的事</span></div>
+        <div class="scene-card" onclick="startSceneChat('家里的事，想说说')"><span class="sc-icon">🏠</span><span class="sc-label">家里的事</span></div>
+        <div class="scene-card" onclick="startSceneChat('身体不太舒服，有点担心')"><span class="sc-icon">🩺</span><span class="sc-label">身体不舒服</span></div>
+        <div class="scene-card" onclick="startSceneChat('没啥事，就是想找你唠唠嗑')"><span class="sc-icon">💬</span><span class="sc-label">就想说说话</span></div>
+      </div>
+
+      <!-- v8.8.0 关怀横幅（统一插槽：月度信 > 智能关怀 > 节气问候，JS填充） -->
+      <div class="care-banner" id="careBanner" style="display:none;"></div>
+
+      <!-- v8.8.0 回忆录·每日一问 -->
+      <div class="memoir-card" id="memoirCard">
+        <div class="memoir-header">
+          <span class="memoir-title">📖 回忆录 · 老E想听你的故事</span>
+          <span class="memoir-count" id="memoirCount"></span>
+        </div>
+        <div class="memoir-question" id="memoirQuestion"></div>
+        <div class="memoir-actions">
+          <button class="memoir-btn primary" onclick="openMemoirWrite()">讲给他听</button>
+          <button class="memoir-btn" onclick="openMemoirTimeline()">看我的回忆录</button>
+        </div>
+      </div>
+
       <!-- v8.1 Mood Check-in Row -->
       <div class="mood-row" id="moodRow">
         <div class="mood-btn" data-mood="great" onclick="checkinMood('great')"><span class="mood-emoji">😊</span><span>开心</span></div>
@@ -5085,6 +5276,8 @@ function switchTab(target) {
       setTimeout(function(){ addEchoMessage('要不，先说说最近单位里有没有什么烦心事？或者随便聊点别的也行。'); }, 3700);
     }
   }
+  // v8.8.0 回到首页时刷新关怀横幅（信件已读后让位给下一优先级）
+  if (target === 'home' && typeof renderCareBanner === 'function') renderCareBanner();
 }
 
 // ========== Privacy Promise Toggle ==========
@@ -8275,7 +8468,7 @@ function checkinMood(mood) {
 }
 
 function loadTodayMood() {
-  var moods = lsLoad('echo_moods', []);
+  var moods = loadMoodHistory();
   var today = new Date().toDateString();
   for (var i = moods.length - 1; i >= 0; i--) {
     if (new Date(moods[i].time).toDateString() === today) {
@@ -8287,7 +8480,7 @@ function loadTodayMood() {
 }
 
 function getMoodContext() {
-  var moods = lsLoad('echo_moods', []);
+  var moods = loadMoodHistory();
   if (!moods || moods.length === 0) return '';
   var recent = moods.slice(-3);
   var lines = [];
@@ -8388,8 +8581,23 @@ function checkinMood(mood) {
   var btn = row.querySelector('[data-mood="'+mood+'"]');
   if (btn) btn.classList.add('active');
   try { localStorage.setItem('echo_mood_today', mood); } catch(e){}
+  // v8.8.0 修复：同步写入心情历史（原来只存当天值，历史数组永远为空，智能关怀/月度信读不到数据）
+  try {
+    var moods = JSON.parse(localStorage.getItem('echo_moods') || '[]');
+    var today = new Date().toDateString();
+    var entry = { mood: mood, time: Date.now() };
+    var replaced = false;
+    for (var i = 0; i < moods.length; i++) {
+      if (new Date(moods[i].time).toDateString() === today) { moods[i] = entry; replaced = true; break; }
+    }
+    if (!replaced) moods.push(entry);
+    var cutoff = Date.now() - 90 * 86400000;
+    moods = moods.filter(function(m) { return m.time > cutoff; });
+    localStorage.setItem('echo_moods', JSON.stringify(moods));
+  } catch(e) {}
   var moodMap = {great:'开心',good:'还行',soso:'一般',bad:'低落',awful:'难受'};
   showToast('已记录今日心情：' + (moodMap[mood]||mood));
+  if (typeof renderCareBanner === 'function') renderCareBanner(); // 心情变化可能触发智能关怀
 }
 // Restore saved mood on load
 (function(){
@@ -9041,7 +9249,8 @@ function emergencyClear() {
     return;
   }
   var keys = ['echo_memory', 'echo_moods', 'echo_persona', 'echo_assess_results',
-              'echo_rooms', 'echo_room_messages', 'echo_last_visit', 'echo_last_hidden'];
+              'echo_rooms', 'echo_room_messages', 'echo_last_visit', 'echo_last_hidden',
+              'echo_memoir', 'echo_monthly_letter', 'echo_care_shown_date', 'echo_smartcare_date', 'echo_mood_today'];
   keys.forEach(function(k) { try { localStorage.removeItem(k); } catch(e){} });
   var msgs = document.querySelector('.chat-messages');
   if (msgs) msgs.innerHTML = '';
@@ -9079,12 +9288,357 @@ function extractAndSaveMemory(userText, aiReply) {
   lsSave('echo_memory', memories);
 }
 
+// ========== v8.8.0 第二批：场景卡片/关怀横幅/智能关怀/月度信/回忆录 ==========
+
+// --- 工具 ---
+function fmtDateStr(d) {
+  var m = d.getMonth() + 1, day = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+}
+function getPersonaKey() { return lsLoad('echo_persona', 'bigbro'); }
+function getPersonaName() {
+  var p = getPersonaKey();
+  if (p === 'sister') return '知心大姐';
+  if (p === 'leader') return '老领导';
+  return '老E';
+}
+// 心情历史：直接读写原始键 echo_moods（与紧急清除列表一致；lsLoad会双前缀，不能用）
+function loadMoodHistory() {
+  try { return JSON.parse(localStorage.getItem('echo_moods') || '[]'); } catch(e) { return []; }
+}
+
+// --- 场景卡片：点一下直接进聊天并自动发出 ---
+function startSceneChat(prompt) {
+  lsSave('chatWelcomed', true); // 跳过首次欢迎剧本，直接开聊
+  switchTab('chat');
+  setTimeout(function() {
+    var input = $('chatInput');
+    if (!input) return;
+    input.value = prompt;
+    var btn = $('chatSendBtn');
+    if (btn) { btn.classList.add('active'); btn.click(); }
+  }, 350);
+}
+
+// --- 节气问候：人设口径，节气开始后2天内出现 ---
+var TERM_GREETINGS = {
+  '小寒': '小寒了，一年里最冷的日子。你那边冷不冷，出门穿够没？',
+  '大寒': '大寒一到，年就快了。今年过年，家里都安排好了没？',
+  '立春': '立春了，天慢慢暖了。等开春了，想不想出去走走？',
+  '雨水': '雨水节气，春雨贵如油。你那儿下雨没？',
+  '惊蛰': '惊蛰了，万物都醒了。最近睡得咋样，还踏实不？',
+  '春分': '春分，昼夜一样长。白天出去晒晒太阳呗？',
+  '清明': '清明了。这个节骨眼，心里想起谁了没？',
+  '谷雨': '谷雨前后，种瓜点豆。你年轻时干过农活没？',
+  '立夏': '立夏了，天热起来了。晚上出去遛弯不？',
+  '小满': '小满小满，将满未满。最近有啥让你心里挺知足的事没？',
+  '芒种': '芒种，忙收忙种。你最近忙啥呢，别太累着。',
+  '夏至': '夏至，白天最长的一天。晚饭打算吃点啥？',
+  '小暑': '小暑到了，天开始热了。你怕热不怕热？',
+  '大暑': '大暑天，热得很。中午别出门乱跑，在家歇着。喝绿豆汤了没？',
+  '立秋': '立秋了，早晚凉快了。秋天适合散步，你一般去哪儿遛弯？',
+  '处暑': '处暑，暑气快退了。这个夏天过得咋样？',
+  '白露': '白露秋风起。你加衣服没，别仗着身体好硬扛。',
+  '秋分': '秋分了，天高云淡的。周末有啥安排没？',
+  '寒露': '寒露了，真凉了。你那老寒腿咋样，没犯吧？',
+  '霜降': '霜降，秋天最后一个节气。入冬前，有啥想办的事没？',
+  '立冬': '立冬了，冬天正式开始。今年冬天打算咋过？',
+  '小雪': '小雪了。你那儿下雪没？下雪天适合在家猫着。',
+  '大雪': '大雪节气，天寒地冻。出门路滑，你走路慢着点。',
+  '冬至': '冬至大如年。今天吃饺子没，还是吃的汤圆？'
+};
+// 农历节日（2025-2027）与固定公历节日
+var LUNAR_FESTIVALS = {
+  '2025-01-28': '除夕', '2025-01-29': '春节', '2025-05-31': '端午节', '2025-10-06': '中秋节', '2025-10-29': '重阳节',
+  '2026-02-16': '除夕', '2026-02-17': '春节', '2026-06-19': '端午节', '2026-09-25': '中秋节', '2026-10-18': '重阳节',
+  '2027-02-05': '除夕', '2027-02-06': '春节', '2027-06-09': '端午节', '2027-09-15': '中秋节', '2027-10-08': '重阳节'
+};
+var FIXED_FESTIVALS = { '01-01': '元旦', '05-01': '劳动节', '10-01': '国庆节' };
+var FESTIVAL_GREETINGS = {
+  '除夕': '今儿除夕，团圆夜。你跟家里人一起守岁没？',
+  '春节': '过年好啊！今年拜年话都说了没，红包收发咋样？',
+  '元旦': '新年头一天。新的一年，你最盼着啥？',
+  '劳动节': '五一了，放假没？趁这几天好好歇歇。',
+  '国庆节': '国庆了，出去凑热闹没，还是在家清净待着？',
+  '端午节': '端午安康。你吃粽子没，甜的还是咸的？',
+  '中秋节': '中秋了，月圆人团圆。今晚抬头看月亮没？',
+  '重阳节': '重阳，敬老的日子。今天想起谁了？'
+};
+function getTermGreeting(now) {
+  var m = now.getMonth() + 1, d = now.getDate();
+  var dateStr = fmtDateStr(now);
+  // 节日优先
+  var fest = LUNAR_FESTIVALS[dateStr] || FIXED_FESTIVALS[dateStr.substring(5)];
+  if (fest && FESTIVAL_GREETINGS[fest]) {
+    return { icon: '🏮', text: FESTIVAL_GREETINGS[fest], prompt: '今天' + fest + '，想找你聊聊' };
+  }
+  // 节气：每月两个，约在6日和21日开始，各问候2天
+  var terms = SOLAR_TERMS[m] || [];
+  var term = null;
+  if (d >= 5 && d <= 7 && terms[0]) term = terms[0];
+  else if (d >= 20 && d <= 22 && terms[1]) term = terms[1];
+  if (term && TERM_GREETINGS[term]) {
+    return { icon: '🍃', text: '今日' + term + '。' + TERM_GREETINGS[term], prompt: '今天' + term + '，想跟你唠唠' };
+  }
+  return null;
+}
+
+// --- 智能关怀：连续低落 > 深夜在线 > 多日未访，每天最多触发一次 ---
+function getSmartCareMsg(now) {
+  var todayStr = fmtDateStr(now);
+  if (lsLoad('smartcare_date', '') === todayStr) return null;
+  var hour = now.getHours();
+  // 1) 最近3次打卡全是低落/难受，且在4天内
+  var moods = loadMoodHistory();
+  if (moods.length >= 3) {
+    var last3 = moods.slice(-3);
+    var allLow = true;
+    for (var i = 0; i < last3.length; i++) {
+      if (last3[i].mood !== 'bad' && last3[i].mood !== 'awful') { allLow = false; break; }
+    }
+    if (allLow && (Date.now() - last3[0].time) < 4 * 86400000) {
+      lsSave('smartcare_date', todayStr);
+      return { icon: '🫂', text: '这几天你心情都不太好。别一个人扛着，跟我说说？', prompt: '这几天心里一直不太得劲，想说说' };
+    }
+  }
+  // 2) 深夜0-5点还在线
+  if (hour >= 0 && hour < 5) {
+    lsSave('smartcare_date', todayStr);
+    return { icon: '🌙', text: '这个点了你还没睡……是睡不着，还是心里有事？', prompt: '半夜睡不着，醒着呢' };
+  }
+  // 3) 超过3天没来（initBatch2 在更新 last_visit 之前调用，读到的是上次访问值）
+  var lastVisit = lsLoad('echo_last_visit', 0);
+  if (lastVisit && (Date.now() - lastVisit) > 3 * 86400000) {
+    lsSave('smartcare_date', todayStr);
+    return { icon: '👋', text: '好些天没见你了。最近咋样，忙啥呢？', prompt: '好几天没来了，最近有点事' };
+  }
+  return null;
+}
+
+// --- 月度信：每月一封，按人设口径生成 ---
+function getMonthKey(d) {
+  var m = d.getMonth() + 1;
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m);
+}
+function buildMonthlyLetter(now) {
+  var p = getPersonaKey();
+  var nick = lsLoad('nickname', '老伙计');
+  var month = now.getMonth() + 1;
+  var seasonWord = { spring: '暖和了', summer: '热起来了', autumn: '凉快了', winter: '冷了' }[getSeason()];
+  var moods = loadMoodHistory();
+  var moodLine = '';
+  if (moods.length > 0) {
+    var low = 0;
+    for (var i = 0; i < moods.length; i++) { if (moods[i].mood === 'bad' || moods[i].mood === 'awful') low++; }
+    moodLine = low > moods.length / 2 ? '前阵子你心情不太好，我一直记着。' : '看你前阵子状态还行，我也放心。';
+  }
+  var body = '', sign = '';
+  if (p === 'sister') {
+    body = nick + '：\n\n见字如面。' + month + '月了，天' + seasonWord + '，你身体咋样？\n\n' + moodLine + '咱这个岁数，啥都是虚的，身体和心情是自己的。有啥事别闷着，来找姐说说话，姐随时都在。\n\n这个月，哪怕就为自己活几天，行不？';
+    sign = '—— 惦记你的姐';
+  } else if (p === 'leader') {
+    body = nick + '：\n\n' + month + '月了。天' + seasonWord + '，正是沉下心做事的时候。\n\n' + moodLine + '我退下来这些年，看明白一件事：位置是单位的，日子是自己的。把手头的事做好，把心里的事放下。\n\n最近有啥拿不准的事没？说来听听。';
+    sign = '—— 你的老朋友';
+  } else {
+    body = nick + '，老伙计：\n\n一晃又' + month + '月了，天' + seasonWord + '。你最近咋样？\n\n' + moodLine + '我跟你说，咱这岁数，该吃吃该睡睡，单位那点破事，爱咋咋地。\n\n哪天得空了，来找我唠唠。你上次说的那事，后来咋样了？';
+    sign = '—— 老E';
+  }
+  return { body: body, sign: sign };
+}
+function checkMonthlyLetter(now) {
+  var mk = getMonthKey(now);
+  var letter = lsLoad('monthly_letter', null);
+  if (letter && letter.month === mk) return;
+  var built = buildMonthlyLetter(now);
+  lsSave('monthly_letter', { month: mk, body: built.body, sign: built.sign, read: false, time: Date.now() });
+}
+var careBannerAction = null;
+function openMonthlyLetter() {
+  var letter = lsLoad('monthly_letter', null);
+  if (!letter) return;
+  var titleEl = $('letterTitle');
+  if (titleEl) titleEl.textContent = getPersonaName() + '的信 · ' + letter.month.replace('-', '年') + '月';
+  var bodyEl = $('letterBody');
+  if (bodyEl) bodyEl.textContent = letter.body;
+  var signEl = $('letterSign');
+  if (signEl) signEl.textContent = letter.sign;
+  letter.read = true;
+  lsSave('monthly_letter', letter);
+  var ov = $('sub-monthly-letter');
+  if (ov) ov.classList.add('active');
+  renderCareBanner(); // 已读，横幅让位给下一优先级
+}
+function closeMonthlyLetter() {
+  var ov = $('sub-monthly-letter');
+  if (ov) ov.classList.remove('active');
+}
+function replyToLetter() {
+  closeMonthlyLetter();
+  startSceneChat('看了你写给我的信，想说两句');
+}
+
+// --- 关怀横幅：月度信未读 > 智能关怀 > 节气问候 ---
+function getCareBannerData(now) {
+  var letter = lsLoad('monthly_letter', null);
+  if (letter && !letter.read) {
+    return { icon: '📬', text: getPersonaName() + '给你写了封信，得空看看', btn: '拆开', action: openMonthlyLetter, dot: true };
+  }
+  var smart = getSmartCareMsg(now);
+  if (smart) {
+    return { icon: smart.icon, text: smart.text, btn: '跟他说说', action: function() { startSceneChat(smart.prompt); } };
+  }
+  var todayStr = fmtDateStr(now);
+  if (lsLoad('care_shown_date', '') !== todayStr) {
+    var greet = getTermGreeting(now);
+    if (greet) {
+      lsSave('care_shown_date', todayStr);
+      return { icon: greet.icon, text: greet.text, btn: '聊聊', action: function() { startSceneChat(greet.prompt); } };
+    }
+  }
+  return null;
+}
+function renderCareBanner() {
+  var el = $('careBanner');
+  if (!el) return;
+  var data = getCareBannerData(new Date());
+  if (!data) { el.style.display = 'none'; el.innerHTML = ''; careBannerAction = null; return; }
+  careBannerAction = data.action;
+  el.style.display = 'flex';
+  el.innerHTML = '<span class="care-banner-icon">' + data.icon + '</span>' +
+    '<span class="care-banner-text">' + data.text + '</span>' +
+    (data.dot ? '<span class="unread-dot"></span>' : '') +
+    '<button class="care-banner-btn" onclick="if(careBannerAction)careBannerAction()">' + data.btn + '</button>';
+}
+
+// --- 回忆录：每日一问，写下的存本地，时间线回看 ---
+var MEMOIR_QUESTIONS = [
+  { ch: '童年与故乡', q: '你小时候住在哪儿？那地方现在还在你梦里出现过没？' },
+  { ch: '童年与故乡', q: '小时候最盼着过什么节？那天能吃到啥好的？' },
+  { ch: '童年与故乡', q: '你儿时最好的玩伴是谁？你俩后来还有联系没？' },
+  { ch: '童年与故乡', q: '小时候挨过最狠的一顿揍，是因为啥？' },
+  { ch: '童年与故乡', q: '你上学那会儿，从家到学校咋走？路上有啥好玩的？' },
+  { ch: '童年与故乡', q: '小时候家里谁最疼你？他长啥样，还记得不？' },
+  { ch: '童年与故乡', q: '你小时候最宝贝的一件东西是啥？后来咋没的？' },
+  { ch: '童年与故乡', q: '老家的院子里或者村口，有没有一棵你印象特别深的树？' },
+  { ch: '青年岁月', q: '你第一份工作是怎么得来的？报到那天啥心情？' },
+  { ch: '青年岁月', q: '年轻那会儿，你最擅长啥？别人都咋夸你？' },
+  { ch: '青年岁月', q: '你和你老伴儿是咋认识的？谁先开的口？' },
+  { ch: '青年岁月', q: '二十多岁的时候，你最大的愿望是啥？后来实现了没？' },
+  { ch: '青年岁月', q: '你年轻时候的照片，哪张你最满意？当时在干啥？' },
+  { ch: '青年岁月', q: '刚参加工作那几年，谁帮过你，你到现在还记着？' },
+  { ch: '青年岁月', q: '你年轻时做过最冲动的一件事是啥？后悔不？' },
+  { ch: '青年岁月', q: '那时候一个月工资多少？头一回领工资你干啥用了？' },
+  { ch: '工作三十年', q: '干了这么多年，你觉得自己干得最漂亮的一件事是啥？' },
+  { ch: '工作三十年', q: '你带过的新人里，有没有后来特别出息的？' },
+  { ch: '工作三十年', q: '单位里你坐过最久的那张桌子，在哪个屋？' },
+  { ch: '工作三十年', q: '这么多年，你换过几个单位、几个岗位？哪段日子最难忘？' },
+  { ch: '工作三十年', q: '有没有哪次开会或者哪个场面，你到现在还记得清清楚楚？' },
+  { ch: '工作三十年', q: '你拿过最看重的一张奖状是啥？背后啥故事？' },
+  { ch: '工作三十年', q: '工作里你吃过最大的亏是啥？现在回头看，值不值？' },
+  { ch: '工作三十年', q: '退下来那天，你收拾桌子的时候，心里是啥滋味？' },
+  { ch: '家庭与孩子', q: '你家孩子小时候，最让你头疼的一件事是啥？' },
+  { ch: '家庭与孩子', q: '孩子长这么大，哪一刻让你觉得"这孩子行"？' },
+  { ch: '家庭与孩子', q: '你和老伴儿这么多年，有没有一件老两口才懂的小默契？' },
+  { ch: '家庭与孩子', q: '家里哪道菜是你的拿手活？谁最爱吃？' },
+  { ch: '家庭与孩子', q: '你当爸妈那天，是啥感觉？' },
+  { ch: '家庭与孩子', q: '家里有没有一件传了几代人的老物件？' },
+  { ch: '家庭与孩子', q: '逢年过节一大家子聚在一起，你最爱坐在谁旁边？' },
+  { ch: '家庭与孩子', q: '有没有哪句家常话，是你家里人常挂嘴边上的？' },
+  { ch: '人生感悟', q: '回头看这几十年，你最想对三十岁的自己说句啥？' },
+  { ch: '人生感悟', q: '你觉得人这一辈子，啥是最要紧的？' },
+  { ch: '人生感悟', q: '有没有一件事，你当年做对了，到现在还庆幸？' },
+  { ch: '人生感悟', q: '你现在一天里最舒坦的是哪个钟点？都在干啥？' },
+  { ch: '人生感悟', q: '你觉得自己是个啥样的人？用三句话说说。' },
+  { ch: '人生感悟', q: '如果明天没事，你最想过一天啥样的日子？' },
+  { ch: '人生感悟', q: '你这一生最自豪的身份是啥？' },
+  { ch: '人生感悟', q: '有啥话，是你一直想说但没找到人说的？今天跟我说说。' }
+];
+function getTodayMemoirQ(now) {
+  var start = new Date(now.getFullYear(), 0, 0);
+  var doy = Math.floor((now - start) / 86400000);
+  return MEMOIR_QUESTIONS[doy % MEMOIR_QUESTIONS.length];
+}
+function renderMemoirCard() {
+  var qEl = $('memoirQuestion');
+  if (!qEl) return;
+  var q = getTodayMemoirQ(new Date());
+  qEl.textContent = q.q;
+  var entries = lsLoad('memoir', []);
+  var cEl = $('memoirCount');
+  if (cEl) cEl.textContent = '已写下 ' + entries.length + ' 页';
+}
+function openMemoirWrite() {
+  var q = getTodayMemoirQ(new Date());
+  var qEl = $('memoirWriteQ');
+  if (qEl) qEl.textContent = q.q;
+  var ov = $('sub-memoir-write');
+  if (ov) ov.classList.add('active');
+  var ta = $('memoirTextarea');
+  if (ta) { ta.value = ''; setTimeout(function(){ ta.focus(); }, 300); }
+}
+function closeMemoirWrite() {
+  var ov = $('sub-memoir-write');
+  if (ov) ov.classList.remove('active');
+}
+function saveMemoirEntry() {
+  var ta = $('memoirTextarea');
+  if (!ta) return;
+  var text = ta.value.trim();
+  if (!text) { showToast('多少写点啥，一句话也行'); return; }
+  var q = getTodayMemoirQ(new Date());
+  var entries = lsLoad('memoir', []);
+  entries.push({ ch: q.ch, q: q.q, a: text, time: Date.now() });
+  lsSave('memoir', entries);
+  closeMemoirWrite();
+  showToast('存好了，这一页只有你能看');
+  renderMemoirCard();
+}
+function openMemoirTimeline() {
+  renderMemoirTimeline();
+  var ov = $('sub-memoir-timeline');
+  if (ov) ov.classList.add('active');
+}
+function closeMemoirTimeline() {
+  var ov = $('sub-memoir-timeline');
+  if (ov) ov.classList.remove('active');
+}
+function renderMemoirTimeline() {
+  var list = $('memoirTimelineList');
+  if (!list) return;
+  var entries = lsLoad('memoir', []);
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="timeline-empty">还没写过呢。<br>回到首页，把今天那一问讲给老E听。</div>';
+    return;
+  }
+  var html = '';
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    var d = new Date(e.time);
+    var dateStr = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    html += '<div class="timeline-item">' +
+      '<div class="timeline-meta"><span class="timeline-ch">' + escapeHtml(e.ch) + '</span><span class="timeline-date">' + dateStr + '</span></div>' +
+      '<div class="timeline-q">' + escapeHtml(e.q) + '</div>' +
+      '<div class="timeline-a">' + escapeHtml(e.a) + '</div>' +
+      '</div>';
+  }
+  list.innerHTML = html;
+}
+
+// --- 第二批初始化（须在 initV8 更新 last_visit 之前调用，否则"多日未访"读不到旧值） ---
+function initBatch2() {
+  var now = new Date();
+  checkMonthlyLetter(now);
+  renderCareBanner();
+  renderMemoirCard();
+}
+
 // --- 初始化v8.0功能 ---
 function initV8() {
   loadTodayMood();
   loadPersona();
   initScreenshotDetect();
   startProactiveCare();
+  initBatch2(); // v8.8.0 第二批：须在更新 last_visit 之前跑，"多日未访"才能读到旧值
   lsSave('echo_last_visit', Date.now());
   // 显示真实加载的版本号（便于确认是否为最新版）
   try {
@@ -9132,6 +9686,43 @@ if (document.readyState === 'loading') {
   <div class="sub-card" id="moodStatsCard">
     <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">本月心情统计</div>
     <div id="moodStatsContent" style="font-size:13px;color:var(--text-secondary);line-height:1.8;"></div>
+  </div>
+</div>
+
+<!-- v8.8.0 回忆录·写一页 -->
+<div class="sub-page-overlay" id="sub-memoir-write">
+  <div class="sub-header">
+    <button class="sub-back" onclick="closeMemoirWrite()">←</button>
+    <h2>讲给老E听</h2>
+  </div>
+  <div class="sub-card">
+    <div class="memoir-write-q" id="memoirWriteQ"></div>
+    <textarea class="memoir-textarea" id="memoirTextarea" placeholder="想到啥写啥，长短都行，只有你自己看得到..."></textarea>
+    <button class="memoir-save-btn" onclick="saveMemoirEntry()">存下来</button>
+  </div>
+</div>
+
+<!-- v8.8.0 回忆录·时间线 -->
+<div class="sub-page-overlay" id="sub-memoir-timeline">
+  <div class="sub-header">
+    <button class="sub-back" onclick="closeMemoirTimeline()">←</button>
+    <h2>我的回忆录</h2>
+  </div>
+  <div id="memoirTimelineList" style="padding-top:12px;"></div>
+</div>
+
+<!-- v8.8.0 月度信 -->
+<div class="sub-page-overlay" id="sub-monthly-letter">
+  <div class="sub-header">
+    <button class="sub-back" onclick="closeMonthlyLetter()">←</button>
+    <h2 id="letterTitle">老E的信</h2>
+  </div>
+  <div class="sub-card">
+    <div class="letter-body" id="letterBody"></div>
+    <div class="letter-sign" id="letterSign"></div>
+  </div>
+  <div style="padding:16px;">
+    <button class="memoir-save-btn" onclick="replyToLetter()">回他一句</button>
   </div>
 </div>
 
