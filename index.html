@@ -9440,7 +9440,8 @@ function buildMonthlyLetter(now) {
     body = nick + '：\n\n' + month + '月了。天' + seasonWord + '，正是沉下心做事的时候。\n\n' + moodLine + '我退下来这些年，看明白一件事：位置是单位的，日子是自己的。把手头的事做好，把心里的事放下。\n\n最近有啥拿不准的事没？说来听听。';
     sign = '—— 你的老朋友';
   } else {
-    body = nick + '，老伙计：\n\n一晃又' + month + '月了，天' + seasonWord + '。你最近咋样？\n\n' + moodLine + '我跟你说，咱这岁数，该吃吃该睡睡，单位那点破事，爱咋咋地。\n\n哪天得空了，来找我唠唠。你上次说的那事，后来咋样了？';
+    var greet = (nick === '老伙计') ? '老伙计' : nick + '，老伙计';
+    body = greet + '：\n\n一晃又' + month + '月了，天' + seasonWord + '。你最近咋样？\n\n' + moodLine + '我跟你说，咱这岁数，该吃吃该睡睡，单位那点破事，爱咋咋地。\n\n哪天得空了，来找我唠唠。你上次说的那事，后来咋样了？';
     sign = '—— 老E';
   }
   return { body: body, sign: sign };
