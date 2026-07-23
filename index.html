@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.5.5';
+  var APP_VERSION = '8.6.0';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.5.5</title>
+<title>Echo回声 — 试用版v8.6.0</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3661,12 +3661,13 @@ body {
         <button class="ch-settings" onclick="openSubPage('settings')">⚙️</button>
         <div onclick="simulateScreenshot()" style="font-size:10px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;background:var(--bg-surface-3);border-radius:8px;">模拟截屏检测</div>
       </div>
-      <div class="privacy-status-bar" id="privacyStatusBar">
+      <div class="privacy-status-bar" id="privacyStatusBar" onclick="openPrivacyReport(event)" style="cursor:pointer;">
         <span class="psb-icon">🔒</span>
         <span class="psb-text">本次对话仅存本机 · 关闭即消失</span>
         <button class="psb-burn-toggle" id="autoBurnToggle" onclick="toggleAutoBurn()">
           <span id="autoBurnLabel">阅后即焚：关</span>
         </button>
+        <span class="psb-more" style="font-size:14px;color:var(--text-tertiary);margin-left:2px;">›</span>
       </div>
       <div class="chat-trust-bar">🔒 隐私对话 · 消息定时清理 · 📵请勿截屏</div>
       <div class="chat-topic-tag" id="chatTopicTag"><span id="topicTagClose" onclick="clearTopic()" style="margin-left:8px;cursor:pointer;opacity:0.6;font-size:12px;">✕</span></div>
@@ -3688,6 +3689,9 @@ body {
       </div>
       <div class="chat-quick-tags">
         <button class="chat-tag" data-prompt="最近工作压力有点大">工作压力</button>
+        <button class="chat-tag" data-prompt="又要迎检了，材料堆成山，天天加班">迎检考核</button>
+        <button class="chat-tag" data-prompt="晋升的事一直卡着，心里很焦虑">晋升瓶颈</button>
+        <button class="chat-tag" data-prompt="单位要审计，心里有点不踏实">审计担忧</button>
         <button class="chat-tag" data-prompt="家里有些事想说说">家庭烦恼</button>
         <button class="chat-tag" data-prompt="今天心情不太好">心情不好</button>
         <button class="chat-tag" data-prompt="想聊聊退休的事">退休规划</button>
@@ -5060,22 +5064,25 @@ function switchTab(target) {
   if(page) page.classList.add('active');
   // Close any sub pages
   document.querySelectorAll('.sub-page-overlay').forEach(function(s){ s.classList.remove('active'); });
-  // v8.2 Privacy notice on first chat open
-  if (target === 'chat' && chatMessagesStore.length === 0) {
+  // v8.6 P0-1 首次访问前3分钟剧本：老E自我介绍 + 隐私承诺 + 首个话题
+  // （原v8.2隐私提示因静态首条消息存在而从未触发，属死代码，此处重写为生效逻辑）
+  if (target === 'chat' && !lsLoad('chatWelcomed', false)) {
+    lsSave('chatWelcomed', true);
     var container = document.getElementById('chatMessages');
-    if (container && container.querySelector('.msg') === null) {
+    if (container) {
+      // 移除静态通用开场白，用完整欢迎剧本替代（仅移除容器直子节点，不碰打字指示器内部）
+      var staticMsg = container.querySelector('.msg.echo');
+      if (staticMsg && staticMsg.parentNode === container) container.removeChild(staticMsg);
+      // 隐私安抚（系统气泡）
       var notice = document.createElement('div');
       notice.className = 'msg system';
-      notice.innerHTML = '<div class="msg-bubble" style="background:rgba(94,173,114,0.08);border:1px solid rgba(94,173,114,0.15);color:var(--trust-green);font-size:13px;text-align:center;">🔒 这里是你的私人空间<br>说的话只有你知道 · 关掉就没了<br>放心说，兄弟在</div>';
+      notice.innerHTML = '<div class="msg-bubble" style="background:rgba(94,173,114,0.08);border:1px solid rgba(94,173,114,0.15);color:var(--trust-green);font-size:13px;text-align:center;">🔒 这里是你的私人空间<br>说的话只有你知道 · 关掉就没了<br>放心说，我在听</div>';
       container.appendChild(notice);
-      setTimeout(function() {
-        var greeting = getGreeting();
-        var msg = document.createElement('div');
-        msg.className = 'msg echo';
-        msg.innerHTML = '<div class="msg-bubble">' + greeting + '</div><div class="msg-meta">由你掌控</div>';
-        container.appendChild(msg);
-        container.scrollTop = container.scrollHeight;
-      }, 800);
+      container.scrollTop = container.scrollHeight;
+      // 老E自我介绍 → 隐私承诺 → 首个话题（错峰出现，各带打字指示器）
+      setTimeout(function(){ addEchoMessage('我是老E。在体制内待了半辈子，从科员熬到处长，什么场面都见过。站队、背锅、被边缘化、那些说不出口的规矩，我都懂。你不用跟我交代前因后果，说半句我就明白。'); }, 500);
+      setTimeout(function(){ addEchoMessage('你放心，在这儿说的话只存在你自己手机上。没有记录，没有截屏，没有第三个人。想说就说，不想说就这么静静待着也行。'); }, 2100);
+      setTimeout(function(){ addEchoMessage('要不，先说说最近单位里有没有什么烦心事？或者随便聊点别的也行。'); }, 3700);
     }
   }
 }
@@ -5145,8 +5152,50 @@ document.querySelectorAll('.mood-opt').forEach(function(opt){
     }
     showToast('心情已记录：' + moodNames[moodSelected]);
     updateWeeklyChart();
+    checkStreakMilestone();
   });
 });
+
+// v8.6 P0-5 连续打卡：计算当前连续记录天数（以今天或昨天为终点，往前数连续的天数，断签归零）
+function calcMoodStreak(history) {
+  var dates = [];
+  history.forEach(function(m){ if (dates.indexOf(m.date) === -1) dates.push(m.date); });
+  if (dates.length === 0) return 0;
+  dates.sort().reverse(); // 降序
+  var dayMs = 86400000;
+  function toMs(ds){ return new Date(ds + 'T00:00:00').getTime(); }
+  var t = new Date(); t.setHours(0,0,0,0);
+  var todayMs = t.getTime();
+  var latest = toMs(dates[0]);
+  if (latest !== todayMs && latest !== todayMs - dayMs) return 0; // 已断签
+  var streak = 1;
+  for (var i = 1; i < dates.length; i++) {
+    if (toMs(dates[i-1]) - toMs(dates[i]) === dayMs) streak++;
+    else break;
+  }
+  return streak;
+}
+// v8.6 P0-5 低调里程碑：7/30/100天时老E轻轻说一句（克制措辞，不搞徽章勋章那套）
+function checkStreakMilestone() {
+  var history = lsLoad('moodHistory', []);
+  var streak = calcMoodStreak(history);
+  var celebrated = lsLoad('moodStreakCelebrated', []);
+  var milestones = [
+    { d: 7,   msg: '连着7天了，你一直在认真记着自己的心情。挺好。' },
+    { d: 30,  msg: '一个月了。这30天，你都在好好照顾自己。' },
+    { d: 100, msg: '100天了。能坚持这么久，说明你真的在变好。' }
+  ];
+  for (var i = 0; i < milestones.length; i++) {
+    var m = milestones[i];
+    if (streak === m.d && celebrated.indexOf(m.d) === -1) {
+      celebrated.push(m.d);
+      lsSave('moodStreakCelebrated', celebrated);
+      // 延迟到打卡toast消失后再弹出，避免两个toast互相覆盖
+      setTimeout(function(txt){ return function(){ showToast(txt); }; }(m.msg), 2200);
+      break;
+    }
+  }
+}
 
 // ========== Quick Actions ==========
 document.querySelectorAll('.quick-action').forEach(function(qa){
@@ -5175,6 +5224,11 @@ function openSubPage(name) {
 function closeSubPage(name) {
   var el = $('sub-'+name);
   if (el) el.classList.remove('active');
+}
+// v8.6 P0-2 隐私可见化：点隐私状态栏看隐私报告（排除"阅后即焚"按钮自身）
+function openPrivacyReport(e) {
+  if (e && e.target && e.target.closest && e.target.closest('.psb-burn-toggle')) return;
+  openSubPage('privacy-report');
 }
 // Mine menu items
 document.querySelectorAll('.mine-menu-item').forEach(function(item){
@@ -5534,7 +5588,11 @@ var AI_FEW_SHOTS = [
   { role:'user', content:'有时候觉得活着没意思' },
   { role:'assistant', content:'嘿，别瞎想。你是不是最近太累了？走，改天我找你喝两口，啥也不想就说说话。你可别一个人闷着' },
   { role:'user', content:'退二线以后没人搭理了' },
-  { role:'assistant', content:'嗐，人走茶凉这事你又不是第一天知道。以前那些围着你转的，有几个是真心的？正好，清净了，咱自己待着舒服就行' }
+  { role:'assistant', content:'嗐，人走茶凉这事你又不是第一天知道。以前那些围着你转的，有几个是真心的？正好，清净了，咱自己待着舒服就行' },
+  { role:'user', content:'又要迎检了 材料堆成山 天天加班' },
+  { role:'assistant', content:'得，又是白加黑。迎检这活儿，检查的人走了拍拍屁股，干活的人累掉一层皮。你先顾好身体，材料过得去就行，别太较真' },
+  { role:'user', content:'晋升名单公布了 又没有我' },
+  { role:'assistant', content:'嗐，名单这东西，有时候真不看本事，看的是别的。你别往心里去，身体是自己的，位置是单位的，该吃吃该睡睡' }
 ];
 // Detect obviously AI-style replies (lists / preachy / emoji / self-reference) so we can
 // reject them in favor of the conversational persona. Returns true = AI-style (bad).
@@ -8760,30 +8818,53 @@ function showAssessResult() {
   if (!content) return;
   if (bar) bar.style.width = '100%';
   var total = assessState.scores.reduce(function(a, b) { return a + b; }, 0);
-  var level = '', advice = '';
+  var level = '', advice = '', laoE = '';
   if (assessState.type === 'phq9') {
-    if (total <= 4) { level = '情绪状态良好'; advice = '继续保持，有烦恼随时来聊。'; }
-    else if (total <= 9) { level = '轻度情绪波动'; advice = '最近可能有些压力，注意调节作息，多跟朋友聊聊。'; }
-    else if (total <= 14) { level = '中度情绪困扰'; advice = '建议关注自己的状态，可以尝试呼吸放松，必要时跟信任的人倾诉。'; }
-    else if (total <= 19) { level = '中重度情绪困扰'; advice = '建议认真关注自己的情绪，考虑跟专业人士聊聊。'; }
-    else { level = '重度情绪困扰'; advice = '强烈建议寻求专业心理帮助，你值得被好好对待。'; }
+    if (total <= 4) { level = '情绪状态良好'; advice = '继续保持，有烦恼随时来聊。'; laoE = '看你状态不错，我就放心了。记住，有事儿别憋着，随时来找我。'; }
+    else if (total <= 9) { level = '轻度情绪波动'; advice = '最近可能有些压力，注意调节作息，多跟朋友聊聊。'; laoE = '有点累了是吧？正常，谁都有这时候。别硬扛，多来跟我唠唠。'; }
+    else if (total <= 14) { level = '中度情绪困扰'; advice = '建议关注自己的状态，可以尝试呼吸放松，必要时跟信任的人倾诉。'; laoE = '看得出来你最近不太好受。没事儿，在我这儿你不用撑着。'; }
+    else if (total <= 19) { level = '中重度情绪困扰'; advice = '建议认真关注自己的情绪，考虑跟专业人士聊聊。'; laoE = '这段时间你扛了不少东西。来，跟我聊聊，别一个人硬撑。'; }
+    else { level = '重度情绪困扰'; advice = '强烈建议寻求专业心理帮助，你值得被好好对待。'; laoE = '你真的辛苦了。记住，你不是一个人。跟我聊聊，必要时看看医生，这不丢人。'; }
   } else {
-    if (total <= 4) { level = '心态平和'; advice = '状态不错，继续保持。'; }
-    else if (total <= 9) { level = '轻度焦虑'; advice = '有些紧张是正常的，试试呼吸放松，别给自己太大压力。'; }
-    else if (total <= 14) { level = '中度焦虑'; advice = '焦虑感比较明显了，建议规律运动，减少咖啡因，必要时咨询专业人士。'; }
-    else { level = '重度焦虑'; advice = '建议尽快寻求专业帮助，焦虑是可以被治疗的。'; }
+    if (total <= 4) { level = '心态平和'; advice = '状态不错，继续保持。'; laoE = '心态挺稳，好事儿。该吃吃该睡睡，别想太多。'; }
+    else if (total <= 9) { level = '轻度焦虑'; advice = '有些紧张是正常的，试试呼吸放松，别给自己太大压力。'; laoE = '有点紧张？正常。深呼吸，慢慢来，天塌不下来。'; }
+    else if (total <= 14) { level = '中度焦虑'; advice = '焦虑感比较明显了，建议规律运动，减少咖啡因，必要时咨询专业人士。'; laoE = '能感觉到你绷得有点紧。缓一缓，别把自己逼太狠。'; }
+    else { level = '重度焦虑'; advice = '建议尽快寻求专业帮助，焦虑是可以被治疗的。'; laoE = '焦虑不轻了。跟我聊聊，也考虑看看医生。焦虑能治好，别硬扛。'; }
+  }
+  // v8.6 P0-3 历次分数对比（先取上次，再存本次，避免把本次算进"上次"）
+  var results = lsLoad('echo_assess_results', []);
+  var prev = null;
+  for (var i = results.length - 1; i >= 0; i--) {
+    if (results[i].type === assessState.type) { prev = results[i]; break; }
+  }
+  var trendHtml = '';
+  if (prev) {
+    var diff = total - prev.score;
+    var trendTxt = diff > 0 ? ('比上次高 ' + diff + ' 分') : (diff < 0 ? ('比上次低 ' + Math.abs(diff) + ' 分') : '和上次持平');
+    trendHtml = '<div style="margin-top:10px;font-size:12px;color:var(--text-tertiary);">上次 ' + prev.score + ' 分 · ' + trendTxt + '</div>';
   }
   content.innerHTML = '<div class="assess-result">' +
     '<div class="score">' + total + '</div>' +
     '<div class="level">' + level + '</div>' +
     '<div class="advice">' + advice + '</div>' +
-    '<div style="margin-top:24px;display:flex;gap:12px;justify-content:center;">' +
-    '<button class="assess-opt" onclick="showAssessMenu()" style="padding:12px 20px;">重新测评</button>' +
+    '<div style="margin-top:16px;padding:12px 14px;background:var(--accent-dim);border-left:3px solid var(--accent-primary);border-radius:8px;font-size:14px;color:var(--text-primary);text-align:left;line-height:1.6;">老E：' + laoE + '</div>' +
+    trendHtml +
+    '<div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+    '<button class="assess-opt" onclick="talkAboutAssess()" style="padding:12px 20px;">跟老E聊聊</button>' +
     '<button class="assess-opt" onclick="closeAssessment();openBreathing();" style="padding:12px 20px;">试试呼吸放松</button>' +
+    '<button class="assess-opt" onclick="showAssessMenu()" style="padding:12px 20px;">重新测评</button>' +
     '</div></div>';
-  var results = lsLoad('echo_assess_results', []);
   results.push({ type: assessState.type, score: total, level: level, time: Date.now() });
   lsSave('echo_assess_results', results);
+}
+// v8.6 P0-3 测评闭环：切到聊天页，老E主动开口聊刚才的测评
+function talkAboutAssess() {
+  var typeName = assessState.type === 'phq9' ? '情绪测评' : '焦虑测评';
+  closeAssessment();
+  switchTab('chat');
+  var tag = $('chatTopicTag');
+  if (tag) { tag.textContent = '# 聊聊刚才的测评'; tag.classList.add('show'); }
+  addEchoMessage('刚才的' + typeName + '我看了。分数只是个参考，别太当真。但如果你愿意，可以跟我说说，最近到底是什么事让你有这个感觉。慢慢说，我听着。');
 }
 
 // --- 白噪音/环境音 (Web Audio API) ---
