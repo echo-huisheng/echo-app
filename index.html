@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.8.0';
+  var APP_VERSION = '8.8.1';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.8.0</title>
+<title>Echo回声 — 试用版v8.8.1</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -570,6 +570,58 @@ body {
   color: var(--text-secondary);
   margin-bottom: 16px;
   align-self: flex-start;
+}
+.identity-gender-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.identity-gender-item {
+  flex: 1;
+  padding: 13px 0;
+  text-align: center;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+.identity-gender-item:active { opacity: 0.8; }
+.identity-gender-item.selected {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+/* v8.8.1 安装指引分步卡片 */
+.ig-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px 14px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+.ig-step b { color: var(--accent-primary); font-weight: 600; }
+.ig-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
 }
 .identity-avatar-grid {
   display: grid;
@@ -3722,6 +3774,11 @@ body {
       <span class="identity-nickname-display" id="identityNickname">静水流深</span>
       <button class="identity-nickname-refresh" id="identityRefreshBtn" title="换一个">↻</button>
     </div>
+    <div class="identity-avatar-label">你的性别（可不选）</div>
+    <div class="identity-gender-row" id="identityGenderRow">
+      <div class="identity-gender-item" data-gender="male" onclick="pickIdentityGender(this)">👨 男</div>
+      <div class="identity-gender-item" data-gender="female" onclick="pickIdentityGender(this)">👩 女</div>
+    </div>
     <div class="identity-avatar-label">选择你的头像</div>
     <div class="identity-avatar-grid" id="identityAvatarGrid">
       <div class="identity-avatar-item selected" data-avatar="0"><div class="avatar-inner"></div></div>
@@ -4152,6 +4209,20 @@ body {
       <div class="toggle-row">
         <div class="toggle-label">消息自动清理<span class="sub">到期后自动清理</span></div>
         <button class="toggle-switch on" onclick="this.classList.toggle('on')"></button>
+      </div>
+    </div>
+    <div class="sub-card">
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">👤 我的性别</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">选了就按你的性别称呼你，不选就用中性的叫法</div>
+      <div class="persona-selector" id="genderSelector">
+        <div class="persona-chip" data-gender="male" onclick="selectGender('male')">
+          <div class="p-icon">👨</div>
+          <div class="p-name">男</div>
+        </div>
+        <div class="persona-chip" data-gender="female" onclick="selectGender('female')">
+          <div class="p-icon">👩</div>
+          <div class="p-name">女</div>
+        </div>
       </div>
     </div>
     <div class="sub-card">
@@ -4716,6 +4787,7 @@ var moodSelected = null;
 var immersionFirstVisit = true;
 var identityNicknameIndex = 0;
 var identityAvatarSelected = 0;
+var identityGenderSelected = '';
 var ancientNicknames = ['静水流深','山间清风','云中漫步','松间明月','竹影清泉','秋水长天','暮雪千山','晨钟暮鼓','幽兰空谷','碧水寒潭','孤舟蓑笠','夜雨听风'];
 var deepSeekApiKey = '';
 var zhipuApiKey = '';
@@ -5224,6 +5296,7 @@ $('identityStartBtn').addEventListener('click', function(){
   lsSave('nickname', chosenName);
   lsSave('nicknameIndex', identityNicknameIndex);
   lsSave('avatarIndex', identityAvatarSelected);
+  if (identityGenderSelected) lsSave('gender', identityGenderSelected); // v8.8.1 性别
   // Mark onboarding as complete so returning users skip it
   try { localStorage.setItem('echo_onboarded', '1'); } catch(e){}
   // Update home greeting
@@ -5237,6 +5310,30 @@ $('identityStartBtn').addEventListener('click', function(){
   var companionName = document.querySelector('.companion-name');
   if (companionName) companionName.textContent = chosenName;
 });
+
+// ========== v8.8.1 性别设置 ==========
+function pickIdentityGender(el) {
+  if (!el) return;
+  document.querySelectorAll('.identity-gender-item').forEach(function(i){ i.classList.remove('selected'); });
+  el.classList.add('selected');
+  identityGenderSelected = el.getAttribute('data-gender') || '';
+}
+function selectGender(g) {
+  lsSave('gender', g);
+  var chips = document.querySelectorAll('#genderSelector .persona-chip');
+  chips.forEach(function(c){ c.classList.remove('selected'); });
+  var sel = document.querySelector('#genderSelector [data-gender="' + g + '"]');
+  if (sel) sel.classList.add('selected');
+  showToast('记下了，以后就这么称呼你');
+}
+function loadGenderUI() {
+  var g = lsLoad('gender', '');
+  if (!g) return;
+  var sel = document.querySelector('#genderSelector [data-gender="' + g + '"]');
+  if (sel) sel.classList.add('selected');
+  var idSel = document.querySelector('#identityGenderRow [data-gender="' + g + '"]');
+  if (idSel) { idSel.classList.add('selected'); identityGenderSelected = g; }
+}
 
 // ========== Tab Switching ==========
 document.querySelectorAll('.tab-item').forEach(function(tab){
@@ -5696,9 +5793,24 @@ function recordProviderSuccess(id) {
 function buildOldEPrompt(userText) {
   var nick = lsLoad('nickname', '静水流深');
   var persona = lsLoad('echo_persona', 'bigbro');
+  var gender = lsLoad('gender', ''); // v8.8.1 性别：male/female/空=未知
   var personaDesc = '';
   if (persona === 'sister') {
-    personaDesc = '你是"知心大姐"，50多岁，体制内退下来的大姐。跟' + nick + '是几十年老姐妹。\n\n' +
+    var sisRel, sisAddr, sisFeel;
+    if (gender === 'male') {
+      sisRel = '跟' + nick + '是几十年老邻居，你把他当亲弟弟看。';
+      sisAddr = '- 不许叫"姐妹"，可以叫"兄弟"或直接说"你"\n';
+      sisFeel = '【核心感觉】大姐跟弟弟喝茶聊天，温暖但不矫情。';
+    } else if (gender === 'female') {
+      sisRel = '跟' + nick + '是几十年老姐妹。';
+      sisAddr = '';
+      sisFeel = '【核心感觉】老姐妹喝茶聊天，温暖但不矫情。';
+    } else {
+      sisRel = '跟' + nick + '是几十年老朋友。';
+      sisAddr = '- 不知道对方性别，不许用"姐妹""兄弟"这类带性别的称呼，直接说"你"\n';
+      sisFeel = '【核心感觉】老朋友喝茶聊天，温暖但不矫情。';
+    }
+    personaDesc = '你是"知心大姐"，50多岁，体制内退下来的大姐。' + sisRel + '\n\n' +
       '【说话规则】\n' +
       '- 像微信语音转文字，1-3句，最多不超过50字\n' +
       '- 温柔但不腻，关心人但不啰嗦\n' +
@@ -5709,8 +5821,9 @@ function buildOldEPrompt(userText) {
       '【绝对禁止】\n' +
       '- 禁止emoji、感叹号、编号列表、加粗\n' +
       '- 禁止说教、心理分析、鸡汤（"加油""一切都会好的"）\n' +
+      sisAddr +
       '- 禁止超过3句话\n\n' +
-      '【核心感觉】老姐妹喝茶聊天，温暖但不矫情。';
+      sisFeel;
   } else if (persona === 'leader') {
     personaDesc = '你是"老领导"，60出头，退下来的老领导。跟' + nick + '是忘年交。\n\n' +
       '【说话规则】\n' +
@@ -5727,24 +5840,45 @@ function buildOldEPrompt(userText) {
       '- 禁止打官腔、说套话\n\n' +
       '【核心感觉】老领导下棋时有一搭没一搭地点拨你。';
   } else {
-    personaDesc = '你是"老E"，55岁，体制内混了三十年的老油条，刚退二线。跟' + nick + '是穿开裆裤长大的发小。\n\n' +
+    var oeRel, oeAddr, oePro, oeLow, oeCatch;
+    if (gender === 'female') {
+      oeRel = '跟' + nick + '是从小一起长大的邻居，你一直把她当亲妹妹看。';
+      oeAddr = '- 绝对不许叫"兄弟""哥们""老小子"。可以叫"妹子"，或者干脆说"你"。\n';
+      oePro = '她';
+      oeLow = '"咋了这是，跟哥说说，到底咋了？"';
+      oeCatch = '口头禅换着用：嗐、得、说真的、嘿、得了吧。';
+    } else if (gender === 'male') {
+      oeRel = '跟' + nick + '是穿开裆裤长大的发小。';
+      oeAddr = '';
+      oePro = '他';
+      oeLow = '"咋了这是，跟哥们说说，到底咋了？"';
+      oeCatch = '口头禅换着用：嗐、得、说真的、嘿、得了吧、你个老小子。';
+    } else {
+      oeRel = '跟' + nick + '是从小一起长大的老朋友。';
+      oeAddr = '- 不知道对方性别，不许用"兄弟""哥们""老小子""姐妹"这类带性别的称呼，直接说"你"。\n';
+      oePro = '对方';
+      oeLow = '"咋了这是，跟我说说，到底咋了？"';
+      oeCatch = '口头禅换着用：嗐、得、说真的、嘿、得了吧。';
+    }
+    personaDesc = '你是"老E"，55岁，体制内混了三十年的老油条，刚退二线。' + oeRel + '\n\n' +
       '【三条铁律，必须遵守】\n' +
       '1. 短：一次只说1-2句，最多50个字。说完就停。\n' +
-      '2. 不教人做事：绝对不说"你应该""你可以""建议你""先…再…""别焦虑""想开点"。你可以说一句自己看明白的道理帮他换个角度看，但绝不指挥他。\n' +
+      '2. 不教人做事：绝对不说"你应该""你可以""建议你""先…再…""别焦虑""想开点"。你可以说一句自己看明白的道理帮' + oePro + '换个角度看，但绝不指挥' + oePro + '。\n' +
       '3. 必须反问：每句话结尾必须问一个问题，把话头递回去。\n\n' +
       '【分情况说话】\n' +
-      '- 他烦单位、烦领导、烦同事：你跟着骂两句，骂完反问。\n' +
-      '- 他难受、低落、说丧气话（比如"活着没意思"）：不许骂人，不许说风凉话。先接住他，轻声问一句，比如"咋了这是，跟哥们说说，到底咋了？"\n' +
-      '- 他说家里人的事：不许说他家里人坏话。你只问他、听他说。\n\n' +
+      oeAddr +
+      '- ' + oePro + '烦单位、烦领导、烦同事：你跟着骂两句，骂完反问。\n' +
+      '- ' + oePro + '难受、低落、说丧气话（比如"活着没意思"）：不许骂人，不许说风凉话。先接住' + oePro + '，轻声问一句，比如' + oeLow + '\n' +
+      '- ' + oePro + '说家里人的事：不许说' + oePro + '家里人坏话。你只问' + oePro + '、听' + oePro + '说。\n\n' +
       '【你是这样的人】\n' +
-      '- 口头禅换着用：嗐、得、说真的、嘿、得了吧、你个老小子。别句句都带脏字，十句里一两句就够了。\n' +
-      '- 他说的破事你都经历过，你懂，不用他解释\n' +
-      '- 你偶尔说句掏心窝的话帮他看淡，比如"咱这岁数，身体是自己的，位置是单位的"\n\n' +
+      '- ' + oeCatch + '别句句都带脏字，十句里一两句就够了。\n' +
+      '- ' + oePro + '说的破事你都经历过，你懂，不用' + oePro + '解释\n' +
+      '- 你偶尔说句掏心窝的话帮' + oePro + '看淡，比如"咱这岁数，身体是自己的，位置是单位的"\n\n' +
       '【错误示范】\n' +
       '用户：单位要审计，心里不踏实\n' +
       '错误：你先把材料准备好，别焦虑，身体要紧。（教人做事+废话）\n' +
       '正确：审计这事儿，谁心里都不痛快。你是担心材料还是担心人？\n\n' +
-      '【记住】你不是来解决问题的，是来陪他说话的。多问，少说，别讲大道理。';
+      '【记住】你不是来解决问题的，是来陪' + oePro + '说话的。多问，少说，别讲大道理。';
   }
   var systemPrompt = personaDesc;
   systemPrompt += '\n\n【做不到的事】如果对方让你发视频、发图片、发语音、打电话、发红包、转账、查天气等你做不到的事，绝对不要说"作为AI我无法"这种话。用你自己的口吻自然地婉拒，然后转移话题（比如讲个笑话、聊聊别的），就像真人朋友会做的那样。';
@@ -5775,7 +5909,7 @@ var AI_FEW_SHOTS = [
   { role:'user', content:'体检报告出来了 血压又高了' },
   { role:'assistant', content:'得，咱这岁数哪个指标能好看。我去年血糖也高，忌嘴三天就破戒了。你医生咋说，让吃药没' },
   { role:'user', content:'有时候觉得活着没意思' },
-  { role:'assistant', content:'咋了这是，好端端的说这个。跟哥们说说，到底咋了' },
+  { role:'assistant', content:'咋了这是，好端端的说这个。跟我说说，到底咋了' },
   { role:'user', content:'退二线以后没人搭理了' },
   { role:'assistant', content:'嗐，人走茶凉你又不是第一天知道。以前围着你转的有几个真心的？正好清净了。你现在最想跟谁待着' },
   { role:'user', content:'又要迎检了 材料堆成山 天天加班' },
@@ -8414,6 +8548,13 @@ window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
   deferredPrompt = e;
 });
+// v8.8.1: 真正安装成功后才隐藏横幅
+window.addEventListener('appinstalled', function() {
+  deferredPrompt = null;
+  var banner = document.getElementById('installBanner');
+  if (banner) banner.style.display = 'none';
+  showToast('已安装到桌面，以后直接从主屏幕打开');
+});
 // 已以 standalone 方式安装运行时，隐藏安装横幅
 if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
   var _ib = document.getElementById('installBanner');
@@ -8422,20 +8563,65 @@ if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
 
 function installPWA() {
   if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(choice) {
+    try {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(choice) {
+        deferredPrompt = null;
+        // v8.8.1: 只有用户真的装了才隐藏横幅；点了"取消"按钮保留，随时能再装
+        if (choice && choice.outcome === 'accepted') {
+          var banner = document.getElementById('installBanner');
+          if (banner) banner.style.display = 'none';
+        }
+      });
+      return;
+    } catch (e) {
+      // v8.8.1: prompt()可能因浏览器策略失效抛异常（表现为按钮"没反应"），改走手动指引
       deferredPrompt = null;
-      var banner = document.getElementById('installBanner');
-      if (banner) banner.style.display = 'none';
-    });
-    return;
+    }
   }
-  // 拿不到原生安装提示（iOS Safari 不支持 beforeinstallprompt / 已安装 / 曾关闭提示），给出手动指引
-  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  var msg = isIOS
-    ? '点击底部分享按钮 ↑，选择"添加到主屏幕"即可'
-    : '点击浏览器菜单（⋮ 或 ⋯），选择"安装应用"或"添加到主屏幕"';
-  showToast(msg);
+  // 拿不到原生安装提示（iOS Safari 不支持 / 微信里 / 曾关闭提示），弹出图文指引
+  openInstallGuide();
+}
+
+// v8.8.1: 分平台安装指引（持久页面，不是一闪而过的提示条）
+function getInstallGuideHtml() {
+  var ua = navigator.userAgent || '';
+  var isWeChat = /MicroMessenger/i.test(ua);
+  var isIOS = /iphone|ipad|ipod/i.test(ua);
+  var title = '';
+  var steps = '';
+  if (isWeChat) {
+    title = '微信里不能直接安装';
+    steps =
+      '<div class="ig-step"><span class="ig-num">1</span><span>点屏幕右上角的 <b>⋯</b>（三个点）</span></div>' +
+      '<div class="ig-step"><span class="ig-num">2</span><span>在弹出的菜单里选 <b>在浏览器打开</b></span></div>' +
+      '<div class="ig-step"><span class="ig-num">3</span><span>到了浏览器里，再点这个页面的"安装Echo到桌面"</span></div>';
+  } else if (isIOS) {
+    title = '苹果手机这样添加到主屏幕';
+    steps =
+      '<div class="ig-step"><span class="ig-num">1</span><span>点屏幕底部的 <b>分享按钮 ⬆</b>（方框带向上箭头的那个）</span></div>' +
+      '<div class="ig-step"><span class="ig-num">2</span><span>往上滑菜单，找到并点 <b>添加到主屏幕</b></span></div>' +
+      '<div class="ig-step"><span class="ig-num">3</span><span>点右上角 <b>添加</b>，桌面上就有Echo了</span></div>';
+  } else {
+    title = '这样添加到桌面';
+    steps =
+      '<div class="ig-step"><span class="ig-num">1</span><span>点浏览器右上角的 <b>菜单 ⋮ 或 ⋯</b></span></div>' +
+      '<div class="ig-step"><span class="ig-num">2</span><span>选 <b>安装应用</b>（有的浏览器叫"添加到主屏幕"）</span></div>' +
+      '<div class="ig-step"><span class="ig-num">3</span><span>弹窗里点 <b>安装</b>，桌面上就有Echo了</span></div>';
+  }
+  return '<div style="font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">' + title + '，按下面三步来：</div>' + steps +
+    '<div style="margin-top:14px;font-size:13px;color:var(--text-tertiary);line-height:1.7;">装好以后，桌面会出现Echo的图标，以后直接点它就行。</div>';
+}
+function openInstallGuide() {
+  var ov = $('sub-install-guide');
+  if (!ov) return;
+  var body = $('installGuideBody');
+  if (body) body.innerHTML = getInstallGuideHtml();
+  ov.classList.add('active');
+}
+function closeInstallGuide() {
+  var ov = $('sub-install-guide');
+  if (ov) ov.classList.remove('active');
 }
 
 
@@ -9250,7 +9436,7 @@ function emergencyClear() {
   }
   var keys = ['echo_memory', 'echo_moods', 'echo_persona', 'echo_assess_results',
               'echo_rooms', 'echo_room_messages', 'echo_last_visit', 'echo_last_hidden',
-              'echo_memoir', 'echo_monthly_letter', 'echo_care_shown_date', 'echo_smartcare_date', 'echo_mood_today'];
+              'echo_memoir', 'echo_monthly_letter', 'echo_care_shown_date', 'echo_smartcare_date', 'echo_mood_today', 'echo_gender'];
   keys.forEach(function(k) { try { localStorage.removeItem(k); } catch(e){} });
   var msgs = document.querySelector('.chat-messages');
   if (msgs) msgs.innerHTML = '';
@@ -9637,6 +9823,7 @@ function initBatch2() {
 function initV8() {
   loadTodayMood();
   loadPersona();
+  loadGenderUI(); // v8.8.1 性别回显
   initScreenshotDetect();
   startProactiveCare();
   initBatch2(); // v8.8.0 第二批：须在更新 last_visit 之前跑，"多日未访"才能读到旧值
@@ -9725,6 +9912,15 @@ if (document.readyState === 'loading') {
   <div style="padding:16px;">
     <button class="memoir-save-btn" onclick="replyToLetter()">回他一句</button>
   </div>
+</div>
+
+<!-- v8.8.1 安装到桌面·分平台指引 -->
+<div class="sub-page-overlay" id="sub-install-guide">
+  <div class="sub-header">
+    <button class="sub-back" onclick="closeInstallGuide()">←</button>
+    <h2>安装到桌面</h2>
+  </div>
+  <div class="sub-card" id="installGuideBody"></div>
 </div>
 
 <!-- v8.0 白噪音面板 -->
