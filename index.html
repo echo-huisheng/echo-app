@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.0';
+  var APP_VERSION = '8.9.1';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.0</title>
+<title>Echo回声 — 试用版v8.9.1</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5091,17 +5091,25 @@ function init() {
     var lastMsg = chatMessagesStore[chatMessagesStore.length - 1];
     var hoursSinceLastMsg = (Date.now() - lastMsg.time) / 3600000;
     if (hoursSinceLastMsg > 4) {
-      // Try memory-based greeting first, fall back to generic
+      // v8.9.1 记忆问候优先（老E记得你说过的事）；没记忆才回退通用/深夜问候
       var memGreet = getMemoryGreeting();
-      var greetPool = memGreet ? [memGreet] : [
-        '嘿，好一阵没聊了。最近忙啥呢？',
-        '来了啊，我正想着你是不是把我忘了。',
-        '哟，好久不见。最近过得还行吧？',
-        '在呢。今天有空来坐坐？',
-        '好久没聊了，你那边没啥事吧？'
-      ];
-      var h = new Date().getHours();
-      if (h >= 23 || h < 6) greetPool = ['又失眠了？还是纯粹睡不着？', '这个点还没睡，想啥呢？', '深夜了，来唠两句。'];
+      var greetPool;
+      if (memGreet) {
+        greetPool = [memGreet];
+      } else {
+        var h = new Date().getHours();
+        if (h >= 23 || h < 6) {
+          greetPool = ['又失眠了？还是纯粹睡不着？', '这个点还没睡，想啥呢？', '深夜了，来唠两句。'];
+        } else {
+          greetPool = [
+            '嘿，好一阵没聊了。最近忙啥呢？',
+            '来了啊，我正想着你是不是把我忘了。',
+            '哟，好久不见。最近过得还行吧？',
+            '在呢。今天有空来坐坐？',
+            '好久没聊了，你那边没啥事吧？'
+          ];
+        }
+      }
       var proGreet = greetPool[Math.floor(Math.random() * greetPool.length)];
       setTimeout(function() {
         addEchoMessage(proGreet);
@@ -5588,8 +5596,8 @@ function extractMemory(userText) {
   if (!userText || userText.length < 4) return null;
   var memories = [];
   // Work & career
-  if (/领导|单位|开会|考核|晋升|编制|汇报|材料|迎检|整改|同事|局长|处长|科长/.test(userText)) {
-    var workMatch = userText.match(/(.{0,20}(?:领导|单位|考核|晋升|编制|迎检|整改).{0,20})/);
+  if (/领导|单位|开会|考核|晋升|编制|汇报|材料|迎检|检查|审计|考察|谈话|整改|同事|局长|处长|科长/.test(userText)) {
+    var workMatch = userText.match(/(.{0,20}(?:领导|单位|考核|晋升|编制|迎检|检查|审计|考察|谈话|整改).{0,20})/);
     if (workMatch) memories.push({ topic: '工作', fact: workMatch[1].trim(), time: Date.now() });
   }
   // Family
@@ -5655,6 +5663,21 @@ function getMemoryContext() {
   return lines.join('\n');
 }
 
+// v8.9.1 从一条记忆里抽出可以具体指代的事件词（如 检查、失眠、女儿）
+function memoryHook(m) {
+  if (!m || !m.fact) return '';
+  var f = m.fact;
+  var hooks = ['迎检','检查','审计','考察','谈话','考核','晋升','编制','开会','汇报','整改','调动',
+               '失眠','头疼','血压','血糖','体检','手术','吃药','看病','医院',
+               '女儿','儿子','孙子','孩子','老伴','父亲','母亲','父母','媳妇',
+               '钓鱼','下棋','散步','旅游','养花','书法','喝茶','跳舞','打牌',
+               '退休','领导','单位','同事','局长','处长','科长'];
+  for (var i = 0; i < hooks.length; i++) {
+    if (f.indexOf(hooks[i]) >= 0) return hooks[i];
+  }
+  return '';
+}
+
 // Proactive greeting using memories
 function getMemoryGreeting() {
   var memories = lsLoad(ECHO_MEMORY_KEY, []);
@@ -5663,6 +5686,16 @@ function getMemoryGreeting() {
   var latest = memories[memories.length - 1];
   var daysAgo = Math.floor((Date.now() - latest.time) / 86400000);
   if (daysAgo > 7) return null; // Too old to reference
+  // v8.9.1 优先指代具体的事，例如 你上次提到检查的事，后来咋样了
+  var hook = memoryHook(latest);
+  if (hook) {
+    var specific = [
+      '你上次提到' + hook + '的事，后来咋样了？',
+      '上次你说的' + hook + '那事儿，我一直惦记着。现在啥情况？',
+      hook + '那事儿还顺利不？上次听你说起来着。'
+    ];
+    return specific[Math.floor(Math.random() * specific.length)];
+  }
   var greetings = [];
   if (latest.topic === '工作') {
     greetings = [
