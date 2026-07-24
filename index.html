@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.8.1';
+  var APP_VERSION = '8.8.2';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.8.1</title>
+<title>Echo回声 — 试用版v8.8.2</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3731,7 +3731,7 @@ body {
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:fadeUp 0.8s var(--ease) 1.2s forwards;">
         <button class="immersion-enter-btn" id="immersionEnter" style="opacity:1;animation:none;">🌙</button>
-        <span class="immersion-enter-text" onclick="document.getElementById('immersionEnter').click()" style="font-size:14px;color:var(--accent-primary);letter-spacing:2px;cursor:pointer;opacity:0.8;">进入夜话</span>
+        <span class="immersion-enter-text" id="immersionEnterText" onclick="document.getElementById('immersionEnter').click()" style="font-size:14px;color:var(--accent-primary);letter-spacing:2px;cursor:pointer;opacity:0.8;">进入夜话</span>
       </div>
     </div>
   </div>
@@ -4827,6 +4827,19 @@ function getGreeting() {
   if (h >= 18 && h < 23) return '忙完了？来，坐会儿聊聊。';
   return '还没睡呢？正好，我陪你唠两句。';
 }
+// v8.8.2 沉浸页进入按钮按时间变文案：夜里=月亮+夜话，白天=太阳+聊聊
+function getImmersionEnter() {
+  var h = new Date().getHours();
+  if (h >= 18 || h < 6) return { icon: '🌙', text: '进入夜话' };
+  return { icon: '☀️', text: '进去聊聊' };
+}
+function updateImmersionEnter() {
+  var cfg = getImmersionEnter();
+  var btn = $('immersionEnter');
+  var txt = $('immersionEnterText');
+  if (btn) btn.textContent = cfg.icon;
+  if (txt) txt.textContent = cfg.text;
+}
 function getHomeGreeting() {
   var h = new Date().getHours();
   var nick = lsLoad('nickname', '老伙计');
@@ -5035,6 +5048,7 @@ function init() {
   $('immersionTime').textContent = getTimeStr();
   $('homeGreeting').textContent = getHomeGreeting();
   $('immersionGreeting').textContent = getGreeting();
+  updateImmersionEnter(); // v8.8.2 进入按钮文案随时段变化
   initDailyContent();
   initNotifications();
   showNotifySettings();
@@ -6069,7 +6083,8 @@ function getEchoReply(text) {
     return pick(['在呢，你来了。咋了，今天有啥事？','嗨，坐坐坐。今天想聊点啥？','来了啊。今天过得咋样？','在呢在呢。来，说说今天啥情况。']);
   if (/谢谢|感谢|你真好/.test(text))
     return pick(['得了吧，跟我还来这套。下次请我喝酒就行。','谢啥呀，咱俩谁跟谁。有空就来聊，我反正闲着也是闲着。','别客气了，你愿意跟我聊我也挺乐的。','行了行了别煽情了，再说我都不好意思了。']);
-  var defaults = ['嗯，你接着说。然后呢？','行，我在听。再详细说说呗。','嗐，你说的这个我还真有点想法。不过你先说完，我不打断你。','嗯嗯，继续。你说到哪了？','嚯，还有这事？后来怎么样了？','你这一说我也想起来一些事。不过你先聊你的，回头我再插嘴。'];
+  // v8.8.2 罐头回复：先接住情绪、表达在听，再轻轻引导往下说，不再上来就问“后来怎么样了”
+  var defaults = ['咋了这是，慢慢说，我听着呢。','嗯，听你这么说，我心里也有数了。你接着讲。','行，你先说，我在这听着，不着急。','听起来这事在你心里搁了一阵了吧？跟我唠唠。','嗯嗯，你说的我都记着呢。然后呢？','别急，一件一件说，我陪你理一理。'];
   return pick(defaults);
 }
 async function sendMessage() {
@@ -6903,16 +6918,16 @@ function updateCompanionStats() {
   // Update mine page stats（修复：原选择器 .mine-stat-num 与页面 .mine-stat .val 不匹配，导致统计永远显示假数据）
   var mineVals = document.querySelectorAll('.mine-stat .val');
   if (mineVals.length > 0) mineVals[0].textContent = days;
-  if (mineVals.length > 1) mineVals[1].textContent = streak;
+  if (mineVals.length > 1) mineVals[1].textContent = streak > 0 ? streak : '—'; // v8.8.2 未打卡不显示0
   if (mineVals.length > 2) mineVals[2].textContent = totalMsgs;
   // Update companion page
   var companionDays = document.querySelector('.companion-big-num .num');
   if (companionDays) companionDays.textContent = days;
   var companionStreak = document.querySelector('.companion-big-num .sub');
-  if (companionStreak) companionStreak.textContent = '🔥 连续打卡' + streak + '天';
+  if (companionStreak) companionStreak.textContent = streak > 0 ? ('🔥 连续打卡' + streak + '天') : '🌱 从今天开始'; // v8.8.2
   // Update immersion opening（原为写死的"陪伴第42天·连续15天"，改为真实数据）
   var immersionStreak = document.querySelector('.immersion-streak');
-  if (immersionStreak) immersionStreak.textContent = '陪伴第' + days + '天 · 🔥连续' + streak + '天';
+  if (immersionStreak) immersionStreak.textContent = streak > 0 ? ('陪伴第' + days + '天 · 🔥连续' + streak + '天') : ('陪伴第' + days + '天 · 今天是个好开始'); // v8.8.2
   // Update milestones（原为写死的假日期，改为基于真实数据的状态）
   var ms = document.querySelectorAll('.milestone-list .ml-date');
   if (ms.length >= 6) {
@@ -9627,7 +9642,10 @@ function buildMonthlyLetter(now) {
     sign = '—— 你的老朋友';
   } else {
     var greet = (nick === '老伙计') ? '老伙计' : nick + '，老伙计';
-    body = greet + '：\n\n一晃又' + month + '月了，天' + seasonWord + '。你最近咋样？\n\n' + moodLine + '我跟你说，咱这岁数，该吃吃该睡睡，单位那点破事，爱咋咋地。\n\n哪天得空了，来找我唠唠。你上次说的那事，后来咋样了？';
+    // v8.8.2 区分新老用户：从没聊过就不装熟问“上次那事”
+    var hasChatted = lsLoad('totalMessages', 0) > 0 || chatMessagesStore.length > 0;
+    var askLine = hasChatted ? '哪天得空了，来找我唠唠。你上次说的那事，后来咋样了？' : '哪天得空了，来找我唠唠。咱俩慢慢熟，有啥话随时开口，我听着。';
+    body = greet + '：\n\n一晃又' + month + '月了，天' + seasonWord + '。你最近咋样？\n\n' + moodLine + '我跟你说，咱这岁数，该吃吃该睡睡，单位那点破事，爱咋咋地。\n\n' + askLine;
     sign = '—— 老E';
   }
   return { body: body, sign: sign };
