@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.9';
+  var APP_VERSION = '8.9.10';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.9</title>
+<title>Echo回声 — 试用版v8.9.10</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -3976,7 +3976,6 @@ body {
         </div>
         <button class="chat-clear-btn" onclick="clearCurrentChat()" title="清除本次对话">🗑️</button>
         <button class="ch-settings" onclick="openSubPage('settings')">⚙️</button>
-        <div onclick="simulateScreenshot()" style="font-size:10px;color:var(--text-tertiary);cursor:pointer;padding:4px 8px;background:var(--bg-surface-3);border-radius:8px;">模拟截屏检测</div>
       </div>
       <div class="privacy-status-bar" id="privacyStatusBar" onclick="openPrivacyReport(event)" style="cursor:pointer;">
         <span class="psb-icon">🔒</span>
@@ -4021,11 +4020,6 @@ body {
           <span>🔥</span><span id="burnLabel">24小时</span><span style="font-size:10px;">▼</span>
         </div>
         <div style="font-size:11px;color:var(--text-tertiary);">消息清理时间</div>
-        <div style="margin-left:auto;display:flex;gap:8px;">
-          <div onclick="showV2Toast()" style="padding:4px 10px;background:var(--bg-surface-3);border-radius:12px;font-size:11px;color:var(--text-tertiary);cursor:pointer;">📷 V2</div>
-          <div onclick="showV2Toast()" style="padding:4px 10px;background:var(--bg-surface-3);border-radius:12px;font-size:11px;color:var(--text-tertiary);cursor:pointer;">📎 V2</div>
-          <div onclick="showV2Toast()" style="padding:4px 10px;background:var(--bg-surface-3);border-radius:12px;font-size:11px;color:var(--text-tertiary);cursor:pointer;">🎤 V2</div>
-        </div>
       </div>
       <!-- 清理时间选择面板 -->
       <div id="burnSelector" style="display:none;padding:8px 16px;background:var(--bg-surface-2);border-top:1px solid var(--bg-surface-3);">
