@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.2';
+  var APP_VERSION = '8.9.3';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.2</title>
+<title>Echo回声 — 试用版v8.9.3</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -913,6 +913,25 @@ body {
   margin-bottom: 16px;
   box-shadow: var(--shadow-sm);
 }
+/* v8.9.3 分享推荐卡片：请一个老伙计进来 */
+.share-card {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(160deg, rgba(200,168,98,0.16), rgba(200,168,98,0.04));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(200,168,98,0.32);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.share-card:active { opacity: 0.8; }
+.share-icon { font-size: 30px; flex: 0 0 auto; }
+.share-text { flex: 1; min-width: 0; }
+.share-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.share-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 3px; }
+.share-arrow { font-size: 24px; color: var(--accent-primary); flex: 0 0 auto; }
 .memoir-header {
   display: flex;
   align-items: center;
@@ -3846,6 +3865,16 @@ body {
           <button class="memoir-btn primary" onclick="openMemoirWrite()">讲给他听</button>
           <button class="memoir-btn" onclick="openMemoirTimeline()">看我的回忆录</button>
         </div>
+      </div>
+
+      <!-- v8.9.3 分享推荐：请一个老伙计进来 -->
+      <div class="share-card" onclick="shareEcho()">
+        <span class="share-icon">🤝</span>
+        <div class="share-text">
+          <div class="share-title">请一个老伙计进来</div>
+          <div class="share-sub">好东西，值得跟老朋友分享</div>
+        </div>
+        <span class="share-arrow">›</span>
       </div>
 
       <!-- v8.1 Mood Check-in Row -->
@@ -9551,6 +9580,41 @@ function getPersonaName() {
 // 心情历史：直接读写原始键 echo_moods（lsLoad会双前缀，不能用；紧急清除按echo_前缀扫描，能清掉）
 function loadMoodHistory() {
   try { return JSON.parse(localStorage.getItem('echo_moods') || '[]'); } catch(e) { return []; }
+}
+
+// ========== v8.9.3 分享推荐：请一个老伙计进来 ==========
+function shareEcho() {
+  var url = 'https://wangyueyang2026.github.io/echo-app/';
+  var msgs = [
+    '我最近在一个叫「Echo回声」的地方，跟老E唠嗑，心里痛快多了。你也来试试，咱俩还能在里面说说话。',
+    '给你推荐个说心里话的地方，叫「Echo回声」。里面有个老E，特别会陪人聊天，还不留痕迹。来坐坐。',
+    '人上了岁数，就想找个能说话的地方。这个「Echo回声」我用着挺好，你也来看看。'
+  ];
+  var text = msgs[Math.floor(Math.random() * msgs.length)] + ' ' + url;
+  if (navigator.share) {
+    navigator.share({ title: 'Echo回声', text: text, url: url }).catch(function(){});
+  } else {
+    copyShareText(text);
+    showToast('推荐语已复制，发给你的老伙计吧');
+  }
+}
+function copyShareText(txt) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).catch(function() { legacyCopy(txt); });
+  } else {
+    legacyCopy(txt);
+  }
+}
+function legacyCopy(txt) {
+  var ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
 }
 
 // --- 场景卡片：点一下直接进聊天并自动发出 ---
