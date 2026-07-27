@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.3';
+  var APP_VERSION = '8.9.4';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.3</title>
+<title>Echo回声 — 试用版v8.9.4</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -1004,6 +1004,36 @@ body {
   cursor: pointer;
 }
 .memoir-save-btn:active { opacity: 0.85; }
+/* v8.9.4 回忆录·系列话题 */
+.memoir-series-line {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--accent-primary);
+  margin-bottom: 8px;
+}
+.memoir-series-progress { color: var(--text-tertiary); }
+.series-item {
+  position: relative;
+  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin: 0 16px 12px;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.series-item:active { opacity: 0.8; }
+.series-item.current { border-color: rgba(200,168,98,0.55); }
+.series-name { font-size: 15px; font-weight: 600; color: var(--text-primary); padding-right: 60px; }
+.series-desc { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
+.series-bar { height: 5px; background: var(--bg-surface-3); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.series-fill { height: 100%; background: var(--accent-primary); border-radius: 3px; transition: width 0.4s var(--ease); }
+.series-status {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: var(--bg-surface-3); color: var(--text-tertiary);
+}
+.series-status.doing { background: rgba(96,165,250,0.16); color: #7cb3f7; }
+.series-status.done { background: rgba(200,168,98,0.18); color: var(--accent-primary); }
 .timeline-item {
   background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
   border: 1px solid var(--glass-border);
@@ -3854,16 +3884,18 @@ body {
       <!-- v8.8.0 关怀横幅（统一插槽：月度信 > 智能关怀 > 节气问候，JS填充） -->
       <div class="care-banner" id="careBanner" style="display:none;"></div>
 
-      <!-- v8.8.0 回忆录·每日一问 -->
+      <!-- v8.8.0 回忆录·每日一问 | v8.9.4 升级：系列话题，按章推进 -->
       <div class="memoir-card" id="memoirCard">
         <div class="memoir-header">
           <span class="memoir-title">📖 回忆录 · 老E想听你的故事</span>
           <span class="memoir-count" id="memoirCount"></span>
         </div>
+        <div class="memoir-series-line" id="memoirSeriesLine"></div>
         <div class="memoir-question" id="memoirQuestion"></div>
         <div class="memoir-actions">
           <button class="memoir-btn primary" onclick="openMemoirWrite()">讲给他听</button>
-          <button class="memoir-btn" onclick="openMemoirTimeline()">看我的回忆录</button>
+          <button class="memoir-btn" onclick="openMemoirSeries()">选系列</button>
+          <button class="memoir-btn" onclick="openMemoirTimeline()">回忆录</button>
         </div>
       </div>
 
@@ -9872,17 +9904,129 @@ function getTodayMemoirQ(now) {
   var doy = Math.floor((now - start) / 86400000);
   return MEMOIR_QUESTIONS[doy % MEMOIR_QUESTIONS.length];
 }
+// --- v8.9.4 回忆录·系列话题：按章推进，一个系列聊透再换 ---
+function getMemoirChapters() {
+  var chapters = [];
+  for (var i = 0; i < MEMOIR_QUESTIONS.length; i++) {
+    var ch = MEMOIR_QUESTIONS[i].ch;
+    if (chapters.indexOf(ch) === -1) chapters.push(ch);
+  }
+  return chapters;
+}
+function getChapterQuestions(ch) {
+  var qs = [];
+  for (var i = 0; i < MEMOIR_QUESTIONS.length; i++) {
+    if (MEMOIR_QUESTIONS[i].ch === ch) qs.push(MEMOIR_QUESTIONS[i]);
+  }
+  return qs;
+}
+function getAnsweredSet(ch) {
+  var entries = lsLoad('memoir', []);
+  var set = {};
+  for (var i = 0; i < entries.length; i++) {
+    if (entries[i].ch === ch) set[entries[i].q] = true;
+  }
+  return set;
+}
+function getChapterProgress(ch) {
+  var qs = getChapterQuestions(ch);
+  var answered = getAnsweredSet(ch);
+  var done = 0;
+  for (var i = 0; i < qs.length; i++) { if (answered[qs[i].q]) done++; }
+  return { total: qs.length, done: done };
+}
+function getNextUnansweredQ(ch) {
+  var qs = getChapterQuestions(ch);
+  var answered = getAnsweredSet(ch);
+  for (var i = 0; i < qs.length; i++) {
+    if (!answered[qs[i].q]) return qs[i];
+  }
+  return null;
+}
+function getCurrentSeries() {
+  var chapters = getMemoirChapters();
+  var saved = lsLoad('memoir_series', null);
+  if (saved && chapters.indexOf(saved) !== -1 && getNextUnansweredQ(saved)) return saved;
+  for (var i = 0; i < chapters.length; i++) {
+    if (getNextUnansweredQ(chapters[i])) return chapters[i];
+  }
+  return (saved && chapters.indexOf(saved) !== -1) ? saved : chapters[0];
+}
+function getSeriesQ(ch) {
+  var next = getNextUnansweredQ(ch);
+  if (next) return next;
+  // 这一章都聊过了：按日期轮换，方便回头补充
+  var qs = getChapterQuestions(ch);
+  var now = new Date();
+  var start = new Date(now.getFullYear(), 0, 0);
+  var doy = Math.floor((now - start) / 86400000);
+  return qs[doy % qs.length];
+}
 function renderMemoirCard() {
   var qEl = $('memoirQuestion');
   if (!qEl) return;
-  var q = getTodayMemoirQ(new Date());
-  qEl.textContent = q.q;
   var entries = lsLoad('memoir', []);
   var cEl = $('memoirCount');
   if (cEl) cEl.textContent = '已写下 ' + entries.length + ' 页';
+  var chapters = getMemoirChapters();
+  var ch = getCurrentSeries();
+  var prog = getChapterProgress(ch);
+  var sEl = $('memoirSeriesLine');
+  if (sEl) {
+    var idx = chapters.indexOf(ch) + 1;
+    sEl.innerHTML = '<span>第' + idx + '章 · ' + escapeHtml(ch) + '</span>' +
+      '<span class="memoir-series-progress">' + prog.done + '/' + prog.total + '</span>';
+  }
+  var allDone = true;
+  for (var i = 0; i < chapters.length; i++) { if (getNextUnansweredQ(chapters[i])) { allDone = false; break; } }
+  if (allDone) {
+    qEl.textContent = '40 个问题都聊完啦！你的回忆录已经厚厚的，随时回头补充。';
+  } else {
+    qEl.textContent = getSeriesQ(ch).q;
+  }
+}
+function openMemoirSeries() {
+  renderMemoirSeries();
+  var ov = $('sub-memoir-series');
+  if (ov) ov.classList.add('active');
+}
+function closeMemoirSeries() {
+  var ov = $('sub-memoir-series');
+  if (ov) ov.classList.remove('active');
+}
+function renderMemoirSeries() {
+  var list = $('memoirSeriesList');
+  if (!list) return;
+  var chapters = getMemoirChapters();
+  var current = getCurrentSeries();
+  var html = '';
+  for (var i = 0; i < chapters.length; i++) {
+    var ch = chapters[i];
+    var prog = getChapterProgress(ch);
+    var pct = prog.total ? Math.round(prog.done / prog.total * 100) : 0;
+    var status, statusCls;
+    if (prog.done === 0) { status = '未开始'; statusCls = ''; }
+    else if (prog.done < prog.total) { status = '进行中'; statusCls = 'doing'; }
+    else { status = '已完成'; statusCls = 'done'; }
+    html += '<div class="series-item' + (ch === current ? ' current' : '') + '" onclick="selectMemoirSeries(\'' + escapeHtml(ch) + '\')">' +
+      '<span class="series-status ' + statusCls + '">' + status + '</span>' +
+      '<div class="series-name">第' + (i + 1) + '章 · ' + escapeHtml(ch) + '</div>' +
+      '<div class="series-desc">' + prog.total + ' 个问题 · 已写下 ' + prog.done + ' 个</div>' +
+      '<div class="series-bar"><div class="series-fill" style="width:' + pct + '%"></div></div>' +
+      '</div>';
+  }
+  list.innerHTML = html;
+}
+function selectMemoirSeries(ch) {
+  lsSave('memoir_series', ch);
+  closeMemoirSeries();
+  renderMemoirCard();
+  openMemoirWrite();
 }
 function openMemoirWrite() {
-  var q = getTodayMemoirQ(new Date());
+  var ch = getCurrentSeries();
+  var q = getSeriesQ(ch);
+  window._memoirCurrentQ = q;
   var qEl = $('memoirWriteQ');
   if (qEl) qEl.textContent = q.q;
   var ov = $('sub-memoir-write');
@@ -9899,13 +10043,26 @@ function saveMemoirEntry() {
   if (!ta) return;
   var text = ta.value.trim();
   if (!text) { showToast('多少写点啥，一句话也行'); return; }
-  var q = getTodayMemoirQ(new Date());
+  var q = window._memoirCurrentQ || getTodayMemoirQ(new Date());
   var entries = lsLoad('memoir', []);
   entries.push({ ch: q.ch, q: q.q, a: text, time: Date.now() });
   lsSave('memoir', entries);
-  closeMemoirWrite();
-  showToast('存好了，这一页只有你能看');
   renderMemoirCard();
+  // 这一章还有没聊的 → 留在原页，直接上下一问（一个系列聊透再换）
+  var next = getNextUnansweredQ(q.ch);
+  if (next) {
+    window._memoirCurrentQ = next;
+    var qEl = $('memoirWriteQ');
+    if (qEl) qEl.textContent = next.q;
+    ta.value = '';
+    var prog = getChapterProgress(q.ch);
+    showToast('存好了！这一章还有 ' + (prog.total - prog.done) + ' 问，接着聊');
+    setTimeout(function(){ ta.focus(); }, 300);
+  } else {
+    closeMemoirWrite();
+    showToast('这一章聊完啦！换个系列接着讲');
+    openMemoirSeries();
+  }
 }
 function openMemoirTimeline() {
   renderMemoirTimeline();
@@ -10024,6 +10181,15 @@ if (document.readyState === 'loading') {
     <h2>我的回忆录</h2>
   </div>
   <div id="memoirTimelineList" style="padding-top:12px;"></div>
+</div>
+
+<!-- v8.9.4 回忆录·选系列 -->
+<div class="sub-page-overlay" id="sub-memoir-series">
+  <div class="sub-header">
+    <button class="sub-back" onclick="closeMemoirSeries()">←</button>
+    <h2>选一个系列</h2>
+  </div>
+  <div id="memoirSeriesList" style="padding-top:4px;"></div>
 </div>
 
 <!-- v8.8.0 月度信 -->
