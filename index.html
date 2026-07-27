@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.4';
+  var APP_VERSION = '8.9.5';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.4</title>
+<title>Echo回声 — 试用版v8.9.5</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -8106,7 +8106,7 @@ function playSpaceVoice(el, dataUrl) {
 }
 
 // ========== Music Player (一起听歌) ==========
-var MUSIC_BASE = 'https://wangyueyang2026.github.io/echo-app/music';
+var MUSIC_BASE = 'https://echo-huisheng.github.io/echo-app/music';
 var musicLibrary = [
   { title: '月光曲', artist: 'Echo·古琴坊', file: 'moonlight.mp3' },
   { title: '山间清风', artist: 'Echo·古琴坊', file: 'breeze.mp3' },
@@ -9616,7 +9616,7 @@ function loadMoodHistory() {
 
 // ========== v8.9.3 分享推荐：请一个老伙计进来 ==========
 function shareEcho() {
-  var url = 'https://wangyueyang2026.github.io/echo-app/';
+  var url = 'https://echo-huisheng.github.io/echo-app/';
   var msgs = [
     '我最近在一个叫「Echo回声」的地方，跟老E唠嗑，心里痛快多了。你也来试试，咱俩还能在里面说说话。',
     '给你推荐个说心里话的地方，叫「Echo回声」。里面有个老E，特别会陪人聊天，还不留痕迹。来坐坐。',
