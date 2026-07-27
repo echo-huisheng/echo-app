@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.7';
+  var APP_VERSION = '8.9.8';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.7</title>
+<title>Echo回声 — 试用版v8.9.8</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -7509,7 +7509,7 @@ function fbListenMessages(code) {
   sbRoomCode = code;
   sbSeenMsgIds = {};
   sbCryptoKey = null;
-  // v8.9.7 进门先静音加载历史，2.5秒后才对新消息响铃
+  // v8.9.8 进门先静音加载历史，2.5秒后才对新消息响铃
   window._sbSoundArmed = false;
   setTimeout(function() { window._sbSoundArmed = true; }, 2500);
 
@@ -7587,7 +7587,7 @@ async function sbPollMessages(code) {
 }
 
 // Process a single incoming message (shared by Realtime callback and polling)
-// v8.9.7 密聊收到新消息提示音（柔和两音铁马叮，AudioContext合成零体积）
+// v8.9.8 密聊收到新消息提示音（柔和两音铁马叮，AudioContext合成零体积）
 function playMsgDing() {
   try {
     var AC = window.AudioContext || window.webkitAudioContext;
@@ -9655,7 +9655,12 @@ function shareEcho() {
   ];
   var text = msgs[Math.floor(Math.random() * msgs.length)] + ' ' + url;
   if (navigator.share) {
-    navigator.share({ title: 'Echo回声', text: text, url: url }).catch(function(){});
+    navigator.share({ title: 'Echo回声', text: text, url: url }).catch(function(err) {
+      // v8.9.8 用户主动取消不处理；其他失败一律降级为复制，保证点了必有回应
+      if (err && err.name === 'AbortError') return;
+      copyShareText(text);
+      showToast('推荐语已复制，发给你的老伙计吧');
+    });
   } else {
     copyShareText(text);
     showToast('推荐语已复制，发给你的老伙计吧');
