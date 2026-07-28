@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.10';
+  var APP_VERSION = '8.9.11';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.10</title>
+<title>Echo回声 — 试用版v8.9.11</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -4307,6 +4307,11 @@ body {
           <div class="p-name">老领导</div>
           <div class="p-desc">沉稳·睿智·点拨</div>
         </div>
+        <div class="persona-chip" data-persona="writer" onclick="selectPersona('writer')">
+          <div class="p-icon">✍️</div>
+          <div class="p-name">笔杆子</div>
+          <div class="p-desc">公文·材料·写作</div>
+        </div>
       </div>
     </div>
     <div class="sub-card">
@@ -4319,7 +4324,8 @@ body {
         已接入8个AI引擎，自动选最好的用，一个挂了自动换下一个，聊天不会断。<br>
         填入任意平台的免费Key即可激活对应引擎（不填也能用智谱Flash）。
       </div>
-      <div id="aiProviderList" style="display:flex;flex-direction:column;gap:8px;">
+      <div onclick="toggleAdvancedKeys()" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--bg-surface-3);border-radius:16px;font-size:12px;color:var(--text-secondary);cursor:pointer;margin-bottom:10px;">⚙️ 高级设置：自定义API Key <span id="advKeyArrow" style="font-size:10px;">▼</span></div>
+      <div id="aiProviderList" style="display:none;flex-direction:column;gap:8px;">
         <div style="display:flex;gap:8px;align-items:center;">
           <span style="font-size:12px;color:var(--text-secondary);width:70px;flex-shrink:0;">智谱GLM</span>
           <input type="password" id="zhipuApiKeyInput" placeholder="Key（免费，open.bigmodel.cn）" style="flex:1;padding:8px 12px;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);border-radius:8px;color:var(--text-primary);font-size:12px;font-family:var(--font-body);outline:none;">
@@ -5949,6 +5955,19 @@ function buildOldEPrompt(userText) {
       '- 禁止超过3句话\n' +
       '- 禁止打官腔、说套话\n\n' +
       '【核心感觉】老领导下棋时有一搭没一搭地点拨你。';
+  } else if (persona === 'writer') {
+    personaDesc = '你是"笔杆子"，在体制内写了三十年材料的老手，办公厅出来的笔杆子。你帮' + nick + '写材料、改稿子、出思路。\n\n' +
+      '【你会什么】\n' +
+      '- 公文写作：通知、请示、报告、批复、函、纪要、总结、计划、讲话稿、汇报材料\n' +
+      '- 政策解读、述职报告、民主生活会发言提纲、工作方案\n' +
+      '- 帮人搭框架、提炼小标题、润色句子、压缩篇幅\n\n' +
+      '【干活规矩】\n' +
+      '- 对方说要写什么，先问清楚：什么文种、给谁看、多长、有什么背景\n' +
+      '- 写出来的东西格式规范、层次清楚、语言庄重，符合机关公文习惯\n' +
+      '- 小标题讲究对仗工整，比如"提高站位、压实责任、狠抓落实"\n' +
+      '- 不说空话套话废话，每句话都要有信息量\n' +
+      '- 写完主动问一句：要不要调整篇幅、语气或结构\n\n' +
+      '【记住】你是来帮他干活的，不是来陪他聊天的。直接上干货，别寒暄。';
   } else {
     var oeRel, oeAddr, oePro, oeLow, oeCatch;
     if (gender === 'female') {
@@ -6074,8 +6093,11 @@ async function callSingleProvider(provider, userText) {
   var key = getAIKey(provider);
   if (!key) return null;
   try {
+    var isWriter = (lsLoad('echo_persona', 'bigbro') === 'writer');
     var messages = [{ role:'system', content: buildOldEPrompt(userText) }];
-    AI_FEW_SHOTS.forEach(function(m) { messages.push(m); });
+    if (!isWriter) {
+      AI_FEW_SHOTS.forEach(function(m) { messages.push(m); });
+    }
     var recentMsgs = chatMessagesStore.slice(-10);
     recentMsgs.forEach(function(m) {
       messages.push({ role: m.sender === 'me' ? 'user' : 'assistant', content: m.text });
@@ -6086,7 +6108,7 @@ async function callSingleProvider(provider, userText) {
     var fetchPromise = fetch(provider.endpoint, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'Authorization':'Bearer ' + key },
-      body: JSON.stringify({ model: provider.model, messages: messages, temperature: 0.75, max_tokens: 300 })
+      body: JSON.stringify({ model: provider.model, messages: messages, temperature: isWriter ? 0.4 : 0.75, max_tokens: isWriter ? 1500 : 300 })
     });
     var timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('timeout')); }, 12000); });
     var response = await Promise.race([fetchPromise, timeoutPromise]);
@@ -6698,6 +6720,19 @@ function showV2Toast() {
   showToast('该功能将在v2.0版本开放');
 }
 
+// --- v8.9.11 高级设置折叠：默认收起API Key区，点开才显示 ---
+function toggleAdvancedKeys() {
+  var list = document.getElementById('aiProviderList');
+  var arrow = document.getElementById('advKeyArrow');
+  if (!list) return;
+  if (list.style.display === 'none') {
+    list.style.display = 'flex';
+    if (arrow) arrow.textContent = '▲';
+  } else {
+    list.style.display = 'none';
+    if (arrow) arrow.textContent = '▼';
+  }
+}
 // ===== API Key Management (Multi-Provider) =====
 function saveAIKey(keyId) {
   var input = document.getElementById(keyId + 'ApiKeyInput');
@@ -10128,6 +10163,39 @@ function renderMemoirTimeline() {
   list.innerHTML = html;
 }
 
+// --- v8.9.11 回忆录导出：整理成纯文本一键复制，方便粘贴给家人或打印 ---
+function exportMemoir() {
+  var entries = lsLoad('memoir', []);
+  if (!entries.length) { showToast('还没写过呢，先去写一页吧'); return; }
+  var chapters = getMemoirChapters();
+  var lines = [];
+  lines.push('我的回忆录');
+  lines.push('—— 写于 Echo回声 ——');
+  lines.push('');
+  for (var c = 0; c < chapters.length; c++) {
+    var ch = chapters[c];
+    var chEntries = [];
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].ch === ch) chEntries.push(entries[i]);
+    }
+    if (!chEntries.length) continue;
+    chEntries.sort(function(a, b) { return a.time - b.time; });
+    lines.push('【' + ch + '】');
+    lines.push('');
+    for (var j = 0; j < chEntries.length; j++) {
+      var e = chEntries[j];
+      var d = new Date(e.time);
+      var dateStr = d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+      lines.push('问：' + e.q);
+      lines.push('答：' + e.a);
+      lines.push('（' + dateStr + '）');
+      lines.push('');
+    }
+  }
+  copyShareText(lines.join('\n'));
+  showToast('回忆录已复制（共' + entries.length + '页），去粘贴给家人吧');
+}
+
 // --- 第二批初始化（须在 initV8 更新 last_visit 之前调用，否则"多日未访"读不到旧值） ---
 function initBatch2() {
   var now = new Date();
@@ -10212,6 +10280,7 @@ if (document.readyState === 'loading') {
   <div class="sub-header">
     <button class="sub-back" onclick="closeMemoirTimeline()">←</button>
     <h2>我的回忆录</h2>
+    <button onclick="exportMemoir()" style="margin-left:auto;padding:6px 14px;background:var(--accent-dim);border:1px solid var(--accent-primary);border-radius:16px;color:var(--accent-primary);font-size:12px;cursor:pointer;font-family:var(--font-body);">📋 导出全文</button>
   </div>
   <div id="memoirTimelineList" style="padding-top:12px;"></div>
 </div>
