@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.11';
+  var APP_VERSION = '8.9.12';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.11</title>
+<title>Echo回声 — 试用版v8.9.12</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -8624,13 +8624,6 @@ function initNotifications() {
   if (settings.enabled && Notification.permission === 'granted') {
     startNotificationSchedule();
   }
-
-  // Register service worker for PWA install support
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/echo-app/sw.js').catch(function(e) {
-      console.log('SW registration failed:', e);
-    });
-  }
 }
 
 function requestNotificationPermission() {
@@ -8720,6 +8713,14 @@ function showNotifySettings() {
 }
 
 // ========== Add to Home Screen Prompt ==========
+// v8.9.12: SW注册改为页面顶层无条件执行（原先藏在initNotifications里被Notification检查卡住，
+// 导致部分环境SW不注册→浏览器判定不可安装→菜单无"安装"选项、安装按钮无效）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/echo-app/sw.js').catch(function(e) {
+    console.log('SW registration failed:', e);
+  });
+}
+
 var deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
@@ -8739,6 +8740,11 @@ if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
 }
 
 function installPWA() {
+  // v8.9.12: 已经在以安装好的应用方式运行，直接告诉用户
+  if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+    showToast('Echo已经装好啦，去桌面或开始菜单找它打开');
+    return;
+  }
   if (deferredPrompt) {
     try {
       deferredPrompt.prompt();
@@ -8748,6 +8754,9 @@ function installPWA() {
         if (choice && choice.outcome === 'accepted') {
           var banner = document.getElementById('installBanner');
           if (banner) banner.style.display = 'none';
+        } else {
+          // v8.9.12: 点了"取消"也别冷场，弹出图文指引兜底
+          openInstallGuide();
         }
       });
       return;
@@ -8756,7 +8765,7 @@ function installPWA() {
       deferredPrompt = null;
     }
   }
-  // 拿不到原生安装提示（iOS Safari 不支持 / 微信里 / 曾关闭提示），弹出图文指引
+  // 拿不到原生安装提示（iOS Safari 不支持 / 微信里 / 曾关闭提示 / 已安装过），弹出图文指引
   openInstallGuide();
 }
 
@@ -8782,12 +8791,12 @@ function getInstallGuideHtml() {
   } else {
     title = '这样添加到桌面';
     steps =
-      '<div class="ig-step"><span class="ig-num">1</span><span>点浏览器右上角的 <b>菜单 ⋮ 或 ⋯</b></span></div>' +
-      '<div class="ig-step"><span class="ig-num">2</span><span>选 <b>安装应用</b>（有的浏览器叫"添加到主屏幕"）</span></div>' +
+      '<div class="ig-step"><span class="ig-num">1</span><span>点浏览器右上角的 <b>菜单 ⋯ 或 ⋮</b></span></div>' +
+      '<div class="ig-step"><span class="ig-num">2</span><span>选 <b>应用</b> → <b>安装此网站为应用</b>（Edge）；或直接找 <b>安装 Echo回声</b> / <b>添加到主屏幕</b>（Chrome）</span></div>' +
       '<div class="ig-step"><span class="ig-num">3</span><span>弹窗里点 <b>安装</b>，桌面上就有Echo了</span></div>';
   }
   return '<div style="font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">' + title + '，按下面三步来：</div>' + steps +
-    '<div style="margin-top:14px;font-size:13px;color:var(--text-tertiary);line-height:1.7;">装好以后，桌面会出现Echo的图标，以后直接点它就行。</div>';
+    '<div style="margin-top:14px;font-size:13px;color:var(--text-tertiary);line-height:1.7;">装好以后，桌面会出现Echo的图标，以后直接点它就行。<br>如果菜单里找不到"安装"选项，多半是已经装过了——去桌面或开始菜单找找Echo的图标。</div>';
 }
 function openInstallGuide() {
   var ov = $('sub-install-guide');
