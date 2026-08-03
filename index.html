@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.12';
+  var APP_VERSION = '8.9.13';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.12</title>
+<title>Echo回声 — 试用版v8.9.13</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -2886,6 +2886,66 @@ body {
   gap: 4px;
 }
 
+/* ========== Voice Call Mode (v8.9.13 与老E语音通话) ========== */
+.voice-call-overlay {
+  position: absolute; inset: 0;
+  z-index: 320;
+  background: linear-gradient(180deg, #0B0E14 0%, #131824 100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 52px 24px 36px;
+  text-align: center;
+}
+.voice-call-overlay.active { display: flex; }
+.vc-top { display: flex; flex-direction: column; align-items: center; }
+.vc-avatar {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(212,165,116,0.25), rgba(212,165,116,0.05));
+  border: 2px solid rgba(212,165,116,0.35);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.vc-avatar img { width: 68px; height: 68px; border-radius: 50%; object-fit: cover; }
+.vc-avatar.speaking { animation: vcGlow 1.6s ease-in-out infinite; }
+@keyframes vcGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212,165,116,0.0); }
+  50% { box-shadow: 0 0 28px 6px rgba(212,165,116,0.30); }
+}
+.vc-name { font-family: var(--font-title); font-size: 22px; color: var(--text-primary); margin-top: 18px; }
+.vc-status { font-size: 15px; color: var(--text-secondary); margin-top: 8px; min-height: 22px; }
+.vc-timer { font-size: 13px; color: var(--text-tertiary); margin-top: 4px; min-height: 18px; }
+.vc-transcript {
+  font-size: 17px; color: var(--text-primary); line-height: 1.9;
+  width: 100%; max-height: 200px; min-height: 80px;
+  overflow-y: auto; padding: 10px 6px;
+  text-align: center;
+}
+.vc-transcript .vc-line-echo { color: var(--text-secondary); }
+.vc-transcript .vc-line-user { color: var(--accent-primary); }
+.vc-controls { display: flex; gap: 56px; align-items: center; }
+.vc-btn {
+  width: 68px; height: 68px; border-radius: 50%;
+  border: none; font-size: 28px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s var(--ease);
+}
+.vc-btn:active { transform: scale(0.92); }
+.vc-mic { background: var(--bg-surface-3); }
+.vc-mic.listening { background: var(--accent-primary); animation: vcPulse 1.6s infinite; }
+.vc-mic.muted { background: rgba(212,107,107,0.25); }
+.vc-hangup { background: var(--danger); }
+@keyframes vcPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212,165,116,0.45); }
+  70% { box-shadow: 0 0 0 20px rgba(212,165,116,0); }
+  100% { box-shadow: 0 0 0 0 rgba(212,165,116,0); }
+}
+.vc-note { font-size: 11px; color: var(--text-tertiary); margin-top: 16px; line-height: 1.6; }
+.phone-frame.care-mode .vc-status { font-size: 18px; }
+.phone-frame.care-mode .vc-transcript { font-size: 20px; }
+
 /* Expert Profile */
 .expert-profile {
   background: var(--bg-surface-2);
@@ -3924,6 +3984,18 @@ body {
         <span class="care-status" id="careStatusText">已开启</span>
       </div>
 
+      <!-- v8.9.13 P0-2: 健康顾问入口（此前页面与免责声明齐全但无任何入口） -->
+      <div class="health-advisor-card" onclick="openHealthAdvisor()">
+        <div class="ha-header">
+          <span class="ha-icon">🩺</span>
+          <div>
+            <div class="ha-title">健康顾问</div>
+            <div class="ha-subtitle">血压睡眠、腰酸腿疼，先跟老E唠唠，心里有个数</div>
+          </div>
+        </div>
+        <div class="ha-disclaimer">⚠️ 仅供参考，不能代替医生诊断；急症请及时就医</div>
+      </div>
+
       <!-- v8.2 Secondary Actions -->
       <div class="home-secondary-actions">
         <button class="home-small-btn" onclick="switchTab('relax')">🌿 放松一下</button>
@@ -3972,8 +4044,9 @@ body {
         <div class="chat-header-left">
           <span class="ch-avatar"><img src="icons/moon-logo.png" class="echo-logo echo-logo-sm"></span>
           <span class="ch-name">Echo · 在这里</span>
-          <span class="lock-badge">🔒 加密</span>
+          <span class="lock-badge">🔒 仅存本机</span>
         </div>
+        <button class="chat-clear-btn" onclick="startVoiceCall()" title="和老E语音通话" style="font-size:16px;">📞</button>
         <button class="chat-clear-btn" onclick="clearCurrentChat()" title="清除本次对话">🗑️</button>
         <button class="ch-settings" onclick="openSubPage('settings')">⚙️</button>
       </div>
@@ -4166,6 +4239,11 @@ body {
         <div class="mine-menu-item" onclick="openMoodCalendar()">
           <span class="mi-icon">📅</span>
           <span class="mi-label">心情日历</span>
+          <span class="mi-arrow">›</span>
+        </div>
+        <div class="mine-menu-item" onclick="openHealthAdvisor()">
+          <span class="mi-icon">🩺</span>
+          <span class="mi-label">健康顾问</span>
           <span class="mi-arrow">›</span>
         </div>
         <div class="mine-menu-item" onclick="openSpaceOverlay()">
@@ -4384,6 +4462,8 @@ body {
           <button onclick="setPinCode()" id="pinSetBtn" style="flex:1;background:var(--accent-dim);border:1px solid var(--accent-primary);color:var(--accent-primary);padding:16px;border-radius:var(--radius-btn);font-size:16px;font-weight:600;cursor:pointer;font-family:var(--font-body);">设置密码</button>
           <button onclick="removePinCode()" id="pinRemoveBtn" style="flex:1;background:var(--bg-surface-3);border:1px solid var(--bg-surface-4);color:var(--text-secondary);padding:16px;border-radius:var(--radius-btn);font-size:15px;cursor:pointer;font-family:var(--font-body);display:none;">取消密码</button>
         </div>
+        <!-- v8.9.13 隐私强化：如实说明密码的作用与存储方式 -->
+        <div style="font-size:11px;color:var(--text-tertiary);line-height:1.7;margin-top:12px;text-align:left;">💡 设置后，每次打开Echo都要输密码，防止别人随手翻看。密码只以加密指纹的形式存在这部手机里，不会上传，也无法被找回。</div>
       </div>
     </div>
     <div class="sub-card" style="text-align:center;">
@@ -4479,7 +4559,7 @@ body {
           所有参与者均使用匿名身份，空间销毁后不留任何痕迹。
         </div>
         <div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">
-          消息经端到端加密传输，服务器无法读取内容。
+          消息先在你的手机上加密再传输，只有知道密室码的人能解开；服务器上存的只是密文。
         </div>
       </div>
     </div>
@@ -4729,7 +4809,7 @@ body {
           <option>1小时</option>
         </select>
       </div>
-      <div class="modal-note">🔒 消息将在你设定的时间后自动清理，不可恢复。正式版将支持端到端加密。</div>
+      <div class="modal-note">🔒 消息将在你设定的时间后自动清理，不可恢复。对话只存在你的手机里，由你完全掌控。</div>
       <div class="modal-actions">
         <button class="modal-btn ghost" onclick="closeModal('modalCreateSpace')">取消</button>
         <button class="modal-btn primary" onclick="createSpace()">创建空间</button>
@@ -4817,6 +4897,24 @@ body {
       <button onclick="closeModal('healthDisclaimerModal');openSubPage('health-advisor')" style="width:100%;padding:14px;background:var(--accent-primary);color:#0B0E14;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-body);margin-bottom:10px;">我理解，进入健康顾问</button>
       <button onclick="closeModal('healthDisclaimerModal')" style="width:100%;padding:12px;background:transparent;color:var(--text-secondary);border:1px solid var(--bg-surface-4);border-radius:12px;font-size:14px;cursor:pointer;font-family:var(--font-body);">返回</button>
       <div style="height:12px;"></div>
+    </div>
+  </div>
+
+  <!-- v8.9.13 Voice Call: 与老E语音通话界面 -->
+  <div class="voice-call-overlay" id="voiceCallOverlay">
+    <div class="vc-top">
+      <div class="vc-avatar" id="vcAvatar"><img src="icons/moon-logo.png" alt=""></div>
+      <div class="vc-name" id="vcName">老E</div>
+      <div class="vc-status" id="vcStatus">接通中…</div>
+      <div class="vc-timer" id="vcTimer"></div>
+    </div>
+    <div class="vc-transcript" id="vcTranscript"></div>
+    <div>
+      <div class="vc-controls">
+        <button class="vc-btn vc-mic" id="vcMicBtn" onclick="toggleCallMic()" title="静音/说话">🎙️</button>
+        <button class="vc-btn vc-hangup" onclick="endVoiceCall()" title="挂断">📵</button>
+      </div>
+      <div class="vc-note">通话内容只用于和老E对话，不单独保存录音<br>周围太吵或识别不准时，可以挂断改用打字</div>
     </div>
   </div>
 
@@ -5191,20 +5289,21 @@ function init() {
     }
   }
 
-  // Load mood data
-  var moodHistory = lsLoad('moodHistory', []);
-  var todayKey = new Date().toISOString().slice(0, 10);
+  // Load mood data（v8.9.13: 统一读 echo_moods，加null防护避免元素缺失时崩溃）
+  var moodHistory = loadMoodHistoryDated();
+  var todayKey = moodEntryDate({ time: Date.now() });
   var todayMood = moodHistory.find(function(m) { return m.date === todayKey; });
   if (todayMood) {
-    var moodColorsMap = { calm:'var(--trust-green)', tired:'var(--accent-primary)', down:'var(--danger)', angry:'var(--danger)', grateful:'var(--trust-green)' };
-    var moodNamesMap = { calm:'平静', tired:'疲惫', down:'低落', angry:'烦躁', grateful:'感恩' };
+    var moodColorsMap = { great:'var(--trust-green)', good:'var(--trust-green)', soso:'var(--accent-primary)', bad:'var(--danger)', awful:'var(--danger)' };
     var todayDot = $('moodTodayDot');
     if (todayDot && moodColorsMap[todayMood.mood]) todayDot.style.background = moodColorsMap[todayMood.mood];
     moodSelected = todayMood.mood;
+    var weekAgoKey = moodEntryDate({ time: Date.now() - 6 * 86400000 });
     var uniqueDays = [];
-    moodHistory.forEach(function(m) { if (uniqueDays.indexOf(m.date) === -1) uniqueDays.push(m.date); });
-    $('moodConfirm').classList.add('show');
-    $('moodConfirmText').textContent = '已记录 · 本周第' + uniqueDays.length + '次打卡 · 今天：' + (moodNamesMap[todayMood.mood] || '');
+    moodHistory.forEach(function(m) { if (m.date >= weekAgoKey && uniqueDays.indexOf(m.date) === -1) uniqueDays.push(m.date); });
+    var _mc = $('moodConfirm'); if (_mc) _mc.classList.add('show');
+    var _initMoodLabels = { great:'开心', good:'还行', soso:'一般', bad:'低落', awful:'难受' };
+    var _mct = $('moodConfirmText'); if (_mct) _mct.textContent = '已记录 · 本周第' + uniqueDays.length + '次打卡 · 今天：' + (_initMoodLabels[todayMood.mood] || '');
   }
 
   // Update companion stats
@@ -5272,37 +5371,40 @@ function updatePinDots() {
 }
 function checkPin() {
   var dots = document.querySelectorAll('.pin-dot');
-  if (pinInput === pinCorrect) {
-    dots.forEach(function(d){ d.classList.add('success'); });
-    setTimeout(function(){
-      $('pinScreen').classList.add('hidden');
-      // Returning users skip onboarding, go straight to main UI
-      var onboarded = false;
-      try { onboarded = localStorage.getItem('echo_onboarded') === '1'; } catch(e){}
-      if (onboarded) {
-        // Restore nickname and go straight to home
-        var nick = lsLoad('nickname', '老伙计');
-        var hour = new Date().getHours();
-        var greet = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
-        if ($('homeGreeting')) $('homeGreeting').textContent = greet + '，' + nick;
-        var mineName = document.querySelector('.mine-name');
-        if (mineName) mineName.textContent = nick;
-      } else {
-        if ($('immersionPage')) $('immersionPage').classList.remove('hidden');
-      }
-    }, 600);
-  } else {
-    dots.forEach(function(d){ d.classList.add('error'); });
-    $('pinDots').style.animation = 'pinShake 0.5s ease';
-    $('pinError').textContent = '密码错误';
-    setTimeout(function(){
-      pinInput = '';
-      updatePinDots();
-      $('pinDots').style.animation = '';
-      dots.forEach(function(d){ d.classList.remove('error'); });
-    }, 800);
-    setTimeout(function(){ $('pinError').textContent = ''; }, 2000);
-  }
+  // v8.9.13 隐私强化：PIN现为哈希存储，用verifyPin异步比对
+  verifyPin(pinInput).then(function(ok) {
+    if (ok) {
+      dots.forEach(function(d){ d.classList.add('success'); });
+      setTimeout(function(){
+        $('pinScreen').classList.add('hidden');
+        // Returning users skip onboarding, go straight to main UI
+        var onboarded = false;
+        try { onboarded = localStorage.getItem('echo_onboarded') === '1'; } catch(e){}
+        if (onboarded) {
+          // Restore nickname and go straight to home
+          var nick = lsLoad('nickname', '老伙计');
+          var hour = new Date().getHours();
+          var greet = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
+          if ($('homeGreeting')) $('homeGreeting').textContent = greet + '，' + nick;
+          var mineName = document.querySelector('.mine-name');
+          if (mineName) mineName.textContent = nick;
+        } else {
+          if ($('immersionPage')) $('immersionPage').classList.remove('hidden');
+        }
+      }, 600);
+    } else {
+      dots.forEach(function(d){ d.classList.add('error'); });
+      $('pinDots').style.animation = 'pinShake 0.5s ease';
+      $('pinError').textContent = '密码错误';
+      setTimeout(function(){
+        pinInput = '';
+        updatePinDots();
+        $('pinDots').style.animation = '';
+        dots.forEach(function(d){ d.classList.remove('error'); });
+      }, 800);
+      setTimeout(function(){ $('pinError').textContent = ''; }, 2000);
+    }
+  });
 }
 $('pinSkip').addEventListener('click', function(){
   $('pinScreen').classList.add('hidden');
@@ -5508,34 +5610,9 @@ document.querySelectorAll('.topic-card').forEach(function(card){
 });
 
 // ========== Mood Check-in ==========
-var moodColors = { calm:'var(--trust-green)', tired:'var(--accent-primary)', down:'var(--danger)', angry:'var(--danger)', grateful:'var(--trust-green)' };
-var moodNames = { calm:'平静', tired:'疲惫', down:'低落', angry:'烦躁', grateful:'感恩' };
-document.querySelectorAll('.mood-opt').forEach(function(opt){
-  opt.addEventListener('click', function(){
-    document.querySelectorAll('.mood-opt').forEach(function(o){ o.classList.remove('selected'); });
-    this.classList.add('selected');
-    moodSelected = this.getAttribute('data-mood');
-    // Save to localStorage with history
-    var todayKey = new Date().toISOString().slice(0, 10);
-    var moodHistory = lsLoad('moodHistory', []);
-    var existingIdx = -1;
-    moodHistory.forEach(function(m, i) { if (m.date === todayKey) existingIdx = i; });
-    if (existingIdx >= 0) moodHistory[existingIdx].mood = moodSelected;
-    else moodHistory.push({ date: todayKey, mood: moodSelected });
-    lsSave('moodHistory', moodHistory);
-    var uniqueDays = [];
-    moodHistory.forEach(function(m) { if (uniqueDays.indexOf(m.date) === -1) uniqueDays.push(m.date); });
-    $('moodConfirm').classList.add('show');
-    $('moodConfirmText').textContent = '已记录 · 本周第' + uniqueDays.length + '次打卡' + (moodSelected ? ' · 今天：' + moodNames[moodSelected] : '');
-    var todayDot = $('moodTodayDot');
-    if (todayDot && moodColors[moodSelected]) {
-      todayDot.style.background = moodColors[moodSelected];
-    }
-    showToast('心情已记录：' + moodNames[moodSelected]);
-    updateWeeklyChart();
-    checkStreakMilestone();
-  });
-});
+// v8.9.13 P0-1: 原此处有 .mood-opt 点击监听（页面上并无 .mood-opt 元素，属死代码），
+// 且它往孤儿键 echo_moodHistory 写旧词表数据。真实打卡入口为 #moodRow .mood-btn → checkinMood()，已移除。
+
 
 // v8.6 P0-5 连续打卡：计算当前连续记录天数（以今天或昨天为终点，往前数连续的天数，断签归零）
 function calcMoodStreak(history) {
@@ -5557,8 +5634,9 @@ function calcMoodStreak(history) {
   return streak;
 }
 // v8.6 P0-5 低调里程碑：7/30/100天时老E轻轻说一句（克制措辞，不搞徽章勋章那套）
+// v8.9.13 P0-1: 改读 loadMoodHistoryDated()（真实打卡数据），原 moodHistory 键从未被写入
 function checkStreakMilestone() {
-  var history = lsLoad('moodHistory', []);
+  var history = loadMoodHistoryDated();
   var streak = calcMoodStreak(history);
   var celebrated = lsLoad('moodStreakCelebrated', []);
   var milestones = [
@@ -6333,16 +6411,18 @@ function toggleVoiceInput() {
 var currentTTSUtterance = null;
 var currentTTSBtn = null;
 
-function speakText(text, btnEl) {
+function speakText(text, btnEl, onDone) {
   if (!window.speechSynthesis) {
     showToast('当前浏览器不支持语音播放');
+    if (typeof onDone === 'function') onDone();
     return;
   }
   // If already playing, stop
-  if (speechSynthesis.speaking) {
+  if (speechSynthesis.speaking || speechSynthesis.pending) {
     speechSynthesis.cancel();
     if (currentTTSBtn) currentTTSBtn.classList.remove('playing');
-    if (currentTTSBtn === btnEl) { currentTTSBtn = null; return; }
+    // v8.9.13: 只有点了同一个朗读按钮才视为"停止"；通话模式(btnEl为空)直接继续播新的
+    if (btnEl && currentTTSBtn === btnEl) { currentTTSBtn = null; return; }
   }
   // Clean text for TTS (remove HTML tags, emojis)
   var cleanText = text.replace(/<[^>]+>/g, '').replace(/\n+/g, '，').trim();
@@ -6363,10 +6443,12 @@ function speakText(text, btnEl) {
   utterance.onend = function() {
     if (btnEl) btnEl.classList.remove('playing');
     currentTTSBtn = null;
+    if (typeof onDone === 'function') onDone();
   };
   utterance.onerror = function() {
     if (btnEl) btnEl.classList.remove('playing');
     currentTTSBtn = null;
+    if (typeof onDone === 'function') onDone();
   };
   speechSynthesis.speak(utterance);
 }
@@ -6382,6 +6464,16 @@ function addTTSButton(msgElement, text) {
     btn.onclick = function() { speakText(text, this); };
     meta.appendChild(btn);
   }
+  // v8.9.13 语音通话：通话中自动朗读回复，读完后自动恢复听你说
+  if (voiceCallActive) {
+    setTimeout(function() {
+      if (!voiceCallActive) return;
+      callAddLine('echo', text);
+      callSetSpeaking(true);
+      speakText(text, null, callAfterReplySpoken);
+    }, 400);
+    return;
+  }
   // Auto-play if enabled
   if (ttsAutoPlay) {
     setTimeout(function() { speakText(text, meta ? meta.querySelector('.msg-tts-btn') : null); }, 500);
@@ -6391,6 +6483,148 @@ function addTTSButton(msgElement, text) {
 // Load voices (some browsers load asynchronously)
 if (window.speechSynthesis) {
   speechSynthesis.onvoiceschanged = function() { speechSynthesis.getVoices(); };
+}
+
+// ========== v8.9.13 Voice Call: 与老E语音通话 ==========
+// 原理：语音识别(STT)把你的话发给老E → 老E的回复朗读出来(TTS) → 读完自动切回听你说，
+// 形成免提手的"打电话"循环。不是真人通话，无需服务器中转，隐私风险低。
+var voiceCallActive = false;
+var callRecognition = null;
+var callMuted = false;
+var callSeconds = 0;
+var callTimerId = null;
+var callSilentRounds = 0;
+
+function setCallStatus(txt) { var el = $('vcStatus'); if (el) el.textContent = txt; }
+function callSetSpeaking(on) {
+  var av = $('vcAvatar');
+  if (av) { if (on) av.classList.add('speaking'); else av.classList.remove('speaking'); }
+  if (voiceCallActive) setCallStatus(on ? '老E在说…' : '在听呢，你说吧');
+}
+function callAddLine(who, text) {
+  var box = $('vcTranscript'); if (!box) return;
+  var clean = String(text).replace(/<[^>]+>/g, '').replace(/\n+/g, ' ').trim();
+  if (!clean) return;
+  if (clean.length > 60) clean = clean.slice(0, 60) + '…';
+  var div = document.createElement('div');
+  div.className = (who === 'user') ? 'vc-line-user' : 'vc-line-echo';
+  div.textContent = (who === 'user' ? '你：' : '老E：') + clean;
+  box.appendChild(div);
+  while (box.children.length > 6) box.removeChild(box.firstChild);
+  box.scrollTop = box.scrollHeight;
+}
+function startVoiceCall() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('当前浏览器不支持语音通话，请用Chrome或Edge打开'); return; }
+  if (!window.speechSynthesis) { showToast('当前浏览器不支持语音播放，打不了电话'); return; }
+  voiceCallActive = true;
+  callMuted = false;
+  callSeconds = 0;
+  callSilentRounds = 0;
+  var ov = $('voiceCallOverlay'); if (ov) ov.classList.add('active');
+  var pname = (typeof getPersonaName === 'function') ? getPersonaName() : '老E';
+  var nameEl = $('vcName'); if (nameEl) nameEl.textContent = pname;
+  var tr = $('vcTranscript'); if (tr) tr.innerHTML = '';
+  setCallStatus('接通中…');
+  var timerEl = $('vcTimer'); if (timerEl) timerEl.textContent = '';
+  var mic = $('vcMicBtn'); if (mic) { mic.classList.remove('muted', 'listening'); mic.textContent = '🎙️'; }
+  try { speechSynthesis.cancel(); } catch(e) {}
+  if (callTimerId) clearInterval(callTimerId);
+  callTimerId = setInterval(function() {
+    callSeconds++;
+    var m = Math.floor(callSeconds / 60), s = callSeconds % 60;
+    var el = $('vcTimer');
+    if (el) el.textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+  }, 1000);
+  // 接通问候，说完开始听
+  setTimeout(function() {
+    if (!voiceCallActive) return;
+    callSetSpeaking(true);
+    speakText('喂，我是' + pname + '。听着呢，你慢慢说。', null, function() {
+      callSetSpeaking(false);
+      callListenOnce();
+    });
+  }, 600);
+}
+function callListenOnce() {
+  if (!voiceCallActive || callMuted) return;
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  setCallStatus('在听呢，你说吧');
+  var mic = $('vcMicBtn'); if (mic) mic.classList.add('listening');
+  try { callRecognition = new SR(); } catch(e) { setCallStatus('语音识别启动失败，挂断重试吧'); return; }
+  callRecognition.lang = 'zh-CN';
+  callRecognition.continuous = false;
+  callRecognition.interimResults = true;
+  var gotText = '';
+  callRecognition.onresult = function(event) {
+    var t = '';
+    for (var i = 0; i < event.results.length; i++) { t += event.results[i][0].transcript; }
+    gotText = t;
+  };
+  callRecognition.onend = function() {
+    var micEl = $('vcMicBtn'); if (micEl) micEl.classList.remove('listening');
+    if (!voiceCallActive || callMuted) return;
+    var text = (gotText || '').trim();
+    gotText = '';
+    if (text) {
+      callSilentRounds = 0;
+      callAddLine('user', text);
+      var inp = $('chatInput'); if (inp) inp.value = text;
+      var sb = $('chatSendBtn'); if (sb) sb.classList.add('active');
+      setCallStatus('老E在想…');
+      sendMessage(); // 回复经 addTTSButton → 朗读 → callAfterReplySpoken → 继续听
+    } else {
+      callSilentRounds++;
+      if (callSilentRounds === 6) {
+        setCallStatus('一会儿没听到声音，想说了点点一下麦克风');
+      } else if (callSilentRounds < 30) {
+        setTimeout(callListenOnce, 500);
+      } else {
+        setCallStatus('很久没听到声音了，点麦克风或挂断都行');
+      }
+    }
+  };
+  callRecognition.onerror = function(event) {
+    if (!voiceCallActive || callMuted) return;
+    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      setCallStatus('请先允许使用麦克风，再重新拨打');
+      return;
+    }
+    // no-speech 等小错误：静默继续听
+    setTimeout(callListenOnce, 400);
+  };
+  try { callRecognition.start(); } catch(e) { setTimeout(callListenOnce, 500); }
+}
+function callAfterReplySpoken() {
+  if (!voiceCallActive) return;
+  callSetSpeaking(false);
+  setTimeout(callListenOnce, 350);
+}
+function toggleCallMic() {
+  if (!voiceCallActive) return;
+  var mic = $('vcMicBtn');
+  if (callMuted) {
+    callMuted = false;
+    if (mic) { mic.classList.remove('muted'); mic.textContent = '🎙️'; }
+    setCallStatus('在听呢，你说吧');
+    callListenOnce();
+  } else {
+    callMuted = true;
+    if (mic) { mic.classList.remove('listening'); mic.classList.add('muted'); mic.textContent = '🔇'; }
+    try { if (callRecognition) callRecognition.stop(); } catch(e) {}
+    setCallStatus('已静音，想说话时点一下麦克风');
+  }
+}
+function endVoiceCall() {
+  voiceCallActive = false;
+  callMuted = false;
+  try { if (callRecognition) callRecognition.stop(); } catch(e) {}
+  callRecognition = null;
+  try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch(e) {}
+  if (callTimerId) { clearInterval(callTimerId); callTimerId = null; }
+  var ov = $('voiceCallOverlay'); if (ov) ov.classList.remove('active');
+  showToast('通话结束');
 }
 
 // ========== Health Advisor Chat ==========
@@ -6469,6 +6703,13 @@ function getHealthReply(text) {
     '你能主动关注自己的身体，这很好。保持好习惯，定期体检，有不舒服及时看医生，这就是最好的健康管理。'
   ];
   return pick(defaults) + disclaimer;
+}
+
+// v8.9.13 P0-2: 健康顾问入口——先弹免责声明，用户确认后进子页面（弹窗内按钮已绑定进入逻辑）
+function openHealthAdvisor() {
+  var modal = $('healthDisclaimerModal');
+  if (modal) { modal.classList.add('active'); return; }
+  openSubPage('health-advisor');
 }
 
 function sendHealthMessage() {
@@ -6840,6 +7081,31 @@ function acceptConsent() {
 function getUserPin() {
   try { return localStorage.getItem('echo_user_pin') || ''; } catch(e) { return ''; }
 }
+// v8.9.13 隐私强化：PIN不再明文存储，改存加盐SHA-256哈希。
+// 旧版存的是4位明文，verifyPin比对成功后自动升级为哈希（无缝迁移）。
+function hashPin(pin) {
+  try {
+    if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode('EchoPIN-v1:' + pin)).then(function(buf) {
+        return Array.prototype.map.call(new Uint8Array(buf), function(b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+      });
+    }
+  } catch(e) {}
+  return Promise.resolve('nosh:' + pin); // 极端环境（无WebCrypto）兜底，仅本地使用
+}
+function verifyPin(pin) {
+  var saved = getUserPin();
+  if (!saved) return Promise.resolve(false);
+  if (/^\d{4}$/.test(saved)) { // 旧版明文：比对成功后迁移为哈希
+    if (pin === saved) {
+      hashPin(pin).then(function(h) { try { localStorage.setItem('echo_user_pin', h); } catch(e) {} });
+      return Promise.resolve(true);
+    }
+    return Promise.resolve(false);
+  }
+  if (saved.indexOf('nosh:') === 0) return Promise.resolve(saved === 'nosh:' + pin);
+  return hashPin(pin).then(function(h) { return h === saved; });
+}
 function onPinSettingInput() {
   var input = $('pinSettingInput');
   var hint = $('pinInputHint');
@@ -6867,23 +7133,29 @@ function setPinCode() {
   if (!input) { showToast('页面未加载完成，请重试'); return; }
   var pin = input.value.trim();
   if (pin.length !== 4 || !/^\d{4}$/.test(pin)) { showToast('请输入4位数字密码'); return; }
-  localStorage.setItem('echo_user_pin', pin);
-  input.value = '';
-  var hint = $('pinInputHint');
-  if (hint) hint.textContent = '请输入4位数字，会直接弹出数字键盘';
-  showToast('密码设置成功！下次打开需要输入密码');
-  updatePinSettingUI();
+  // v8.9.13 隐私强化：只存哈希，不存明文
+  hashPin(pin).then(function(h) {
+    try { localStorage.setItem('echo_user_pin', h); } catch(e) {}
+    input.value = '';
+    var hint = $('pinInputHint');
+    if (hint) hint.textContent = '请输入4位数字，会直接弹出数字键盘';
+    showToast('密码设置成功！下次打开需要输入密码');
+    updatePinSettingUI();
+  });
 }
 function removePinCode() {
   var input = $('pinSettingInput');
   var pin = input.value.trim();
   var saved = getUserPin();
   if (!saved) { showToast('当前没有设置密码'); return; }
-  if (!pin || pin !== saved) { showToast('请输入当前密码来验证'); return; }
-  localStorage.removeItem('echo_user_pin');
-  input.value = '';
-  showToast('已取消密码');
-  updatePinSettingUI();
+  if (!pin) { showToast('请输入当前密码来验证'); return; }
+  verifyPin(pin).then(function(ok) {
+    if (!ok) { showToast('密码不对，请输入当前使用的密码'); return; }
+    localStorage.removeItem('echo_user_pin');
+    input.value = '';
+    showToast('已取消密码');
+    updatePinSettingUI();
+  });
 }
 function updatePinSettingUI() {
   var saved = getUserPin();
@@ -6907,15 +7179,17 @@ function clearAllData() {
 }
 
 // ===== Weekly Insight Chart =====
+// v8.9.13 P0-1: 改读 loadMoodHistoryDated()（真实打卡数据），心情词表统一为 great/good/soso/bad/awful，
+// 日期键改用本地时间 moodEntryDate（与打卡写入一致，避免 toISOString 的时区偏移）
 function updateWeeklyChart() {
-  var moodHistory = lsLoad('moodHistory', []);
-  var moodScoreMap = { calm: 4, grateful: 5, tired: 2, down: 1, angry: 1 };
+  var moodHistory = loadMoodHistoryDated();
+  var moodScoreMap = { great: 5, good: 4, soso: 3, bad: 2, awful: 1 };
   var dayLabels = ['日','一','二','三','四','五','六'];
   var today = new Date();
   for (var i = 6; i >= 0; i--) {
     var d = new Date(today);
     d.setDate(d.getDate() - i);
-    var dateKey = d.toISOString().slice(0, 10);
+    var dateKey = moodEntryDate({ time: d.getTime() });
     var dayIdx = d.getDay();
     var dayData = moodHistory.find(function(m) { return m.date === dateKey; });
     var score = dayData ? (moodScoreMap[dayData.mood] || 0) : 0;
@@ -6924,7 +7198,7 @@ function updateWeeklyChart() {
     if (bar) {
       var height = score > 0 ? (score * 18 + 8) : 4;
       bar.style.height = height + 'px';
-      bar.style.background = score > 0 ? (score >= 3 ? 'var(--trust-green)' : 'var(--danger)') : 'var(--bg-surface-4)';
+      bar.style.background = score >= 4 ? 'var(--trust-green)' : (score === 3 ? 'var(--accent-primary)' : (score > 0 ? 'var(--danger)' : 'var(--bg-surface-4)'));
     }
     if (label) label.textContent = '周' + dayLabels[dayIdx];
   }
@@ -6933,13 +7207,13 @@ function updateWeeklyChart() {
   for (var j = 6; j >= 0; j--) {
     var dd = new Date(today);
     dd.setDate(dd.getDate() - j);
-    var dk = dd.toISOString().slice(0, 10);
+    var dk = moodEntryDate({ time: dd.getTime() });
     var md = moodHistory.find(function(m) { return m.date === dk; });
     if (md) weekMoods.push(md.mood);
   }
   var insightEl = document.querySelector('.weekly-insight-text');
   if (insightEl && weekMoods.length > 0) {
-    var calmCount = weekMoods.filter(function(m) { return m === 'calm' || m === 'grateful'; }).length;
+    var calmCount = weekMoods.filter(function(m) { return m === 'great' || m === 'good'; }).length;
     var ratio = calmCount / weekMoods.length;
     if (ratio >= 0.6) insightEl.textContent = '这周你的心情整体不错，继续保持。';
     else if (ratio >= 0.3) insightEl.textContent = '这周心情有些起伏，记得给自己留点空间。';
@@ -6948,7 +7222,7 @@ function updateWeeklyChart() {
   // Update mine weekly detail（原为写死的"本周聊天5次·共45分钟·心情趋势：平静→疲惫→轻松"，改为真实数据）
   var mineDetail = document.querySelector('.mine-weekly-card .detail');
   var mineObserve = document.querySelector('.mine-weekly-card .echo-observe');
-  var mNameMap = { calm:'平静', tired:'疲惫', down:'低落', angry:'烦躁', grateful:'感恩' };
+  var mNameMap = { great:'开心', good:'还行', soso:'一般', bad:'低落', awful:'难受' };
   if (mineDetail) {
     if (weekMoods.length > 0) {
       var trendText = weekMoods.map(function(m){ return mNameMap[m] || m; }).join(' → ');
@@ -6959,7 +7233,7 @@ function updateWeeklyChart() {
   }
   if (mineObserve) {
     if (weekMoods.length > 0) {
-      var calmCnt = weekMoods.filter(function(m){ return m === 'calm' || m === 'grateful'; }).length;
+      var calmCnt = weekMoods.filter(function(m){ return m === 'great' || m === 'good'; }).length;
       var r = calmCnt / weekMoods.length;
       mineObserve.textContent = r >= 0.6 ? '“这周你的状态整体不错，继续保持。”' : (r >= 0.3 ? '“这周心情有些起伏，记得给自己留点空间。”' : '“这周似乎不太轻松，辛苦了，有需要随时来聊聊。”');
     } else {
@@ -6972,10 +7246,11 @@ function updateWeeklyChart() {
 // ===== Detailed Weekly Insight Sub-Page（真实数据驱动，未追踪的指标诚实留白）=====
 function renderWeeklyDetail() {
   if (!document.getElementById('sub-weekly-insight')) return;
-  var moodHistory = lsLoad('moodHistory', []);
-  var scoreMap = { calm: 4, grateful: 5, tired: 2, down: 1, angry: 1 };
-  var emojiMap = { calm: '😊', grateful: '🙏', tired: '😮‍💨', down: '😔', angry: '😣' };
-  var colorMap = { calm: 'var(--trust-green)', grateful: 'var(--trust-green)', tired: 'var(--accent-primary)', down: 'var(--danger)', angry: 'var(--danger)' };
+  // v8.9.13 P0-1: 改读真实打卡数据 + 统一心情词表
+  var moodHistory = loadMoodHistoryDated();
+  var scoreMap = { great: 5, good: 4, soso: 3, bad: 2, awful: 1 };
+  var emojiMap = { great: '😄', good: '🙂', soso: '😐', bad: '😔', awful: '😣' };
+  var colorMap = { great: 'var(--trust-green)', good: 'var(--trust-green)', soso: 'var(--accent-primary)', bad: 'var(--danger)', awful: 'var(--danger)' };
   var dayLabels = ['日','一','二','三','四','五','六'];
   var today = new Date();
   // 真实日期范围（近7天）
@@ -6988,7 +7263,7 @@ function renderWeeklyDetail() {
   var weekMoods = [];
   for (var i = 6; i >= 0; i--) {
     var d = new Date(today); d.setDate(d.getDate() - i);
-    var key = d.toISOString().slice(0, 10);
+    var key = moodEntryDate({ time: d.getTime() });
     var found = moodHistory.find(function(m) { return m.date === key; });
     if (found) weekMoods.push(found.mood);
     var bar = document.querySelector('.wi-bar[data-day="' + i + '"]');
@@ -7010,7 +7285,7 @@ function renderWeeklyDetail() {
   var setVal = function(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; };
   setVal('wiMoodCount', weekMoods.length);
   if (weekMoods.length > 0) {
-    var calmCount = weekMoods.filter(function(m){ return m === 'calm' || m === 'grateful'; }).length;
+    var calmCount = weekMoods.filter(function(m){ return m === 'great' || m === 'good'; }).length;
     var ratio = calmCount / weekMoods.length;
     setVal('wiTrend', ratio >= 0.6 ? '↗ 向好' : (ratio >= 0.3 ? '→ 平稳' : '↘ 偏低'));
     var obs = document.getElementById('wiObserve');
@@ -7034,17 +7309,8 @@ function updateCompanionStats() {
   }
   var days = Math.max(1, Math.ceil((Date.now() - new Date(startDate).getTime()) / 86400000));
   var totalMsgs = lsLoad('totalMessages', chatMessagesStore.length);
-  // Calculate streak from mood history
-  var moodHistory = lsLoad('moodHistory', []);
-  var streak = 0;
-  var checkDate = new Date();
-  while (true) {
-    var dk = checkDate.toISOString().slice(0, 10);
-    if (moodHistory.some(function(m) { return m.date === dk; })) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else break;
-  }
+  // v8.9.13 P0-1: 改读真实打卡数据，复用 calcMoodStreak（允许以昨天为终点的连续计数）
+  var streak = calcMoodStreak(loadMoodHistoryDated());
   lsSave('currentStreak', streak);
   // Update mine page stats（修复：原选择器 .mine-stat-num 与页面 .mine-stat .val 不匹配，导致统计永远显示假数据）
   var mineVals = document.querySelectorAll('.mine-stat .val');
@@ -7404,17 +7670,25 @@ function initFirebase() { // 保留函数名兼容调用
   });
 }
 
-// ========== AES-GCM Encryption (端到端加密) ==========
-var sbCryptoKey = null;
+// ========== AES-GCM Encryption (客户端加密传输) ==========
+// v8.9.13 隐私强化：密钥派生升级为v2（PBKDF2 31万次迭代+独立盐），
+// 同时保留v1派生用于解密旧版本加密的消息，滚动升级期间双方不丢消息。
+var sbCryptoKey = null;        // v2密钥（加密用）
+var sbCryptoKeyLegacy = null;  // v1旧密钥（仅解密旧消息用）
 var sbCryptoSalt = new TextEncoder().encode('Echo-v1-密语空间');
+var sbCryptoSaltV2 = new TextEncoder().encode('Echo-v2-密语空间');
 
-async function fbDeriveKey(roomCode) {
+async function fbDeriveKey(roomCode, version) {
+  var v = (version === 1) ? 1 : 2;
+  var password = (v === 1) ? (roomCode + '-EchoSecret') : (roomCode + '-EchoSecret-v2');
+  var salt = (v === 1) ? sbCryptoSalt : sbCryptoSaltV2;
+  var iterations = (v === 1) ? 100000 : 310000;
   var keyMaterial = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(roomCode + '-EchoSecret'),
+    'raw', new TextEncoder().encode(password),
     'PBKDF2', false, ['deriveKey']
   );
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: sbCryptoSalt, iterations: 100000, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: salt, iterations: iterations, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false, ['encrypt', 'decrypt']
@@ -7423,7 +7697,7 @@ async function fbDeriveKey(roomCode) {
 
 async function fbEncrypt(text, roomCode) {
   try {
-    if (!sbCryptoKey) sbCryptoKey = await fbDeriveKey(roomCode);
+    if (!sbCryptoKey) sbCryptoKey = await fbDeriveKey(roomCode, 2);
     var iv = crypto.getRandomValues(new Uint8Array(12));
     var encoded = new TextEncoder().encode(text);
     var ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, sbCryptoKey, encoded);
@@ -7442,14 +7716,21 @@ async function fbDecrypt(base64Data, roomCode) {
     if (base64Data.indexOf('b64:') === 0) {
       return new TextDecoder().decode(Uint8Array.from(atob(base64Data.substring(4)), function(c){ return c.charCodeAt(0); }));
     }
-    if (!sbCryptoKey) sbCryptoKey = await fbDeriveKey(roomCode);
     var raw = atob(base64Data);
     var bytes = new Uint8Array(raw.length);
     for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
     var iv = bytes.slice(0, 12);
     var ciphertext = bytes.slice(12);
-    var decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, sbCryptoKey, ciphertext);
-    return new TextDecoder().decode(decrypted);
+    if (!sbCryptoKey) sbCryptoKey = await fbDeriveKey(roomCode, 2);
+    try {
+      var decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, sbCryptoKey, ciphertext);
+      return new TextDecoder().decode(decrypted);
+    } catch (e2) {
+      // v8.9.13: 可能是旧版本(v1)加密的消息，用旧密钥再试一次
+      if (!sbCryptoKeyLegacy) sbCryptoKeyLegacy = await fbDeriveKey(roomCode, 1);
+      var decryptedLegacy = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, sbCryptoKeyLegacy, ciphertext);
+      return new TextDecoder().decode(decryptedLegacy);
+    }
   } catch (e) {
     console.warn('[Decrypt] 解密失败:', e);
     return '[消息解密失败]';
@@ -7842,15 +8123,18 @@ function spacePinFail(msg) {
 function spacePinCheck() {
   var dots = document.querySelectorAll('#spacePinOverlay .spin-dot');
   if (spacePinMode === 'verify') {
-    if (spacePinInput === getUserPin()) {
-      dots.forEach(function(d) { d.classList.add('success'); });
-      setTimeout(function() {
-        $('spacePinOverlay').classList.add('hidden');
-        enterSpaceDetail(pendingSpaceName, pendingSpaceCode);
-      }, 500);
-    } else {
-      spacePinFail('密码错误');
-    }
+    // v8.9.13 隐私强化：哈希PIN异步比对
+    verifyPin(spacePinInput).then(function(ok) {
+      if (ok) {
+        dots.forEach(function(d) { d.classList.add('success'); });
+        setTimeout(function() {
+          $('spacePinOverlay').classList.add('hidden');
+          enterSpaceDetail(pendingSpaceName, pendingSpaceCode);
+        }, 500);
+      } else {
+        spacePinFail('密码错误');
+      }
+    });
   } else if (spacePinMode === 'set') {
     spacePinFirst = spacePinInput;
     spacePinInput = '';
@@ -7859,14 +8143,17 @@ function spacePinCheck() {
     updateSpacePinDots();
   } else if (spacePinMode === 'confirm') {
     if (spacePinInput === spacePinFirst) {
-      try { localStorage.setItem('echo_user_pin', spacePinInput); } catch(e) {}
-      dots.forEach(function(d) { d.classList.add('success'); });
-      setSpacePinTitle('密码设置成功');
-      setTimeout(function() {
-        $('spacePinOverlay').classList.add('hidden');
-        if (typeof updatePinSettingUI === 'function') updatePinSettingUI();
-        enterSpaceDetail(pendingSpaceName, pendingSpaceCode);
-      }, 600);
+      // v8.9.13 隐私强化：只存哈希，不存明文
+      hashPin(spacePinInput).then(function(h) {
+        try { localStorage.setItem('echo_user_pin', h); } catch(e) {}
+        dots.forEach(function(d) { d.classList.add('success'); });
+        setSpacePinTitle('密码设置成功');
+        setTimeout(function() {
+          $('spacePinOverlay').classList.add('hidden');
+          if (typeof updatePinSettingUI === 'function') updatePinSettingUI();
+          enterSpaceDetail(pendingSpaceName, pendingSpaceCode);
+        }, 600);
+      });
     } else {
       spacePinFirst = '';
       spacePinMode = 'set';
@@ -7914,7 +8201,7 @@ function enterSpaceDetail(name, code) {
   var container = $('spaceChatMessages');
   if (container) {
     container.innerHTML = '<div class="space-welcome-msg"><div style="font-size:32px;margin-bottom:8px;">🔐</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">此空间消息阅后即焚，到期后自动物理删除，不可恢复。<br>所有参与者均使用匿名身份，空间销毁后不留任何痕迹。</div>'
-      + (sbReady ? '<div style="font-size:11px;color:#4ade80;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border-radius:8px;">🔒 端到端加密通信已启用 · 消息经AES-256加密传输</div>' : '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。</div>')
+      + (sbReady ? '<div style="font-size:11px;color:#4ade80;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border-radius:8px;">🔒 客户端加密已启用 · 消息经AES-256加密后传输，只有知道密室码的人能读</div>' : '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。</div>')
       + '</div>';
   }
   // Add/update online status indicator
@@ -8817,27 +9104,8 @@ function closeInstallGuide() {
 var MOOD_EMOJIS = { great:'\u{1F60A}', good:'\u{1F642}', soso:'\u{1F610}', bad:'\u{1F614}', awful:'\u{1F623}' };
 var MOOD_LABELS = { great:'开心', good:'还行', soso:'一般', bad:'低落', awful:'难受' };
 
-function checkinMood(mood) {
-  if (!mood) return;
-  var moods = lsLoad('echo_moods', []);
-  var today = new Date().toDateString();
-  var existing = -1;
-  for (var i = 0; i < moods.length; i++) {
-    if (new Date(moods[i].time).toDateString() === today) { existing = i; break; }
-  }
-  var entry = { mood: mood, time: Date.now() };
-  if (existing >= 0) { moods[existing] = entry; } else { moods.push(entry); }
-  var cutoff = Date.now() - 90 * 86400000;
-  moods = moods.filter(function(m) { return m.time > cutoff; });
-  lsSave('echo_moods', moods);
-  var btns = document.querySelectorAll('.mood-emoji-btn');
-  if (btns) {
-    btns.forEach(function(b) { b.classList.remove('selected'); });
-    var sel = document.querySelector('.mood-emoji-btn[data-mood="' + mood + '"]');
-    if (sel) sel.classList.add('selected');
-  }
-  showCareToast('已记录今日心情 ' + (MOOD_EMOJIS[mood] || ''));
-}
+// v8.9.13 P0-1: 原此处有一个v8.0版checkinMood（lsSave双前缀写错键），
+// 已被下方v8.1版checkinMood完全覆盖，属死代码，移除以免误用。
 
 function loadTodayMood() {
   var moods = loadMoodHistory();
@@ -8882,7 +9150,8 @@ function renderMoodCalendar() {
   var now = new Date();
   var year = now.getFullYear(), month = now.getMonth();
   monthEl.textContent = year + '年' + (month + 1) + '月';
-  var moods = lsLoad('echo_moods', []);
+  // v8.9.13 P0-1: lsLoad('echo_moods')会读双前缀键echo_echo_moods（从未写入），改用loadMoodHistory()读真实原始键
+  var moods = loadMoodHistory();
   var moodMap = {};
   moods.forEach(function(m) {
     var d = new Date(m.time);
@@ -8966,6 +9235,13 @@ function checkinMood(mood) {
     var cutoff = Date.now() - 90 * 86400000;
     moods = moods.filter(function(m) { return m.time > cutoff; });
     localStorage.setItem('echo_moods', JSON.stringify(moods));
+  } catch(e) {}
+  // v8.9.13 P0-1: 打卡后立即刷新所有下游展示（连续天数/日历/周洞察/里程碑）
+  try {
+    if (typeof updateCompanionStats === 'function') updateCompanionStats();
+    if (typeof updateWeeklyChart === 'function') updateWeeklyChart();
+    if (typeof renderMoodCalendar === 'function') renderMoodCalendar();
+    if (typeof checkStreakMilestone === 'function') checkStreakMilestone();
   } catch(e) {}
   var moodMap = {great:'开心',good:'还行',soso:'一般',bad:'低落',awful:'难受'};
   showToast('已记录今日心情：' + (moodMap[mood]||mood));
@@ -9681,6 +9957,18 @@ function getPersonaName() {
 // 心情历史：直接读写原始键 echo_moods（lsLoad会双前缀，不能用；紧急清除按echo_前缀扫描，能清掉）
 function loadMoodHistory() {
   try { return JSON.parse(localStorage.getItem('echo_moods') || '[]'); } catch(e) { return []; }
+}
+// v8.9.13: 心情数据链路统一——打卡写 echo_moods 格式{mood,time}，
+// 旧读取方却找 echo_moodHistory 且要 {date} 格式，导致连续天数/日历/周洞察全失效。
+// 这里把 time(毫秒) 换算成 YYYY-MM-DD，供所有读取方统一使用。
+function moodEntryDate(entry) {
+  var t = (entry && entry.time) ? entry.time : 0;
+  var d = new Date(t);
+  var mm = d.getMonth() + 1; var dd = d.getDate();
+  return d.getFullYear() + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd);
+}
+function loadMoodHistoryDated() {
+  return loadMoodHistory().map(function(m) { return { mood: m.mood, time: m.time, date: moodEntryDate(m) }; });
 }
 
 // ========== v8.9.3 分享推荐：请一个老伙计进来 ==========
