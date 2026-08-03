@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.13';
+  var APP_VERSION = '8.9.14';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.13</title>
+<title>Echo回声 — 试用版v8.9.14</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -4548,6 +4548,7 @@ body {
     <div class="sub-header">
       <button class="sub-back" onclick="closeSubPage('space-detail')">←</button>
       <h2 id="spaceDetailName">密语空间</h2>
+      <button onclick="startSpaceCall()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:6px 6px;" title="语音对讲">📞 对讲</button>
       <button onclick="destroySpace()" style="background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;padding:6px 10px;">销毁空间</button>
     </div>
     <div class="space-trust-bar">🔒 加密对话 · 次日清除 · 📵 禁止截屏录屏</div>
@@ -4914,7 +4915,7 @@ body {
         <button class="vc-btn vc-mic" id="vcMicBtn" onclick="toggleCallMic()" title="静音/说话">🎙️</button>
         <button class="vc-btn vc-hangup" onclick="endVoiceCall()" title="挂断">📵</button>
       </div>
-      <div class="vc-note">通话内容只用于和老E对话，不单独保存录音<br>周围太吵或识别不准时，可以挂断改用打字</div>
+      <div class="vc-note" id="vcNote">通话内容只用于和老E对话，不单独保存录音<br>周围太吵或识别不准时，可以挂断改用打字</div>
     </div>
   </div>
 
@@ -5683,6 +5684,10 @@ function openSubPage(name) {
 function closeSubPage(name) {
   var el = $('sub-'+name);
   if (el) el.classList.remove('active');
+  // v8.9.14 离开密聊房间时自动挂断对讲，避免麦克风一直开着
+  if (name === 'space-detail' && spaceCallActive) {
+    if (typeof endVoiceCall === 'function') endVoiceCall();
+  }
 }
 // v8.6 P0-2 隐私可见化：点隐私状态栏看隐私报告（排除"阅后即焚"按钮自身）
 function openPrivacyReport(e) {
@@ -6489,6 +6494,8 @@ if (window.speechSynthesis) {
 // 原理：语音识别(STT)把你的话发给老E → 老E的回复朗读出来(TTS) → 读完自动切回听你说，
 // 形成免提手的"打电话"循环。不是真人通话，无需服务器中转，隐私风险低。
 var voiceCallActive = false;
+var callMode = 'ai'; // 'ai' = 与老E通话；'space' = 密聊语音对讲
+var spaceCallActive = false;
 var callRecognition = null;
 var callMuted = false;
 var callSeconds = 0;
@@ -6499,16 +6506,20 @@ function setCallStatus(txt) { var el = $('vcStatus'); if (el) el.textContent = t
 function callSetSpeaking(on) {
   var av = $('vcAvatar');
   if (av) { if (on) av.classList.add('speaking'); else av.classList.remove('speaking'); }
-  if (voiceCallActive) setCallStatus(on ? '老E在说…' : '在听呢，你说吧');
+  if (voiceCallActive) {
+    if (callMode === 'space') setCallStatus(on ? '对方在说…' : '在听呢，你说吧');
+    else setCallStatus(on ? '老E在说…' : '在听呢，你说吧');
+  }
 }
-function callAddLine(who, text) {
+function callAddLine(who, text, label) {
   var box = $('vcTranscript'); if (!box) return;
   var clean = String(text).replace(/<[^>]+>/g, '').replace(/\n+/g, ' ').trim();
   if (!clean) return;
   if (clean.length > 60) clean = clean.slice(0, 60) + '…';
   var div = document.createElement('div');
   div.className = (who === 'user') ? 'vc-line-user' : 'vc-line-echo';
-  div.textContent = (who === 'user' ? '你：' : '老E：') + clean;
+  var prefix = (who === 'user') ? '你：' : (label ? label + '：' : '老E：');
+  div.textContent = prefix + clean;
   box.appendChild(div);
   while (box.children.length > 6) box.removeChild(box.firstChild);
   box.scrollTop = box.scrollHeight;
@@ -6518,12 +6529,15 @@ function startVoiceCall() {
   if (!SR) { showToast('当前浏览器不支持语音通话，请用Chrome或Edge打开'); return; }
   if (!window.speechSynthesis) { showToast('当前浏览器不支持语音播放，打不了电话'); return; }
   voiceCallActive = true;
+  callMode = 'ai';
+  spaceCallActive = false;
   callMuted = false;
   callSeconds = 0;
   callSilentRounds = 0;
   var ov = $('voiceCallOverlay'); if (ov) ov.classList.add('active');
   var pname = (typeof getPersonaName === 'function') ? getPersonaName() : '老E';
   var nameEl = $('vcName'); if (nameEl) nameEl.textContent = pname;
+  var noteEl = $('vcNote'); if (noteEl) noteEl.innerHTML = '通话内容只用于和老E对话，不单独保存录音<br>周围太吵或识别不准时，可以挂断改用打字';
   var tr = $('vcTranscript'); if (tr) tr.innerHTML = '';
   setCallStatus('接通中…');
   var timerEl = $('vcTimer'); if (timerEl) timerEl.textContent = '';
@@ -6570,6 +6584,13 @@ function callListenOnce() {
     if (text) {
       callSilentRounds = 0;
       callAddLine('user', text);
+      if (callMode === 'space') {
+        // 密聊对讲：把识别出的话加密发到房间，然后继续听
+        spaceCallSendText(text);
+        setCallStatus('已加密发出，你接着说');
+        setTimeout(callListenOnce, 600);
+        return;
+      }
       var inp = $('chatInput'); if (inp) inp.value = text;
       var sb = $('chatSendBtn'); if (sb) sb.classList.add('active');
       setCallStatus('老E在想…');
@@ -6618,6 +6639,8 @@ function toggleCallMic() {
 }
 function endVoiceCall() {
   voiceCallActive = false;
+  spaceCallActive = false;
+  callMode = 'ai';
   callMuted = false;
   try { if (callRecognition) callRecognition.stop(); } catch(e) {}
   callRecognition = null;
@@ -6625,6 +6648,92 @@ function endVoiceCall() {
   if (callTimerId) { clearInterval(callTimerId); callTimerId = null; }
   var ov = $('voiceCallOverlay'); if (ov) ov.classList.remove('active');
   showToast('通话结束');
+}
+
+// ========== v8.9.14 密聊语音对讲 ==========
+// 原理：密聊里的"语音通话"。你说话→识别成文字→加密发到房间；
+// 对方发来文字→自动念给你听；对方发来语音条→直接播放。
+// 半双工：播放对方声音时暂停听你，播完自动切回，避免把对方的声音又录进去发回来。
+function startSpaceCall() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('当前浏览器不支持语音对讲，请用Chrome或Edge打开'); return; }
+  if (!window.speechSynthesis) { showToast('当前浏览器不支持语音播放，没法对讲'); return; }
+  voiceCallActive = true;
+  spaceCallActive = true;
+  callMode = 'space';
+  callMuted = false;
+  callSeconds = 0;
+  callSilentRounds = 0;
+  var ov = $('voiceCallOverlay'); if (ov) ov.classList.add('active');
+  var roomName = '';
+  var nameEl2 = $('spaceDetailName');
+  if (nameEl2) roomName = nameEl2.textContent || '';
+  var nameEl = $('vcName'); if (nameEl) nameEl.textContent = (roomName || '密语空间') + ' · 对讲';
+  var noteEl = $('vcNote'); if (noteEl) noteEl.innerHTML = '你说的话识别后加密发给对方，不发送录音<br>对方的消息会自动念出来，周围有人时注意音量';
+  var tr = $('vcTranscript'); if (tr) tr.innerHTML = '';
+  setCallStatus('接通中…');
+  var timerEl = $('vcTimer'); if (timerEl) timerEl.textContent = '';
+  var mic = $('vcMicBtn'); if (mic) { mic.classList.remove('muted', 'listening'); mic.textContent = '🎙️'; }
+  try { speechSynthesis.cancel(); } catch(e) {}
+  if (callTimerId) clearInterval(callTimerId);
+  callTimerId = setInterval(function() {
+    callSeconds++;
+    var m = Math.floor(callSeconds / 60), s = callSeconds % 60;
+    var el = $('vcTimer');
+    if (el) el.textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+  }, 1000);
+  // 接通提示，说完开始听
+  setTimeout(function() {
+    if (!voiceCallActive || callMode !== 'space') return;
+    callSetSpeaking(true);
+    speakText('对讲接通了。你说完一句，会自动加密发给对方；对方回的话，我念给你听。', null, function() {
+      callSetSpeaking(false);
+      callListenOnce();
+    });
+  }, 600);
+}
+// 把识别出的文字走正常密聊发送通道（Supabase加密 或 本地演示模式）
+function spaceCallSendText(text) {
+  var inp = $('spaceChatInput');
+  if (!inp) return;
+  inp.value = text;
+  if (typeof sendSpaceMessage === 'function') sendSpaceMessage();
+}
+// 播放/朗读完对方的内容后，恢复"听你说"
+function spaceCallResumeAfter() {
+  callSetSpeaking(false);
+  if (!voiceCallActive || callMode !== 'space') return;
+  setTimeout(callListenOnce, 350);
+}
+// 对方发来文字：先停掉麦克风（半双工，防把朗读声录回去），再念出来
+function spaceCallReadIncoming(text, nick) {
+  if (!voiceCallActive || callMode !== 'space') return;
+  try { if (callRecognition) callRecognition.stop(); } catch(e) {}
+  var micEl = $('vcMicBtn'); if (micEl) micEl.classList.remove('listening');
+  var clean = String(text).replace(/<[^>]+>/g, '').replace(/\n+/g, ' ').trim();
+  if (!clean) return;
+  callAddLine('other', clean, nick || '对方');
+  callSetSpeaking(true);
+  speakText((nick ? nick + '说，' : '对方说，') + clean, null, spaceCallResumeAfter);
+}
+// 对方发来语音条：直接播放原声
+function spaceCallPlayVoice(dataUrl, nick) {
+  if (!voiceCallActive || callMode !== 'space') return;
+  try { if (callRecognition) callRecognition.stop(); } catch(e) {}
+  var micEl = $('vcMicBtn'); if (micEl) micEl.classList.remove('listening');
+  callAddLine('other', '发来一段语音', nick || '对方');
+  callSetSpeaking(true);
+  setCallStatus('在播对方的语音…');
+  var resumed = false;
+  var resume = function() { if (!resumed) { resumed = true; spaceCallResumeAfter(); } };
+  try {
+    var audio = new Audio(dataUrl);
+    audio.onended = resume;
+    audio.onerror = resume;
+    audio.play().catch(resume);
+    // 兜底：60秒后无论如何恢复听
+    setTimeout(resume, 60000);
+  } catch(e) { resume(); }
 }
 
 // ========== Health Advisor Chat ==========
@@ -7477,6 +7586,8 @@ function sendSpaceMessage() {
       replyEl.setAttribute('data-msg-idx', replyIdx);
       if (spaceBurnTimeMs > 0) scheduleSpaceBurn(replyEl, spaceBurnTimeMs);
       else setTimeout(function() { burnSpaceMsg(replyEl); }, 500);
+      // v8.9.14 对讲模式：演示回复也念出来
+      if (spaceCallActive && voiceCallActive) spaceCallReadIncoming(replyText, otherNick);
     }, 1500 + Math.random() * 2000);
   }
 }
@@ -7972,14 +8083,19 @@ async function sbProcessIncomingMsg(msg, code) {
 
   // Check if this is an image message
   var bubbleContent;
+  var incomingKind = 'text';
+  var incomingVoiceUrl = '';
   if (text.indexOf('[IMG]') === 0) {
+    incomingKind = 'image';
     var imgData = text.substring(5); // Remove [IMG] prefix
     bubbleContent = '<img src="' + imgData + '" alt="照片" style="max-width:100%;border-radius:8px;">';
   } else if (text.indexOf('[VOICE]') === 0) {
+    incomingKind = 'voice';
     var voicePayload = text.substring(7); // Remove [VOICE] prefix
     var pipeIdx = voicePayload.indexOf('|');
     var voiceDuration = voicePayload.substring(0, pipeIdx);
     var voiceDataUrl = voicePayload.substring(pipeIdx + 1);
+    incomingVoiceUrl = voiceDataUrl;
     bubbleContent = '<div class="voice-msg" onclick="playSpaceVoice(this, \'' + voiceDataUrl + '\')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 0;"><span class="voice-icon">🎤</span><span class="voice-duration">' + voiceDuration + '″</span></div>';
   } else {
     bubbleContent = escapeHtml(text);
@@ -7992,6 +8108,17 @@ async function sbProcessIncomingMsg(msg, code) {
   container.appendChild(msgEl);
   container.scrollTop = container.scrollHeight;
   if (window._sbSoundArmed) playMsgDing();
+
+  // v8.9.14 对讲模式：通话中收到消息自动播/念出来（半双工，先停麦克风）
+  if (spaceCallActive && voiceCallActive) {
+    if (incomingKind === 'voice' && incomingVoiceUrl) {
+      spaceCallPlayVoice(incomingVoiceUrl, msg.nick);
+    } else if (incomingKind === 'text') {
+      spaceCallReadIncoming(text, msg.nick);
+    } else if (incomingKind === 'image') {
+      callAddLine('other', '发来一张照片', msg.nick || '对方');
+    }
+  }
 
   if (burnRemaining > 0) {
     scheduleSpaceBurn(msgEl, burnRemaining);
