@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.15';
+  var APP_VERSION = '8.9.16';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.15</title>
+<title>Echo回声 — 试用版v8.9.16</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -824,6 +824,47 @@ body {
 .dci-arrow {
   font-size: 18px;
   color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+/* v8.9.16 WeChat Banner */
+.wechat-banner {
+  background: linear-gradient(135deg, rgba(7,193,96,0.12), rgba(7,193,96,0.06));
+  border: 1px solid rgba(7,193,96,0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.wb-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wb-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.wb-text {
+  flex: 1;
+  min-width: 0;
+}
+.wb-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+.wb-sub {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.wb-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px 8px;
   flex-shrink: 0;
 }
 /* Daily Content Card */
@@ -3692,6 +3733,25 @@ body {
 .phone-frame.care-mode .home-big-btn { padding: 20px 20px; }
 .phone-frame.care-mode .home-small-btn { font-size: 15px; padding: 16px 8px; }
 
+/* v8.9.16 Elder Mode (长辈极简模式) */
+.phone-frame.elder-mode .scene-cards,
+.phone-frame.elder-mode .care-banner,
+.phone-frame.elder-mode .memoir-card,
+.phone-frame.elder-mode .share-card,
+.phone-frame.elder-mode .mood-row,
+.phone-frame.elder-mode .care-quick-toggle,
+.phone-frame.elder-mode .health-advisor-card,
+.phone-frame.elder-mode .home-secondary-actions,
+.phone-frame.elder-mode .daily-checkin-card { display: none !important; }
+.phone-frame.elder-mode .home-greeting { text-align: center; margin-bottom: 20px; }
+.phone-frame.elder-mode .home-greeting h1 { font-size: 32px; }
+.phone-frame.elder-mode .home-greeting p { font-size: 18px; }
+.phone-frame.elder-mode .home-primary-actions { gap: 16px; }
+.phone-frame.elder-mode .home-big-btn { padding: 24px 20px; }
+.phone-frame.elder-mode .big-btn-icon { font-size: 48px; }
+.phone-frame.elder-mode .big-btn-text { font-size: 26px; }
+.phone-frame.elder-mode .big-btn-sub { font-size: 16px; }
+
 /* Care Mode Toggle */
 .care-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -3951,6 +4011,18 @@ body {
       <div class="home-greeting">
         <h1 id="homeGreeting">晚上好，静水流深</h1>
         <p>今天想聊点什么？</p>
+      </div>
+
+      <!-- v8.9.16 微信环境检测横幅 -->
+      <div class="wechat-banner" id="wechatBanner" style="display:none;">
+        <div class="wb-content">
+          <span class="wb-icon">📲</span>
+          <div class="wb-text">
+            <div class="wb-title">在浏览器打开，功能更全</div>
+            <div class="wb-sub">语音通话、添加到桌面等功能需在系统浏览器中使用</div>
+          </div>
+          <button class="wb-close" onclick="closeWeChatBanner()">✕</button>
+        </div>
       </div>
 
       <!-- v8.9.15 每日签到仪式：驱动每天打开 -->
@@ -4307,6 +4379,14 @@ body {
           <span class="mi-label">大字模式</span>
           <label class="care-toggle-switch">
             <input type="checkbox" id="careModeToggle" onchange="toggleCareMode(this.checked)">
+            <span class="care-slider"></span>
+          </label>
+        </div>
+        <div class="care-toggle-row">
+          <span class="mi-icon">👴</span>
+          <span class="mi-label">长辈极简模式</span>
+          <label class="care-toggle-switch">
+            <input type="checkbox" id="elderModeToggle" onchange="toggleElderMode(this.checked)">
             <span class="care-slider"></span>
           </label>
         </div>
@@ -5305,6 +5385,42 @@ function doDailyCheckin() {
   }, 300);
 }
 
+// ========== v8.9.16 微信环境检测 ==========
+function detectWeChatEnv() {
+  var ua = navigator.userAgent.toLowerCase();
+  var isWeChat = ua.indexOf('micromessenger') !== -1;
+  if (!isWeChat) return;
+  // Don't show if previously dismissed
+  if (lsLoad('wechatBannerDismissed', false)) return;
+  // Show banner
+  var banner = document.getElementById('wechatBanner');
+  if (banner) banner.style.display = 'flex';
+}
+
+function closeWeChatBanner() {
+  var banner = document.getElementById('wechatBanner');
+  if (banner) banner.style.display = 'none';
+  lsSave('wechatBannerDismissed', true);
+}
+
+// v8.9.16 邀请码检测：被邀请人打开链接时显示专属欢迎
+function checkInviteCode() {
+  var params = new URLSearchParams(window.location.search);
+  var inv = params.get('inv');
+  if (!inv || inv.length !== 6) return;
+  // 记录邀请关系（本地存储，后续可扩展统计）
+  try { localStorage.setItem('echo_invited_by', inv); } catch(e){}
+  // 更新首页问候语，增加亲切感
+  var greeting = $('homeGreeting');
+  if (greeting) {
+    greeting.innerHTML = '你的老朋友喊你来坐坐<span style="display:block;font-size:15px;color:var(--text-secondary);margin-top:8px;">邀请码：' + inv + '</span>';
+  }
+  var sub = greeting ? greeting.nextElementSibling : null;
+  if (sub && sub.tagName === 'P') {
+    sub.textContent = '老E在这儿等你，有啥说啥，别客气';
+  }
+}
+
 function init() {
   // Check if user has set a PIN - if so, show lock screen; otherwise skip
   var userPin = getUserPin();
@@ -5336,6 +5452,8 @@ function init() {
   updateImmersionEnter(); // v8.8.2 进入按钮文案随时段变化
   initDailyContent();
   initDailyCheckin(); // v8.9.15 每日签到仪式
+  detectWeChatEnv(); // v8.9.16 微信环境检测
+  checkInviteCode(); // v8.9.16 邀请码检测
   initNotifications();
   showNotifySettings();
   setTimeout(initFirebase, 300);
@@ -9712,6 +9830,31 @@ function toggleCareMode(enabled) {
   }
 })();
 
+// v8.9.16 Elder Mode (长辈极简模式)
+function toggleElderMode(enabled) {
+  var frame = document.querySelector('.phone-frame');
+  if (frame) {
+    if (enabled) {
+      frame.classList.add('elder-mode');
+    } else {
+      frame.classList.remove('elder-mode');
+    }
+  }
+  try { localStorage.setItem('echo_elder_mode', enabled ? '1' : '0'); } catch(e){}
+  var toggle = $('elderModeToggle');
+  if (toggle) toggle.checked = enabled;
+}
+(function(){
+  var saved = null;
+  try { saved = localStorage.getItem('echo_elder_mode'); } catch(e){}
+  if (saved === '1') {
+    var frame = document.querySelector('.phone-frame');
+    if (frame) frame.classList.add('elder-mode');
+    var toggle = $('elderModeToggle');
+    if (toggle) toggle.checked = true;
+  }
+})();
+
 // --- Open Space Overlay ---
 function openSpaceOverlay() {
   switchTab('space');
@@ -10217,14 +10360,25 @@ function loadMoodHistoryDated() {
 }
 
 // ========== v8.9.3 分享推荐：请一个老伙计进来 ==========
+// v8.9.16 邀请码：每人一个6位码，分享时带上，被邀请人打开看到专属欢迎
+function getOrCreateInviteCode() {
+  var code = null;
+  try { code = localStorage.getItem('echo_invite_code'); } catch(e){}
+  if (!code) {
+    code = String(Math.floor(100000 + Math.random() * 900000));
+    try { localStorage.setItem('echo_invite_code', code); } catch(e){}
+  }
+  return code;
+}
 function shareEcho() {
-  var url = 'https://echo-huisheng.github.io/echo-app/';
+  var code = getOrCreateInviteCode();
+  var url = 'https://echo-huisheng.github.io/echo-app/?inv=' + code;
   var msgs = [
     '我最近在一个叫「Echo回声」的地方，跟老E唠嗑，心里痛快多了。你也来试试，咱俩还能在里面说说话。',
     '给你推荐个说心里话的地方，叫「Echo回声」。里面有个老E，特别会陪人聊天，还不留痕迹。来坐坐。',
     '人上了岁数，就想找个能说话的地方。这个「Echo回声」我用着挺好，你也来看看。'
   ];
-  var text = msgs[Math.floor(Math.random() * msgs.length)] + ' ' + url;
+  var text = msgs[Math.floor(Math.random() * msgs.length)] + '\n\n我的邀请码：' + code + '\n' + url;
   // v8.9.9 只有手机才弹系统分享；电脑(Windows/Mac)分享弹窗易报错，直接复制更稳
   var ua = navigator.userAgent || '';
   var isPhone = /Android|iPhone|iPod|Mobile|HarmonyOS/i.test(ua);
