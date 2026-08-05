@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.14';
+  var APP_VERSION = '8.9.15';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -69,7 +69,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.14</title>
+<title>Echo回声 — 试用版v8.9.15</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -784,6 +784,47 @@ body {
   font-size: 16px;
   color: var(--text-secondary);
   margin-top: 4px;
+}
+/* v8.9.15 Daily Check-in Card */
+.daily-checkin-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(200,168,98,0.12), rgba(200,168,98,0.06));
+  border: 1px solid rgba(200,168,98,0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.daily-checkin-card:active {
+  transform: scale(0.98);
+  background: linear-gradient(135deg, rgba(200,168,98,0.18), rgba(200,168,98,0.1));
+}
+.dci-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.dci-text {
+  flex: 1;
+  min-width: 0;
+}
+.dci-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+.dci-sub {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.dci-arrow {
+  font-size: 18px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
 }
 /* Daily Content Card */
 .daily-card {
@@ -3912,6 +3953,16 @@ body {
         <p>今天想聊点什么？</p>
       </div>
 
+      <!-- v8.9.15 每日签到仪式：驱动每天打开 -->
+      <div class="daily-checkin-card" id="dailyCheckinCard" onclick="doDailyCheckin()">
+        <div class="dci-icon">📅</div>
+        <div class="dci-text">
+          <div class="dci-title" id="dciTitle">今日已陪伴第 <span id="dciDays">1</span> 天</div>
+          <div class="dci-sub" id="dciSub">点一下，听老E说句今日专属话</div>
+        </div>
+        <span class="dci-arrow">›</span>
+      </div>
+
       <!-- v8.5 核心入口上移：聊天+密聊必须首屏可见 -->
       <div class="home-primary-actions">
         <button class="home-big-btn chat-btn" onclick="switchTab('chat')">
@@ -4052,7 +4103,7 @@ body {
       </div>
       <div class="privacy-status-bar" id="privacyStatusBar" onclick="openPrivacyReport(event)" style="cursor:pointer;">
         <span class="psb-icon">🔒</span>
-        <span class="psb-text">本次对话仅存本机 · 关闭即消失</span>
+        <span class="psb-text">对话经AI处理 · 不含身份信息 · 本地存储</span>
         <button class="psb-burn-toggle" id="autoBurnToggle" onclick="toggleAutoBurn()">
           <span id="autoBurnLabel">阅后即焚：关</span>
         </button>
@@ -4300,11 +4351,11 @@ body {
     <div class="sub-card">
       <h3>隐私承诺清单</h3>
       <ul style="list-style:none;margin-top:8px;">
-        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 对话加密保护，只有你能查看</li>
-        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 消息到期后自动清理</li>
-        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 不会将你的身份透露给AI</li>
-        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 不收集位置、通讯录等隐私</li>
-        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 你可以随时一键清除所有数据</li>
+        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 对话发送给AI生成回复，但不含您的身份信息</li>
+        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 聊天记录只存本机，可随时一键清除</li>
+        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 密语空间消息端到端加密，服务器只存密文</li>
+        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 消息到期后自动清理，不留痕迹</li>
+        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 不收集位置、通讯录等隐私信息</li>
       </ul>
     </div>
   </div>
@@ -4870,7 +4921,7 @@ body {
       <div style="font-size:18px;font-weight:600;color:var(--text-primary);text-align:center;margin-bottom:20px;font-family:var(--font-title);">欢迎使用 Echo回声</div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:2;margin-bottom:20px;">
         <p style="margin-bottom:12px;">在使用Echo回声之前，请了解以下事项：</p>
-        <p style="margin-bottom:8px;"><strong style="color:var(--text-primary);">1. 关于隐私保护</strong><br>Echo回声重视您的隐私。对话内容仅存储在您的本地设备中，不会上传到任何服务器。您的匿名身份信息不会被发送给AI模型。</p>
+        <p style="margin-bottom:8px;"><strong style="color:var(--text-primary);">1. 关于隐私保护</strong><br>Echo回声重视您的隐私。对话内容会发送给AI服务商用于生成回复，<strong style="color:var(--trust-green);">不包含您的身份、昵称和联系方式</strong>，服务商无法把内容关联到您本人。聊天记录只存在您手机本地，可随时一键清除。</p>
         <p style="margin-bottom:8px;"><strong style="color:var(--text-primary);">2. 关于AI对话</strong><br>Echo使用AI技术提供对话陪伴。AI回复仅供参考，不代表专业建议。AI可能会产生不准确的信息，请自行判断。</p>
         <p style="margin-bottom:8px;"><strong style="color:var(--text-primary);">3. 关于健康建议</strong><br>健康顾问功能提供的内容仅为健康知识参考，<strong style="color:var(--danger);">不构成医疗诊断或治疗建议</strong>，不能替代专业医生的面诊和处方。如有健康问题，请及时就医。</p>
         <p style="margin-bottom:8px;"><strong style="color:var(--text-primary);">4. 免责声明</strong><br>使用Echo回声即表示您理解并同意：本应用提供的所有内容仅供娱乐和参考，开发者不对因使用本应用而产生的任何直接或间接后果承担责任。</p>
@@ -5155,9 +5206,12 @@ function initDailyContent() {
 function fetchWeather() {
   var weatherEl = document.getElementById('dailyWeather');
   if (!weatherEl) return;
+  // Timeout after 5 seconds to prevent hanging when wttr.in is blocked
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function() { controller.abort(); }, 5000);
   // Use wttr.in - free, no API key, works in China
-  fetch('https://wttr.in/?format=j1&lang=zh', { mode: 'cors' })
-    .then(function(r) { return r.json(); })
+  fetch('https://wttr.in/?format=j1&lang=zh', { mode: 'cors', signal: controller.signal })
+    .then(function(r) { clearTimeout(timeoutId); return r.json(); })
     .then(function(data) {
       if (!data || !data.current_condition || !data.current_condition[0]) {
         weatherEl.innerHTML = '<span class="weather-desc">天气暂不可用</span>';
@@ -5188,6 +5242,69 @@ function fetchWeather() {
       weatherEl.innerHTML = '<span class="weather-desc">' + tip + '</span>';
     });
 }
+
+// ========== v8.9.15 每日签到仪式 ==========
+var DAILY_CHECKIN_KEY = 'echo_daily_checkin';
+var DAILY_GREETINGS = [
+  '今天天气不错，心情怎么样？',
+  '新的一天，有什么想聊的？',
+  '来了啊，今天想唠点啥？',
+  '在呢，今天过得还行吧？',
+  '嘿，今天有啥新鲜事？',
+  '来了，正等着你呢。',
+  '今天想聊点轻松的还是严肃的？',
+  '在呢，今天心情怎么样？'
+];
+var MILESTONE_GREETINGS = {
+  7: '连续7天了，你这份坚持真不容易。',
+  30: '一个月了，谢谢你一直陪着我。',
+  100: '100天！你把我当老朋友了，我也一样。',
+  365: '一整年了，这一年你过得还好吗？'
+};
+
+function initDailyCheckin() {
+  var today = new Date().toDateString();
+  var data = lsLoad(DAILY_CHECKIN_KEY, { firstDay: today, lastDay: today, streak: 1, totalDays: 1 });
+  // Calculate streak
+  var lastDay = new Date(data.lastDay);
+  var todayDate = new Date(today);
+  var diffDays = Math.floor((todayDate - lastDay) / 86400000);
+  if (diffDays === 1) {
+    data.streak += 1;
+  } else if (diffDays > 1) {
+    data.streak = 1;
+  }
+  data.lastDay = today;
+  data.totalDays = Math.floor((todayDate - new Date(data.firstDay)) / 86400000) + 1;
+  lsSave(DAILY_CHECKIN_KEY, data);
+  // Update UI
+  var daysEl = document.getElementById('dciDays');
+  if (daysEl) daysEl.textContent = data.totalDays;
+}
+
+function doDailyCheckin() {
+  var data = lsLoad(DAILY_CHECKIN_KEY, { streak: 1, totalDays: 1 });
+  // Check for milestone
+  var milestone = MILESTONE_GREETINGS[data.streak];
+  var greeting;
+  if (milestone) {
+    greeting = milestone;
+    showToast('🎉 ' + data.streak + '天里程碑！');
+  } else {
+    greeting = DAILY_GREETINGS[Math.floor(Math.random() * DAILY_GREETINGS.length)];
+  }
+  // Update card to show checked-in state
+  var subEl = document.getElementById('dciSub');
+  if (subEl) subEl.textContent = '✓ 今日已打卡';
+  var card = document.getElementById('dailyCheckinCard');
+  if (card) card.style.opacity = '0.7';
+  // Send greeting to chat
+  switchTab('chat');
+  setTimeout(function() {
+    addMessage('echo', greeting);
+  }, 300);
+}
+
 function init() {
   // Check if user has set a PIN - if so, show lock screen; otherwise skip
   var userPin = getUserPin();
@@ -5218,6 +5335,7 @@ function init() {
   $('immersionGreeting').textContent = getGreeting();
   updateImmersionEnter(); // v8.8.2 进入按钮文案随时段变化
   initDailyContent();
+  initDailyCheckin(); // v8.9.15 每日签到仪式
   initNotifications();
   showNotifySettings();
   setTimeout(initFirebase, 300);
