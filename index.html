@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '9.1.0';
+  var APP_VERSION = '9.1.1';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -68,7 +68,7 @@
 <link rel="apple-touch-icon" sizes="512x512" href="/echo-app/icons/icon-512.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <!-- v9.0 移除Google Fonts依赖，改用系统字体（国内加载快） -->
-<title>Echo回声 — 试用版v9.1.0</title>
+<title>Echo回声 — 试用版v9.1.1</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5458,8 +5458,8 @@ function initDailyCheckin() {
   // Update UI
   var daysEl = document.getElementById('dciDays');
   if (daysEl) daysEl.textContent = data.totalDays;
-  // v9.1 检查里程碑解锁
-  checkMilestoneUnlock();
+  // v9.1 检查里程碑解锁（安全包裹，防止影响init流程）
+  try { checkMilestoneUnlock(); } catch(e) { console.warn('milestone check error:', e); }
 }
 
 function doDailyCheckin() {
@@ -5598,7 +5598,8 @@ function init() {
     var hoursSinceLastMsg = (Date.now() - lastMsg.time) / 3600000;
     if (hoursSinceLastMsg > 4) {
       // v9.1 情绪连续性优先：引用昨天聊天内容
-      var yesterdayGreet = getYesterdayGreeting();
+      var yesterdayGreet = null;
+      try { yesterdayGreet = getYesterdayGreeting(); } catch(e) { console.warn('yesterday greeting error:', e); }
       var memGreet = getMemoryGreeting();
       var greetPool;
       if (yesterdayGreet) {
@@ -5700,7 +5701,7 @@ function init() {
     }
   });
 }
-init();
+try { init(); } catch(e) { console.error('init error:', e); }
 
 // ========== PIN ==========
 var pinKeys = document.querySelectorAll('.pin-key[data-num]');
@@ -6724,7 +6725,7 @@ async function sendMessage() {
   if (csc) csc.style.display = 'none';
   addUserMessage(text);
   // v9.1 每次发消息都保存摘要（给次日情绪连续性用）
-  saveLastChatSummary(text);
+  try { saveLastChatSummary(text); } catch(e){}
   // Extract and save memories from user message
   var newMemories = extractMemory(text);
   if (newMemories) saveMemories(newMemories);
