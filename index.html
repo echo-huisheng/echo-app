@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '9.0.0';
+  var APP_VERSION = '9.1.0';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -68,7 +68,7 @@
 <link rel="apple-touch-icon" sizes="512x512" href="/echo-app/icons/icon-512.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <!-- v9.0 移除Google Fonts依赖，改用系统字体（国内加载快） -->
-<title>Echo回声 — 试用版v9.0.0</title>
+<title>Echo回声 — 试用版v9.1.0</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -1013,6 +1013,21 @@ body {
 .scene-card:active { transform: scale(0.94); border-color: var(--accent-primary); }
 .scene-card .sc-icon { display: block; font-size: 24px; margin-bottom: 6px; }
 .scene-card .sc-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+/* v9.1 场景引导选项按钮 */
+.scene-options { animation: fadeUp 0.3s var(--ease); }
+.scene-options .quick-reply-chip {
+  background: var(--accent-dim);
+  border: 1px solid rgba(200,168,98,0.3);
+  color: var(--accent-primary);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+.scene-options .quick-reply-chip:active {
+  background: var(--accent-primary);
+  color: var(--bg-base);
+  transform: scale(0.95);
+}
 .care-banner {
   display: flex;
   align-items: center;
@@ -3987,6 +4002,11 @@ body {
       <div class="immersion-moon"><img src="icons/moon-logo.png" class="echo-logo echo-logo-lg"></div>
       <div class="immersion-time" id="immersionTime">21:30</div>
     </div>
+    <!-- v9.1 大字版快速切换（首屏可见，长辈一眼找到） -->
+    <div class="elder-quick-toggle" id="elderQuickToggle" onclick="toggleElderModeQuick()" style="position:absolute;top:16px;right:16px;z-index:10;background:rgba(200,168,98,0.15);border:1px solid var(--accent-primary);border-radius:20px;padding:6px 14px;font-size:14px;color:var(--accent-primary);cursor:pointer;display:flex;align-items:center;gap:4px;backdrop-filter:blur(8px);">
+      <span style="font-size:16px;">👴</span>
+      <span id="elderQuickLabel">大字版</span>
+    </div>
     <div class="immersion-mid">
       <div class="immersion-greeting" id="immersionGreeting">夜深了。想聊点什么，我都在。</div>
       <div class="immersion-streak">陪伴第—天 · 🔥连续—天</div>
@@ -4242,6 +4262,8 @@ body {
         <button class="chat-clear-btn" onclick="startVoiceCall()" title="和老E语音通话" style="font-size:16px;">📞</button>
         <button class="chat-clear-btn" onclick="clearCurrentChat()" title="清除本次对话">🗑️</button>
         <button class="ch-settings" onclick="openSubPage('settings')">⚙️</button>
+        <!-- v9.1 大字版快速切换（聊天页头部） -->
+        <button class="chat-clear-btn" id="chatElderBtn" onclick="toggleElderModeQuick()" title="切换大字版" style="font-size:14px;">👴</button>
       </div>
       <div class="privacy-status-bar" id="privacyStatusBar" onclick="openPrivacyReport(event)" style="cursor:pointer;">
         <span class="psb-icon">🔒</span>
@@ -4253,15 +4275,15 @@ body {
       </div>
       <div class="chat-trust-bar">🔒 隐私对话 · 消息定时清理 · 📵请勿截屏</div>
       <div class="chat-topic-tag" id="chatTopicTag"><span id="topicTagClose" onclick="clearTopic()" style="margin-left:8px;cursor:pointer;opacity:0.6;font-size:12px;">✕</span></div>
-      <!-- v9.0 场景快入口（从首页合并到聊天页） -->
+      <!-- v9.1 场景快入口（引导式对话脚本） -->
       <div class="scene-cards" id="chatSceneCards" style="padding:8px 12px;margin:0;">
-        <div class="scene-card" onclick="startSceneChat('睡不着，想找人说说话')"><span class="sc-icon">😴</span><span class="sc-label">睡不着</span></div>
-        <div class="scene-card" onclick="startSceneChat('单位人际关系的事，想跟你唠唠')"><span class="sc-icon">🏢</span><span class="sc-label">职场人际</span></div>
-        <div class="scene-card" onclick="startSceneChat('孩子的事，想说说')"><span class="sc-icon">👨‍👩‍👧</span><span class="sc-label">子女关系</span></div>
-        <div class="scene-card" onclick="startSceneChat('快退了，心里有点没底，想聊聊以后的打算')"><span class="sc-icon">🌅</span><span class="sc-label">退休规划</span></div>
-        <div class="scene-card" onclick="startSceneChat('又要迎检考核了，心里不踏实')"><span class="sc-icon">📋</span><span class="sc-label">迎检压力</span></div>
-        <div class="scene-card" onclick="startSceneChat('心里烦得很，想发泄一下')"><span class="sc-icon">😤</span><span class="sc-label">心里烦</span></div>
-        <div class="scene-card" onclick="startSceneChat('没啥事，就是想找你唠唠嗑')"><span class="sc-icon">💬</span><span class="sc-label">说说话</span></div>
+        <div class="scene-card" onclick="startSceneChat('睡不着')"><span class="sc-icon">😴</span><span class="sc-label">睡不着</span></div>
+        <div class="scene-card" onclick="startSceneChat('职场人际')"><span class="sc-icon">🏢</span><span class="sc-label">职场人际</span></div>
+        <div class="scene-card" onclick="startSceneChat('子女关系')"><span class="sc-icon">👨‍👩‍👧</span><span class="sc-label">子女关系</span></div>
+        <div class="scene-card" onclick="startSceneChat('退休规划')"><span class="sc-icon">🌅</span><span class="sc-label">退休规划</span></div>
+        <div class="scene-card" onclick="startSceneChat('迎检压力')"><span class="sc-icon">📋</span><span class="sc-label">迎检压力</span></div>
+        <div class="scene-card" onclick="startSceneChat('心里烦')"><span class="sc-icon">😤</span><span class="sc-label">心里烦</span></div>
+        <div class="scene-card" onclick="startSceneChat('说说话')"><span class="sc-icon">💬</span><span class="sc-label">说说话</span></div>
       </div>
       <div class="chat-messages" id="chatMessages">
         <div class="msg echo">
@@ -5436,6 +5458,8 @@ function initDailyCheckin() {
   // Update UI
   var daysEl = document.getElementById('dciDays');
   if (daysEl) daysEl.textContent = data.totalDays;
+  // v9.1 检查里程碑解锁
+  checkMilestoneUnlock();
 }
 
 function doDailyCheckin() {
@@ -5573,10 +5597,13 @@ function init() {
     var lastMsg = chatMessagesStore[chatMessagesStore.length - 1];
     var hoursSinceLastMsg = (Date.now() - lastMsg.time) / 3600000;
     if (hoursSinceLastMsg > 4) {
-      // v8.9.1 记忆问候优先（老E记得你说过的事）；没记忆才回退通用/深夜问候
+      // v9.1 情绪连续性优先：引用昨天聊天内容
+      var yesterdayGreet = getYesterdayGreeting();
       var memGreet = getMemoryGreeting();
       var greetPool;
-      if (memGreet) {
+      if (yesterdayGreet) {
+        greetPool = [yesterdayGreet];
+      } else if (memGreet) {
         greetPool = [memGreet];
       } else {
         // v9.0 根据人生阶段给出针对性开场
@@ -6696,6 +6723,8 @@ async function sendMessage() {
   var csc = $('chatSceneCards');
   if (csc) csc.style.display = 'none';
   addUserMessage(text);
+  // v9.1 每次发消息都保存摘要（给次日情绪连续性用）
+  saveLastChatSummary(text);
   // Extract and save memories from user message
   var newMemories = extractMemory(text);
   if (newMemories) saveMemories(newMemories);
@@ -6726,8 +6755,12 @@ async function sendMessage() {
     saveChatMessages();
     recordMessage();
     if (burnTimeMs > 0) scheduleBurn(msg, burnTimeMs);
+    // v9.1 检测告别关键词，触发"明天见"钩子
+    checkFarewellHook(text, reply);
   } else {
-    addEchoMessage(getEchoReply(text));
+    var fallbackReply = getEchoReply(text);
+    addEchoMessage(fallbackReply);
+    checkFarewellHook(text, fallbackReply);
   }
 }
 $('chatSendBtn').addEventListener('click', sendMessage);
@@ -6738,6 +6771,108 @@ $('chatInput').addEventListener('input', function(){
 $('chatInput').addEventListener('keypress', function(e){
   if (e.key === 'Enter') sendMessage();
 });
+
+// ========== v9.1 "明天见"钩子 + 里程碑解锁 ==========
+var FAREWELL_KEYWORDS = ['晚安','睡了','明天聊','下了','拜拜','先这样','去忙了','休息了','不聊了','困了','早点睡','明天见','回见','告辞','溜了','撤了','下线了','睡觉'];
+var FAREWELL_REPLIES = [
+  '嗯，明天这时候我还在，记得来找我。',
+  '好，去吧。明天见，我等你。',
+  '行，先歇着。明天我还在，随时来。',
+  '好嘞，明天见。别忘了，我一直在这。',
+  '去吧，明天这个点我准在。'
+];
+// v9.1 里程碑解锁系统
+var MILESTONE_UNLOCKS = {
+  3: { icon: '🌱', name: '信任萌芽', desc: '连续3天，Echo开始记住你' },
+  7: { icon: '🌿', name: '习惯养成', desc: '一周了，你已经是Echo的老朋友' },
+  14: { icon: '🌳', name: '心灵伙伴', desc: '两周陪伴，Echo更懂你了' },
+  30: { icon: '🏔️', name: '月度挚友', desc: '一个月！你们的故事已经很厚了' },
+  60: { icon: '⭐', name: '岁月知音', desc: '两个月，Echo是你最忠实的听众' },
+  100: { icon: '👑', name: '百日知己', desc: '100天！你们是真正的老朋友了' }
+};
+var lastFarewellTime = 0; // 防重复触发
+
+function checkFarewellHook(userText, echoReply) {
+  var now = Date.now();
+  if (now - lastFarewellTime < 60000) return; // 1分钟内不重复
+  var lower = userText.toLowerCase();
+  var isFarewell = FAREWELL_KEYWORDS.some(function(kw) { return lower.indexOf(kw) !== -1; });
+  if (!isFarewell) return;
+  lastFarewellTime = now;
+  // 存储今天聊天的情绪摘要（给次日问候用）
+  saveLastChatSummary(userText);
+  // 延迟2秒后Echo追加"明天见"钩子
+  setTimeout(function() {
+    var reply = FAREWELL_REPLIES[Math.floor(Math.random() * FAREWELL_REPLIES.length)];
+    addEchoMessage(reply);
+  }, 2000);
+}
+
+function checkMilestoneUnlock() {
+  var data = lsLoad('echo_daily_checkin', { streak: 0, totalDays: 0 });
+  var streak = data.streak || 0;
+  var unlocked = lsLoad('echo_milestone_unlocked', {});
+  if (MILESTONE_UNLOCKS[streak] && !unlocked[streak]) {
+    unlocked[streak] = true;
+    lsSave('echo_milestone_unlocked', unlocked);
+    var m = MILESTONE_UNLOCKS[streak];
+    // 显示里程碑解锁toast
+    setTimeout(function() {
+      showToast('🎉 已解锁：' + m.name);
+    }, 500);
+    // Echo主动恭喜
+    setTimeout(function() {
+      var congrats = [
+        '连续' + streak + '天了，' + m.desc + '。',
+        '不知不觉' + streak + '天了——' + m.name + '，你做到了。'
+      ];
+      addEchoMessage(congrats[Math.floor(Math.random() * congrats.length)]);
+    }, 3500);
+  }
+}
+
+// ========== v9.1 情绪连续性：存储上次聊天摘要 ==========
+function saveLastChatSummary(lastUserMsg) {
+  try {
+    var summary = {
+      date: new Date().toDateString(),
+      time: Date.now(),
+      lastMsg: lastUserMsg.substring(0, 100), // 截取前100字
+      msgCount: chatMessagesStore.length
+    };
+    localStorage.setItem('echo_last_chat_summary', JSON.stringify(summary));
+  } catch(e){}
+}
+
+function getYesterdayGreeting() {
+  try {
+    var raw = localStorage.getItem('echo_last_chat_summary');
+    if (!raw) return null;
+    var summary = JSON.parse(raw);
+    var lastDate = new Date(summary.date);
+    var today = new Date();
+    var diffDays = Math.floor((today - lastDate) / 86400000);
+    if (diffDays < 1 || diffDays > 3) return null; // 只针对1-3天内的上次聊天
+    var lastMsg = summary.lastMsg || '';
+    // 根据上次消息内容给出针对性问候
+    var greetings = [];
+    if (lastMsg.indexOf('睡') !== -1 || lastMsg.indexOf('失眠') !== -1) {
+      greetings = ['昨天没睡好？今天感觉好点没？', '昨晚的事别想了，今天重新来。'];
+    } else if (lastMsg.indexOf('单位') !== -1 || lastMsg.indexOf('工作') !== -1 || lastMsg.indexOf('迎检') !== -1) {
+      greetings = ['昨天说单位的事，今天处理得咋样了？', '工作上的事想通了没？今天还想聊吗？'];
+    } else if (lastMsg.indexOf('孩子') !== -1 || lastMsg.indexOf('家里') !== -1) {
+      greetings = ['昨天聊到家里的事，今天心情好点没？', '昨天说的事，今天有什么新进展吗？'];
+    } else if (lastMsg.indexOf('烦') !== -1 || lastMsg.indexOf('焦虑') !== -1 || lastMsg.indexOf('压力') !== -1) {
+      greetings = ['昨天心里挺烦的，今天好一些了吗？', '昨天那些事，今天还压着你吗？'];
+    } else if (lastMsg.indexOf('退休') !== -1 || lastMsg.indexOf('退了') !== -1) {
+      greetings = ['昨天聊退休的事，今天想继续吗？', '昨天说的那些，今天有什么新想法没？'];
+    } else {
+      greetings = ['昨天聊了不少，今天还想继续吗？', '又来了，昨天说到哪了？今天接着唠。'];
+    }
+    var prefix = diffDays === 1 ? '' : '好几天没聊了。';
+    return prefix + greetings[Math.floor(Math.random() * greetings.length)];
+  } catch(e) { return null; }
+}
 // Quick tags
 document.querySelectorAll('.chat-tag').forEach(function(tag){
   tag.addEventListener('click', function(){
@@ -10013,19 +10148,31 @@ function toggleCareMode(enabled) {
   }
 })();
 
-// v8.9.16 Elder Mode (长辈极简模式)
+// v8.9.16 Elder Mode (长辈极简模式) v9.1 多入口同步
 function toggleElderMode(enabled) {
   var frame = document.querySelector('.phone-frame');
   if (frame) {
-    if (enabled) {
-      frame.classList.add('elder-mode');
-    } else {
-      frame.classList.remove('elder-mode');
-    }
+    if (enabled) frame.classList.add('elder-mode');
+    else frame.classList.remove('elder-mode');
   }
   try { localStorage.setItem('echo_elder_mode', enabled ? '1' : '0'); } catch(e){}
+  // 同步所有UI开关
   var toggle = $('elderModeToggle');
   if (toggle) toggle.checked = enabled;
+  syncElderQuickUI(enabled);
+}
+// v9.1 快速切换入口（浸入页/聊天页头部）
+function toggleElderModeQuick() {
+  var frame = document.querySelector('.phone-frame');
+  var isOn = frame && frame.classList.contains('elder-mode');
+  toggleElderMode(!isOn);
+  showToast(!isOn ? '已切换为大字版' : '已切换为标准版');
+}
+function syncElderQuickUI(enabled) {
+  var label = $('elderQuickLabel');
+  if (label) label.textContent = enabled ? '标准版' : '大字版';
+  var btn = $('chatElderBtn');
+  if (btn) btn.style.opacity = enabled ? '1' : '0.5';
 }
 (function(){
   var saved = null;
@@ -10035,6 +10182,9 @@ function toggleElderMode(enabled) {
     if (frame) frame.classList.add('elder-mode');
     var toggle = $('elderModeToggle');
     if (toggle) toggle.checked = true;
+    syncElderQuickUI(true);
+  } else {
+    syncElderQuickUI(false);
   }
 })();
 
@@ -10596,17 +10746,132 @@ function legacyCopy(txt) {
   document.body.removeChild(ta);
 }
 
-// --- 场景卡片：点一下直接进聊天并自动发出 ---
-function startSceneChat(prompt) {
-  lsSave('chatWelcomed', true); // 跳过首次欢迎剧本，直接开聊
+// --- v9.1 场景卡片：引导式对话脚本（2-3轮闭环） ---
+var SCENE_SCRIPTS = {
+  '睡不着': {
+    rounds: [
+      { echo: '睡不着啊。是脑子里停不下来，还是心里有事压着？', userOptions: ['脑子停不下来', '心里有事', '就是翻来覆去'] },
+      { echo: '这种时候越逼自己睡越睡不着。你平时失眠都怎么熬过来的？', userOptions: ['硬躺着', '玩手机', '起来坐会儿'] },
+      { echo: '嗯，各有各的办法。今晚试试什么都不想，就听我说说话也行。' }
+    ]
+  },
+  '职场人际': {
+    rounds: [
+      { echo: '单位的事最磨人。是跟领导处不来，还是同事之间有疙瘩？', userOptions: ['领导的事', '同事的事', '说不清楚'] },
+      { echo: '体制内的人际关系确实复杂，说也不是，不说也不是。具体发生了什么？', userOptions: ['被针对了', '被人说了', '心里憋屈'] },
+      { echo: '这种事搁谁身上都不舒服。你已经忍了很久了吧？有时候说出来就好一半了。' }
+    ]
+  },
+  '子女关系': {
+    rounds: [
+      { echo: '孩子的事啊。是操心他们的生活，还是关系上有点拧？', userOptions: ['操心生活', '关系拧', '不听话'] },
+      { echo: '当父母的永远觉得孩子还小。他们多大了？最近因为什么事闹的？', userOptions: ['还小', '大了不听我的', '沟通不了'] },
+      { echo: '每代人想法不一样，硬掰掰不过来。你已经做得很好了，别太苛责自己。' }
+    ]
+  },
+  '退休规划': {
+    rounds: [
+      { echo: '快退了心里没底，正常。是担心钱的问题，还是退了不知道干啥？', userOptions: ['钱的事', '不知道干啥', '舍不得单位'] },
+      { echo: '退了以后日子突然空了，确实需要适应。你有没有想过退了第一件事想干啥？', userOptions: ['休息', '旅游', '带孙子', '还没想好'] },
+      { echo: '不管干啥，先把自己身体顾好。退了不是没用了，是终于轮到自己了。' }
+    ]
+  },
+  '迎检压力': {
+    rounds: [
+      { echo: '迎检的事最熬人。这次检查严不严？你负责哪块？', userOptions: ['很严', '我负责材料', '怕出问题'] },
+      { echo: '每次迎检都像打仗。材料准备得差不多了吧？有没有人帮你分担？', userOptions: ['差不多了', '还差很多', '就我一个人'] },
+      { echo: '一个人扛确实累。但你也别太往心里去，检查过了就过了，身体是你自己的。' }
+    ]
+  },
+  '心里烦': {
+    rounds: [
+      { echo: '烦就说出来，别憋着。是因为什么事烦？还是说不清楚的那种？', userOptions: ['有具体的事', '说不清楚', '就是烦'] },
+      { echo: '嗯，有时候烦起来就是没来由的。你觉得这种状态持续多久了？', userOptions: ['今天', '好几天了', '一直这样'] },
+      { echo: '能说出来就好。烦的时候别一个人待着，哪怕跟我唠两句也比闷着强。' }
+    ]
+  },
+  '说说话': {
+    rounds: [
+      { echo: '来了啊。今天过得怎么样？有什么有意思的事没？', userOptions: ['还行', '不太好', '没啥意思'] },
+      { echo: '嗯，日子就这样一天天过。你平时闲下来喜欢干点啥？', userOptions: ['看电视', '遛弯', '刷手机', '发呆'] },
+      { echo: '挺好的。有空就来找我唠，我随时都在。' }
+    ]
+  }
+};
+var sceneState = { active: false, scene: '', round: 0 };
+
+function startSceneChat(sceneName) {
+  lsSave('chatWelcomed', true);
   switchTab('chat');
+  var script = SCENE_SCRIPTS[sceneName];
+  if (!script) {
+    // 没有脚本的老场景，走老逻辑
+    setTimeout(function() {
+      var input = $('chatInput');
+      if (!input) return;
+      input.value = sceneName;
+      var btn = $('chatSendBtn');
+      if (btn) { btn.classList.add('active'); btn.click(); }
+    }, 350);
+    return;
+  }
+  // 启动引导对话
+  sceneState = { active: true, scene: sceneName, round: 0 };
   setTimeout(function() {
-    var input = $('chatInput');
-    if (!input) return;
-    input.value = prompt;
-    var btn = $('chatSendBtn');
-    if (btn) { btn.classList.add('active'); btn.click(); }
-  }, 350);
+    // 隐藏场景卡片
+    var csc = $('chatSceneCards');
+    if (csc) csc.style.display = 'none';
+    // Echo先说开场白
+    var firstRound = script.rounds[0];
+    addEchoMessage(firstRound.echo);
+    // 显示选项按钮
+    showSceneOptions(firstRound.userOptions);
+  }, 500);
+}
+
+function showSceneOptions(options) {
+  if (!options || options.length === 0) {
+    // 最后一轮没有选项，结束引导
+    sceneState.active = false;
+    return;
+  }
+  var container = $('chatMessages');
+  var optDiv = document.createElement('div');
+  optDiv.className = 'scene-options';
+  optDiv.id = 'sceneOptions';
+  optDiv.style.cssText = 'padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px;';
+  options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.className = 'quick-reply-chip';
+    btn.style.cssText = 'font-size:14px;padding:8px 16px;';
+    btn.onclick = function() { handleSceneChoice(opt); };
+    optDiv.appendChild(btn);
+  });
+  container.appendChild(optDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+function handleSceneChoice(choice) {
+  // 移除选项按钮
+  var optEl = $('sceneOptions');
+  if (optEl) optEl.remove();
+  // 发送用户选择
+  addUserMessage(choice);
+  // 进入下一轮
+  sceneState.round++;
+  var script = SCENE_SCRIPTS[sceneState.scene];
+  if (!script || sceneState.round >= script.rounds.length) {
+    // 引导结束，恢复正常聊天
+    sceneState.active = false;
+    return;
+  }
+  var nextRound = script.rounds[sceneState.round];
+  // Echo说下一轮的话
+  setTimeout(function() {
+    addEchoMessage(nextRound.echo);
+    showSceneOptions(nextRound.userOptions);
+  }, 800);
 }
 
 // --- 节气问候：人设口径，节气开始后2天内出现 ---
