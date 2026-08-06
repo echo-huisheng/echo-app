@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '9.1.1';
+  var APP_VERSION = '9.1.2';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -68,7 +68,7 @@
 <link rel="apple-touch-icon" sizes="512x512" href="/echo-app/icons/icon-512.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
 <!-- v9.0 移除Google Fonts依赖，改用系统字体（国内加载快） -->
-<title>Echo回声 — 试用版v9.1.1</title>
+<title>Echo回声 — 试用版v9.1.2</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -5522,22 +5522,15 @@ function checkInviteCode() {
 }
 
 function init() {
-  // Check if user has set a PIN - if so, show lock screen; otherwise skip
+  // Check if user has set a PIN - if so, show lock screen; otherwise show immersion
   var userPin = getUserPin();
-  // v9.0 回访用户（已完成引导）直接进首页，跳过浸入页
-  var onboarded = false;
-  try { onboarded = localStorage.getItem('echo_onboarded') === '1'; } catch(e){}
   if (userPin) {
     // PIN is set - show lock screen, update pinCorrect to user's PIN
     pinCorrect = userPin;
     $('pinScreen').classList.remove('hidden');
     $('immersionPage').classList.add('hidden');
-  } else if (onboarded) {
-    // v9.0 回访无PIN → 直接进主界面
-    $('pinScreen').classList.add('hidden');
-    $('immersionPage').classList.add('hidden');
   } else {
-    // 首次用户 → 浸入页（品牌仪式感）
+    // v9.1.1 所有无PIN用户都看浸入页（欢迎页），包括回访用户
     $('pinScreen').classList.add('hidden');
     $('immersionPage').classList.remove('hidden');
   }
