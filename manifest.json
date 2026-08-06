@@ -1,8 +1,8 @@
 {
   "id": "/echo-app/",
-  "name": "Echo回声 — 你的知音",
-  "short_name": "Echo回声",
-  "description": "有些话，说给懂的人听。月亮在，风在，我在。",
+  "name": "Echo鍥炲０ 鈥?浣犵殑鐭ラ煶",
+  "short_name": "Echo鍥炲０",
+  "description": "鏈変簺璇濓紝璇寸粰鎳傜殑浜哄惉銆傛湀浜湪锛岄鍦紝鎴戝湪銆?,
   "start_url": "/echo-app/",
   "scope": "/echo-app/",
   "display": "standalone",
