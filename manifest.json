@@ -2,7 +2,7 @@
   "id": "/echo-app/",
   "name": "Echo回声 — 你的知音",
   "short_name": "Echo回声",
-  "description": "有些话，说给懂的人听。一个有阅历的老朋友，不评价，不说教，只倾听。",
+  "description": "有些话，说给懂的人听。月亮在，风在，我在。",
   "start_url": "/echo-app/",
   "scope": "/echo-app/",
   "display": "standalone",
