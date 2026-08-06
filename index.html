@@ -11,7 +11,7 @@
 // 作用：手机/微信浏览器会顽固缓存旧页面，导致修好的AI功能在旧版上依然"答非所问"。
 // 本脚本每次加载时读取服务器 version.txt（绕过缓存），发现更新版本立即重载，用户无需手动清缓存。
 (function(){
-  var APP_VERSION = '8.9.17';
+  var APP_VERSION = '9.0.0';
   window.APP_VERSION = APP_VERSION;
   try {
     var dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -67,9 +67,8 @@
 <link rel="apple-touch-icon" sizes="192x192" href="/echo-app/icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="/echo-app/icons/icon-512.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600&display=swap"></noscript>
-<title>Echo回声 — 试用版v8.9.17</title>
+<!-- v9.0 移除Google Fonts依赖，改用系统字体（国内加载快） -->
+<title>Echo回声 — 试用版v9.0.0</title>
 <style>
 /* ========== 1. Reset & Variables ========== */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -88,8 +87,8 @@
   --text-tertiary: #B8A898;
   --trust-green: #5EAD72;
   --danger: #D46B6B;
-  --font-title: 'Noto Serif SC', 'Songti SC', '宋体', 'SimSun', Georgia, serif;
-  --font-body: 'Noto Sans SC', 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', '微软雅黑', '黑体', 'SimHei', -apple-system, sans-serif;
+  --font-title: 'Songti SC', '宋体', 'SimSun', 'Noto Serif SC', Georgia, serif;
+  --font-body: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', '微软雅黑', 'Noto Sans SC', '黑体', 'SimHei', -apple-system, sans-serif;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   --radius-card: 16px;
   --radius-btn: 12px;
@@ -911,6 +910,18 @@ body {
   padding: 2px 6px;
   flex-shrink: 0;
 }
+/* v9.0 字体与触控可及性：最小字号13px + 最小触控区44px */
+.tab-item, .scene-card, .chat-tag, .home-big-btn, .home-small-btn,
+.mine-menu-item, .noise-item, .stage-card, .quick-reply-chip,
+.hib-btn, .burn-opt, .identity-avatar-item {
+  font-size: max(inherit, 13px);
+  min-height: 44px;
+  min-width: 44px;
+}
+.tab-item { min-height: 56px; }
+.tab-item span:last-child { font-size: max(12px, 13px); }
+.scene-card .sc-label { font-size: max(12px, 13px); }
+.chat-tag { font-size: max(12px, 13px); padding: max(8px, 10px) 14px; }
 /* Daily Content Card */
 .daily-card {
   background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
@@ -4051,7 +4062,7 @@ body {
   <!-- Pages Container -->
   <div class="pages-container" id="pagesContainer">
     <!-- Home -->
-    <div class="tab-page active" id="page-home">
+    <div class="tab-page" id="page-home">
       <div class="home-greeting">
         <h1 id="homeGreeting">晚上好，静水流深</h1>
         <p>今天想聊点什么？</p>
@@ -4114,9 +4125,11 @@ body {
       <!-- v8.8.0 场景卡片：点一下直接开聊 -->
       <div class="scene-cards" id="sceneCards">
         <div class="scene-card" onclick="startSceneChat('睡不着，想找人说说话')"><span class="sc-icon">😴</span><span class="sc-label">睡不着</span></div>
+        <div class="scene-card" onclick="startSceneChat('单位人际关系的事，想跟你唠唠')"><span class="sc-icon">🏢</span><span class="sc-label">职场人际</span></div>
+        <div class="scene-card" onclick="startSceneChat('孩子的事，想说说')"><span class="sc-icon">👨‍👩‍👧</span><span class="sc-label">子女关系</span></div>
+        <div class="scene-card" onclick="startSceneChat('快退了，心里有点没底，想聊聊以后的打算')"><span class="sc-icon">🌅</span><span class="sc-label">退休规划</span></div>
+        <div class="scene-card" onclick="startSceneChat('又要迎检考核了，心里不踏实')"><span class="sc-icon">📋</span><span class="sc-label">迎检压力</span></div>
         <div class="scene-card" onclick="startSceneChat('心里烦得很，想发泄一下')"><span class="sc-icon">😤</span><span class="sc-label">心里烦</span></div>
-        <div class="scene-card" onclick="startSceneChat('单位有点事，想跟你唠唠')"><span class="sc-icon">🏢</span><span class="sc-label">单位的事</span></div>
-        <div class="scene-card" onclick="startSceneChat('家里的事，想说说')"><span class="sc-icon">🏠</span><span class="sc-label">家里的事</span></div>
         <div class="scene-card" onclick="startSceneChat('身体不太舒服，有点担心')"><span class="sc-icon">🩺</span><span class="sc-label">身体不舒服</span></div>
         <div class="scene-card" onclick="startSceneChat('没啥事，就是想找你唠唠嗑')"><span class="sc-icon">💬</span><span class="sc-label">就想说说话</span></div>
       </div>
@@ -4219,7 +4232,7 @@ body {
     </div>
 
     <!-- Chat -->
-    <div class="tab-page" id="page-chat">
+    <div class="tab-page active" id="page-chat">
       <div class="chat-header">
         <div class="chat-header-left">
           <span class="ch-avatar"><img src="icons/moon-logo.png" class="echo-logo echo-logo-sm"></span>
@@ -4240,6 +4253,16 @@ body {
       </div>
       <div class="chat-trust-bar">🔒 隐私对话 · 消息定时清理 · 📵请勿截屏</div>
       <div class="chat-topic-tag" id="chatTopicTag"><span id="topicTagClose" onclick="clearTopic()" style="margin-left:8px;cursor:pointer;opacity:0.6;font-size:12px;">✕</span></div>
+      <!-- v9.0 场景快入口（从首页合并到聊天页） -->
+      <div class="scene-cards" id="chatSceneCards" style="padding:8px 12px;margin:0;">
+        <div class="scene-card" onclick="startSceneChat('睡不着，想找人说说话')"><span class="sc-icon">😴</span><span class="sc-label">睡不着</span></div>
+        <div class="scene-card" onclick="startSceneChat('单位人际关系的事，想跟你唠唠')"><span class="sc-icon">🏢</span><span class="sc-label">职场人际</span></div>
+        <div class="scene-card" onclick="startSceneChat('孩子的事，想说说')"><span class="sc-icon">👨‍👩‍👧</span><span class="sc-label">子女关系</span></div>
+        <div class="scene-card" onclick="startSceneChat('快退了，心里有点没底，想聊聊以后的打算')"><span class="sc-icon">🌅</span><span class="sc-label">退休规划</span></div>
+        <div class="scene-card" onclick="startSceneChat('又要迎检考核了，心里不踏实')"><span class="sc-icon">📋</span><span class="sc-label">迎检压力</span></div>
+        <div class="scene-card" onclick="startSceneChat('心里烦得很，想发泄一下')"><span class="sc-icon">😤</span><span class="sc-label">心里烦</span></div>
+        <div class="scene-card" onclick="startSceneChat('没啥事，就是想找你唠唠嗑')"><span class="sc-icon">💬</span><span class="sc-label">说说话</span></div>
+      </div>
       <div class="chat-messages" id="chatMessages">
         <div class="msg echo">
           <div class="msg-bubble">今天过得怎么样？有什么想和我聊聊的吗？</div>
@@ -4354,13 +4377,13 @@ body {
         <div class="space-empty-state" style="text-align:center;padding:48px 24px;">
           <div style="font-size:48px;margin-bottom:16px;opacity:0.5;">🔐</div>
           <div style="font-family:var(--font-title);font-size:16px;color:var(--text-primary);margin-bottom:8px;">还没有密语空间</div>
-          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:24px;">创建一个私密空间，或通过密室码加入</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:24px;">创建一个私密空间，或通过邀请码加入</div>
           <div style="display:flex;gap:12px;justify-content:center;">
             <button onclick="document.getElementById('spaceAddBtn').click()" style="padding:10px 20px;background:var(--accent-primary);color:var(--bg-base);border:none;border-radius:var(--radius-btn);font-size:14px;font-weight:500;cursor:pointer;">创建空间</button>
             <button onclick="document.getElementById('spaceJoinBtn').click()" style="padding:10px 20px;background:transparent;color:var(--accent-primary);border:1px solid var(--accent-primary);border-radius:var(--radius-btn);font-size:14px;font-weight:500;cursor:pointer;">加入空间</button>
           </div>
         </div>
-        <button class="space-join-btn" id="spaceJoinBtn">+ 加入空间（输入6位数字密室码）</button>
+        <button class="space-join-btn" id="spaceJoinBtn">+ 加入空间（输入6位数字邀请码）</button>
       </div>
     </div>
 
@@ -4490,7 +4513,7 @@ body {
       <ul style="list-style:none;margin-top:8px;">
         <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 对话发送给AI生成回复，但不含您的身份信息</li>
         <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 聊天记录只存本机，可随时一键清除</li>
-        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 密语空间消息端到端加密，服务器只存密文</li>
+        <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 密语空间消息私密保护，服务器只存密文</li>
         <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 消息到期后自动清理，不留痕迹</li>
         <li style="padding:8px 0;font-size:13px;color:var(--trust-green);display:flex;align-items:center;gap:8px;">✓ 不收集位置、通讯录等隐私信息</li>
       </ul>
@@ -4739,7 +4762,7 @@ body {
       <button onclick="startSpaceCall()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:6px 6px;" title="语音对讲">📞 对讲</button>
       <button onclick="destroySpace()" style="background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;padding:6px 10px;">销毁空间</button>
     </div>
-    <div class="space-trust-bar">🔒 加密对话 · 次日清除 · 📵 禁止截屏录屏</div>
+    <div class="space-trust-bar">🔒 私密对话 · 次日清除 · 📵 禁止截屏录屏</div>
     <div class="space-chat-messages" id="spaceChatMessages">
       <div class="space-welcome-msg">
         <div style="font-size:32px;margin-bottom:8px;">🔐</div>
@@ -4748,7 +4771,7 @@ body {
           所有参与者均使用匿名身份，空间销毁后不留任何痕迹。
         </div>
         <div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">
-          消息先在你的手机上加密再传输，只有知道密室码的人能解开；服务器上存的只是密文。
+          消息先在你的手机上加密再传输，只有知道邀请码的人能解开；服务器上存的只是密文。
         </div>
       </div>
     </div>
@@ -4963,11 +4986,11 @@ body {
         <input type="text" id="spaceNameInput" placeholder="给空间起个名字">
       </div>
       <div class="modal-field">
-        <label>密室码（6位数字）</label>
-        <input type="text" id="spaceCodeInput" placeholder="设置6位数字密室码" maxlength="6" inputmode="numeric" style="letter-spacing:4px;text-align:center;font-size:18px;">
+        <label>邀请码（6位数字）</label>
+        <input type="text" id="spaceCodeInput" placeholder="设置6位数字邀请码" maxlength="6" inputmode="numeric" style="letter-spacing:4px;text-align:center;font-size:18px;">
       </div>
       <div class="modal-field" style="font-size:12px;color:var(--text-secondary);margin-top:-8px;">
-        将密室码分享给对方，即可加入密语空间。消息到期后自动清理，全程加密保护。
+        将邀请码分享给对方，即可加入密语空间。消息到期后自动清理，全程加密保护。
       </div>
       <div style="display:none;">
       <div class="modal-field">
@@ -5012,10 +5035,10 @@ body {
       <div class="modal-handle"></div>
       <div class="modal-title">加入密语空间</div>
       <div class="modal-field">
-        <label>输入6位数字密室码</label>
+        <label>输入6位数字邀请码</label>
         <input type="text" placeholder="000000" id="inviteCodeInput" maxlength="6" inputmode="numeric" style="text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;">
       </div>
-      <div class="modal-note">🔒 密室码由空间创建者分享给你。加入后，你的消息同样受到加密保护。</div>
+      <div class="modal-note">🔒 邀请码由空间创建者分享给你。加入后，你的消息同样受到加密保护。</div>
       <div class="modal-actions">
         <button class="modal-btn ghost" onclick="closeModal('modalJoinSpace')">取消</button>
         <button class="modal-btn primary" onclick="joinSpace()">加入</button>
@@ -5027,15 +5050,15 @@ body {
   <div class="modal-overlay" id="modalInviteCode">
     <div class="modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title">密室码已生成</div>
+      <div class="modal-title">邀请码已生成</div>
       <div class="modal-invite-code">
-        <p style="font-size:14px;color:var(--text-secondary);">将此密室码分享给你想邀请的人</p>
+        <p style="font-size:14px;color:var(--text-secondary);">将此邀请码分享给你想邀请的人</p>
         <div class="code" id="generatedCode">A3K7F2</div>
         <p class="hint">有效期24小时 · 仅限1人使用</p>
       </div>
       <div class="modal-actions">
         <button class="modal-btn ghost" onclick="closeModal('modalInviteCode')">关闭</button>
-        <button class="modal-btn primary" onclick="copyInviteCode()">复制密室码</button>
+        <button class="modal-btn primary" onclick="copyInviteCode()">复制邀请码</button>
       </div>
     </div>
   </div>
@@ -5109,11 +5132,7 @@ body {
 
   <!-- Tab Bar -->
   <div class="tab-bar" id="tabBar">
-    <button class="tab-item active" data-tab="home">
-      <span class="tab-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
-      <span>首页</span>
-    </button>
-    <button class="tab-item" data-tab="chat">
+    <button class="tab-item active" data-tab="chat">
       <span class="tab-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
       <span>聊聊</span>
     </button>
@@ -5481,13 +5500,20 @@ function checkInviteCode() {
 function init() {
   // Check if user has set a PIN - if so, show lock screen; otherwise skip
   var userPin = getUserPin();
+  // v9.0 回访用户（已完成引导）直接进首页，跳过浸入页
+  var onboarded = false;
+  try { onboarded = localStorage.getItem('echo_onboarded') === '1'; } catch(e){}
   if (userPin) {
     // PIN is set - show lock screen, update pinCorrect to user's PIN
     pinCorrect = userPin;
     $('pinScreen').classList.remove('hidden');
     $('immersionPage').classList.add('hidden');
+  } else if (onboarded) {
+    // v9.0 回访无PIN → 直接进主界面
+    $('pinScreen').classList.add('hidden');
+    $('immersionPage').classList.add('hidden');
   } else {
-    // No PIN - go directly to app
+    // 首次用户 → 浸入页（品牌仪式感）
     $('pinScreen').classList.add('hidden');
     $('immersionPage').classList.remove('hidden');
   }
@@ -5517,6 +5543,9 @@ function init() {
 
   // Render saved chat messages (filter expired burns, re-apply timers)
   if (chatMessagesStore.length > 0) {
+    // v9.0 有历史消息时隐藏场景快入口
+    var csc = $('chatSceneCards');
+    if (csc) csc.style.display = 'none';
     var container = $('chatMessages');
     var now = Date.now();
     var kept = [];
@@ -5550,17 +5579,23 @@ function init() {
       if (memGreet) {
         greetPool = [memGreet];
       } else {
-        var h = new Date().getHours();
-        if (h >= 23 || h < 6) {
-          greetPool = ['又失眠了？还是纯粹睡不着？', '这个点还没睡，想啥呢？', '深夜了，来唠两句。'];
+        // v9.0 根据人生阶段给出针对性开场
+        var stageGreet = getStageGreeting();
+        if (stageGreet) {
+          greetPool = [stageGreet];
         } else {
-          greetPool = [
-            '嘿，好一阵没聊了。最近忙啥呢？',
-            '来了啊，我正想着你是不是把我忘了。',
-            '哟，好久不见。最近过得还行吧？',
-            '在呢。今天有空来坐坐？',
-            '好久没聊了，你那边没啥事吧？'
-          ];
+          var h = new Date().getHours();
+          if (h >= 23 || h < 6) {
+            greetPool = ['又失眠了？还是纯粹睡不着？', '这个点还没睡，想啥呢？', '深夜了，来唠两句。'];
+          } else {
+            greetPool = [
+              '嘿，好一阵没聊了。最近忙啥呢？',
+              '来了啊，我正想着你是不是把我忘了。',
+              '哟，好久不见。最近过得还行吧？',
+              '在呢。今天有空来坐坐？',
+              '好久没聊了，你那边没啥事吧？'
+            ];
+          }
         }
       }
       var proGreet = greetPool[Math.floor(Math.random() * greetPool.length)];
@@ -5720,14 +5755,25 @@ $('immersionEnter').addEventListener('click', function(e){
   enterMainUI();
 });
 $('immersionPage').addEventListener('click', function(){
-  if (!immersionFirstVisit) {
-    enterMainUI();
-  }
-  immersionFirstVisit = false;
+  // v9.0 任何点击直接进入，不再需要两下
+  enterMainUI();
 });
 function enterMainUI() {
+  // v9.0 首次用户也直接进首页，欢迎页/身份设定后置
   $('immersionPage').classList.add('hidden');
-  $('welcomeScreen').classList.remove('hidden');
+  $('welcomeScreen').classList.add('hidden');
+  $('identitySetupScreen').classList.remove('visible');
+  // 首次用户给默认昵称，不阻塞进入
+  var onboarded = false;
+  try { onboarded = localStorage.getItem('echo_onboarded') === '1'; } catch(e){}
+  if (!onboarded) {
+    try {
+      if (!lsLoad('nickname', '')) {
+        localStorage.setItem('echo_nickname', '静水流深');
+        localStorage.setItem('echo_onboarded', '1');
+      }
+    } catch(e){}
+  }
 }
 
 // ========== Welcome ==========
@@ -6010,8 +6056,26 @@ document.querySelectorAll('.stage-card').forEach(function(card){
   card.addEventListener('click', function(){
     document.querySelectorAll('.stage-card').forEach(function(c){ c.classList.remove('selected'); });
     this.classList.add('selected');
+    // v9.0 保存人生阶段到localStorage
+    var title = this.querySelector('.sc-title');
+    if (title) {
+      try { localStorage.setItem('echo_life_stage', title.textContent); } catch(e){}
+    }
   });
 });
+// v9.0 恢复已选人生阶段
+(function(){
+  var saved = null;
+  try { saved = localStorage.getItem('echo_life_stage'); } catch(e){}
+  if (saved) {
+    document.querySelectorAll('.stage-card').forEach(function(c){
+      c.classList.remove('selected');
+      if (c.querySelector('.sc-title') && c.querySelector('.sc-title').textContent === saved) {
+        c.classList.add('selected');
+      }
+    });
+  }
+})();
 // Memory filters
 document.querySelectorAll('.memory-filter').forEach(function(f){
   f.addEventListener('click', function(){
@@ -6173,6 +6237,45 @@ function getMemoryGreeting() {
   if (greetings.length === 0) return null;
   return greetings[Math.floor(Math.random() * greetings.length)];
 }
+
+// v9.0 根据人生阶段给出针对性开场白
+function getStageGreeting() {
+  var stage = null;
+  try { stage = localStorage.getItem('echo_life_stage'); } catch(e){}
+  if (!stage) return null;
+  var h = new Date().getHours();
+  var isNight = (h >= 23 || h < 6);
+  if (stage === '在职末期') {
+    if (isNight) return '这么晚还没睡？单位的事别带到床上想。';
+    var pool = [
+      '最近又迎检了吧？这种时候最熬人。',
+      '快退下来的人，单位还折腾你，也是够可以的。',
+      '上班的日子数一天少一天了，最近心态还行吧？',
+      '最近单位还那样吧？没再给你派什么棘手活？'
+    ];
+    return pool[Math.floor(Math.random() * pool.length)];
+  } else if (stage === '退休过渡') {
+    if (isNight) return '退了以后反而睡不好了？脑子里在想啥？';
+    var pool = [
+      '最近还在适应不用上班的日子吧？',
+      '退下来头一阵子最不好受，日子突然空了。现在感觉咋样？',
+      '退了以后时间多了，有没有想做的事？',
+      '最近作息调过来了没？刚退的时候最容易乱。'
+    ];
+    return pool[Math.floor(Math.random() * pool.length)];
+  } else if (stage === '悠然晚年') {
+    if (isNight) return '夜深了，睡不着就跟我唠两句。';
+    var pool = [
+      '最近身体还硬朗吧？有啥不舒服别硬扛。',
+      '今天出去溜达了没？天气好的话别老待家里。',
+      '孩子们最近常来看不？',
+      '最近有啥开心的事没？跟我唠唠。'
+    ];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  return null;
+}
+
 function addEchoMessage(text) {
   var container = $('chatMessages');
   var typing = document.createElement('div');
@@ -6392,6 +6495,10 @@ function buildOldEPrompt(userText) {
   if (memCtx) systemPrompt += '\n\n【你记得的事】\n' + memCtx + '\n合适的时候自然提起，别刻意。';
   var moodCtx = getMoodContext();
   if (moodCtx) systemPrompt += '\n\n【最近心情】\n' + moodCtx;
+  // v9.0 人生阶段上下文
+  var lifeStage = null;
+  try { lifeStage = localStorage.getItem('echo_life_stage'); } catch(e){}
+  if (lifeStage) systemPrompt += '\n\n【' + lifeStage + '】' + oePro + '正处于' + lifeStage + '阶段，说话时注意贴合这个阶段的处境和心态。';
   return systemPrompt;
 }
 var AI_FEW_SHOTS = [
@@ -6585,6 +6692,9 @@ async function sendMessage() {
   var input = $('chatInput');
   var text = input.value.trim();
   if (!text) return;
+  // v9.0 发第一条消息后隐藏场景快入口
+  var csc = $('chatSceneCards');
+  if (csc) csc.style.display = 'none';
   addUserMessage(text);
   // Extract and save memories from user message
   var newMemories = extractMemory(text);
@@ -7176,10 +7286,10 @@ function createSpace() {
   var name = $('spaceNameInput').value.trim();
   var code = $('spaceCodeInput').value.trim();
   if (!name) { showToast('请输入空间名称'); return; }
-  if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('密室码必须是6位数字'); return; }
+  if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('邀请码必须是6位数字'); return; }
   var spaces = lsLoad('spaces', []);
   var duplicate = spaces.some(function(s) { return s.code === code; });
-  if (duplicate) { showToast('该密室码已被使用，请换一个'); return; }
+  if (duplicate) { showToast('该邀请码已被使用，请换一个'); return; }
   var cleanupSelect = document.querySelector('#modalCreateSpace select:last-of-type');
   var cleanup = cleanupSelect ? cleanupSelect.value : '24小时';
   spaces.push({ name: name, code: code, cleanup: cleanup, created: Date.now(), messages: [] });
@@ -7215,7 +7325,7 @@ function addSpaceCard(name, code, cleanup) {
   if (empty) empty.style.display = 'none';
   var card = document.createElement('div');
   card.className = 'space-card';
-  card.innerHTML = '<div class="space-card-top"><div class="space-card-icon">🔐</div><div style="flex:1"><div class="space-card-name">' + name + '</div><div class="space-card-status ' + (sbReady ? 'active' : '') + '">' + (sbReady ? '已连接' : '未连接') + '</div></div><button onclick="event.stopPropagation();deleteSpaceCard(this,\'' + code + '\')" style="background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:4px 8px;" title="销毁空间">✕</button></div><div class="space-card-desc">密室码：' + code + ' · 清理：' + cleanup + '</div><div class="space-card-meta">创建者：你</div>';
+  card.innerHTML = '<div class="space-card-top"><div class="space-card-icon">🔐</div><div style="flex:1"><div class="space-card-name">' + name + '</div><div class="space-card-status ' + (sbReady ? 'active' : '') + '">' + (sbReady ? '已连接' : '未连接') + '</div></div><button onclick="event.stopPropagation();deleteSpaceCard(this,\'' + code + '\')" style="background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;padding:4px 8px;" title="销毁空间">✕</button></div><div class="space-card-desc">邀请码：' + code + ' · 清理：' + cleanup + '</div><div class="space-card-meta">创建者：你</div>';
   card.addEventListener('click', function() { openSpaceDetail(name, code); });
   list.insertBefore(card, list.querySelector('.space-join-btn'));
 }
@@ -7244,7 +7354,7 @@ function loadSpaces() {
 }
 function joinSpace() {
   var code = $('inviteCodeInput').value.trim();
-  if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('请输入6位数字密室码'); return; }
+  if (code.length !== 6 || !/^\d{6}$/.test(code)) { showToast('请输入6位数字邀请码'); return; }
 
   if (sbReady) {
     // Check Supabase for room across devices
@@ -7283,7 +7393,7 @@ function joinSpace() {
     alert('⚠️ 服务器未连接(sbReady=false)，只能在本地查找。\n请检查：1.页面是否最新版本(强制刷新) 2.网络是否正常');
     var spaces = lsLoad('spaces', []);
     var found = spaces.some(function(s) { return s.code === code; });
-    if (!found) { showToast('未找到该密室码对应的空间'); return; }
+    if (!found) { showToast('未找到该邀请码对应的空间'); return; }
     closeModal('modalJoinSpace');
     $('inviteCodeInput').value = '';
     showToast('已加入空间');
@@ -7292,7 +7402,7 @@ function joinSpace() {
 }
 function copyInviteCode() {
   var code = $('generatedCode').textContent;
-  showToast('密室码已复制：' + code);
+  showToast('邀请码已复制：' + code);
   closeModal('modalInviteCode');
 }
 // Close modal on overlay click (except consent modal - must use button)
@@ -8621,7 +8731,7 @@ function enterSpaceDetail(name, code) {
   var container = $('spaceChatMessages');
   if (container) {
     container.innerHTML = '<div class="space-welcome-msg"><div style="font-size:32px;margin-bottom:8px;">🔐</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">此空间消息阅后即焚，到期后自动物理删除，不可恢复。<br>所有参与者均使用匿名身份，空间销毁后不留任何痕迹。</div>'
-      + (sbReady ? '<div style="font-size:11px;color:#4ade80;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border-radius:8px;">🔒 客户端加密已启用 · 消息经AES-256加密后传输，只有知道密室码的人能读</div>' : '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。</div>')
+      + (sbReady ? '<div style="font-size:11px;color:#4ade80;margin-top:10px;padding:8px 12px;background:rgba(74,222,128,0.08);border-radius:8px;">🔒 客户端加密已启用 · 消息经AES-256加密后传输，只有知道邀请码的人能读</div>' : '<div style="font-size:11px;color:var(--text-tertiary);margin-top:10px;padding:8px 12px;background:var(--bg-surface-3);border-radius:8px;">网页试用版：消息仅存本设备。多人实时同步将在小程序版本中上线。</div>')
       + '</div>';
   }
   // Add/update online status indicator
